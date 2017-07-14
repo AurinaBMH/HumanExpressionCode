@@ -17,7 +17,7 @@
 % without cust probes.
 
 UseDataWithCUSTprobes = false;
-probeSelection = 'PC';% ('variance', lessNoise')
+probeSelection = 'PC';% ('variance', lessNoise', 'mean')
 ChooseMaxPC = true;
 ChooseMaxVAR = false;
 
@@ -32,7 +32,8 @@ else
     fprintf(1,'Loading the data without CUST probes and assigning variables\n')
     load('MicroarrayData.mat');
 end
-
+cd ..
+cd ('rawData');
 
 ProbeName = DataTableProbe.ProbeName{1,1};
 ProbeID = DataTableProbe.ProbeID{1,1};
@@ -41,7 +42,7 @@ GeneID = DataTableProbe.GeneID{1,1};
 GeneSymbol = DataTableProbe.GeneSymbol{1,1};
 GeneName = DataTableProbe.GeneName{1,1};
 %------------------------------------------------------------------------------
-% Normalise each subject data separately 
+% Normalise each subject data separately
 % Calculate probe selection criteria for each subject separately (non
 % normalised data)
 % Choose probe with max probe selection criteria on average
@@ -62,8 +63,22 @@ Uniq = unique(EntrezID(:,1));
 N = histc(EntrezID, Uniq);
 ProbeList = zeros(length(Uniq),2);
 indMsubj = zeros(length(Uniq),6);
+
+fileNoise = 'PACall.csv';
+
 for subj = 1:6
     expression = (DataTable.Expression{subj})';
+    if strcmp (probeSelection, 'lessNoise')
+        folder = sprintf('normalized_microarray_donor0%d', subj);
+        cd (folder);
+        noise = csvread(fileNoise);
+        [~,probeList] = intersect(noise(:,1),ProbeID, 'stable');
+        noise = (noise(probeList,2:end))';
+        cd ..
+    elseif strcmp(probeSelection, 'mean')
+        expressionSelected = zeros(size(expression,1), length(Uniq), 6);
+        
+    end
     % load noise level matrix for each subject here
     
     for k=1:length(Uniq)
@@ -84,100 +99,122 @@ for subj = 1:6
                     % determine max var value
                     [MaxV, indMaxV] = max(measure);
                     
-                    
                 case 'PC'
                     fprintf(1,'Performing probe selection using max PC\n')
                     measure = pca(expRepEntrezIDs,'Centered',false);
                     % determine max PC loading
                     [MaxV, indMaxV] = max(measure(:,1));
-                case 'lessNoise'
-                    % do for leaa noise option
                     
+                case 'lessNoise'
+                    fprintf(1,'Performing probe selection using less noise criteria\n')
+                    noiseRepEntrezIDs = noise(:,indRepEntrezIDs);
+                    % find probe with most signal in it compared to noise
+                    measure = sum(noiseRepEntrezIDs,1);
+                    % determine probe with max signal
+                    [MaxV, indMaxV] = max(measure);
+                    
+                case 'mean'
+                    expressionSelected(:,k,subj) = mean(expRepEntrezIDs,2);
                     
             end
-            indMsubj(k,subj) = indRepEntrezIDs(indMaxV); 
-
-        else
-            indMsubj(k,subj) = indRepEntrezIDs; 
+            
+            if strcmp(probeSelection, 'variance') || strcmp(probeSelection, 'PC') || strcmp(probeSelection, 'lessNoise')
+                indMsubj(k,subj) = indRepEntrezIDs(indMaxV);
+                
+                
+            else
+                indMsubj(k,subj) = indRepEntrezIDs;
+            end
         end
     end
 end
-indProbe = zeros(length(Uniq),1); 
-for j=1:length(Uniq)
-    [hcount,index] = hist(indMsubj(j,:),unique(indMsubj(j,:))); 
-    [~, ind] = max(hcount); 
-    indINlist = index(ind); 
-    ProbeList(j,1) = ProbeID(indINlist); 
-    ProbeList(j,2) = EntrezID(indINlist); 
-end
 
-
-%% check to exclude probes with not maximum variance or max PC and repeating entrezIDs (assign NaN value to
-% them)
-for j=1:length(ProbeID)
-    if ProbeID(j)~=(ProbeList(:,1))
-        ProbeID(j) = NaN;
-        EntrezID(j) = NaN;
+if strcmp(probeSelection, 'variance') || strcmp(probeSelection, 'PC') || strcmp(probeSelection, 'lessNoise')
+    indProbe = zeros(length(Uniq),1);
+    for j=1:length(Uniq)
+        [hcount,index] = hist(indMsubj(j,:),unique(indMsubj(j,:)));
+        [~, ind] = max(hcount);
+        indINlist = index(ind);
+        ProbeList(j,1) = ProbeID(indINlist);
+        ProbeList(j,2) = EntrezID(indINlist);
     end
-end
-
-% combine Probe information variables to a structure
-EntrezID(isnan(EntrezID)) = [];
-ProbeInformation.EntrezID = EntrezID;
-
-GeneID(isnan(ProbeID)) = [];
-ProbeInformation.GeneID = GeneID;
-
-GeneSymbol(isnan(ProbeID)) = [];
-ProbeInformation.GeneSymbol = GeneSymbol;
-
-GeneName(isnan(ProbeID)) = [];
-ProbeInformation.GeneName = GeneName;
-
-ProbeName(isnan(ProbeID)) = [];
-ProbeInformation.ProbeName = ProbeName;
-
-RemoveProbes = ProbeID;
-
-ProbeID(isnan(ProbeID)) = [];
-ProbeInformation.ProbeID = ProbeID;
-
-for subject=1:6
-    % exclude NaN probes keeping 1 probe for 1 entrezID.
-    fprintf(1,'Combining and saving the data for subject %u\n', subject)
-    Expression = DataTable.Expression{subject,1};
-    Expression(isnan(RemoveProbes),:) = [];
-    Expression = Expression';
+    %% check to exclude probes with not maximum variance or max PC and repeating entrezIDs (assign NaN value to
+    % them)
+    for q=1:length(ProbeID)
+        if ProbeID(q)~=(ProbeList(:,1))
+            ProbeID(q) = NaN;
+            EntrezID(q) = NaN;
+        end
+    end
+    EntrezID(isnan(EntrezID)) = [];
+    ProbeInformation.EntrezID = EntrezID;
     
+    GeneID(isnan(ProbeID)) = [];
+    ProbeInformation.GeneID = GeneID;
     
-    % combine sample information variables to a structure.
-    SampleInformation.StructureNames = DataTable.StructureName{subject,1};
-    SampleInformation.MMCoordinates = DataTable.MMcoordinates{subject,1};
-    SampleInformation.MRIvoxCoordinates = DataTable.MRIvoxCoordinates{subject,1};
+    GeneSymbol(isnan(ProbeID)) = [];
+    ProbeInformation.GeneSymbol = GeneSymbol;
     
+    GeneName(isnan(ProbeID)) = [];
+    ProbeInformation.GeneName = GeneName;
     
+    ProbeName(isnan(ProbeID)) = [];
+    ProbeInformation.ProbeName = ProbeName;
     
-    %% save files according to the selected option
+    RemoveProbes = ProbeID;
     
-    if ChoosePC == 1 && UseDataWithCUSTprobes == 0
+    ProbeID(isnan(ProbeID)) = [];
+    ProbeInformation.ProbeID = ProbeID;
+    
+    for subject=1:6
         
-        save(sprintf('MicroarrayDataPCAS0%d.mat', subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
         
-    elseif ChooseMaxVAR == 1 && UseDataWithCUSTprobes == 0
+        % exclude NaN probes keeping 1 probe for 1 entrezID.
+        fprintf(1,'Combining and saving the data for subject %u\n', subject)
+        Expression = DataTable.Expression{subject,1};
+        Expression(isnan(RemoveProbes),:) = [];
+        Expression = Expression';
         
-        save(sprintf('MicroarrayDataMaxVARS0%d.mat', subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
         
-    elseif ChoosePC == 1 && UseDataWithCUSTprobes == 1
-        
-        save(sprintf('MicroarrayDataWITHCUSTPCAS0%d.mat', subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
-        
-    elseif ChooseMaxVAR == 1 && UseDataWithCUSTprobes == 1
-        
-        save(sprintf('MicroarrayDataWITHCUSTMaxVARS0%d.mat', subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
+        % combine sample information variables to a structure.
+        SampleInformation.StructureNames = DataTable.StructureName{subject,1};
+        SampleInformation.MMCoordinates = DataTable.MMcoordinates{subject,1};
+        SampleInformation.MRIvoxCoordinates = DataTable.MRIvoxCoordinates{subject,1};
         
     end
-    %              clearvars -except DataTable DataTableProbe UseMaxVarProbes UseHighestPCProbes UseDataWithCUSTprobes
+    
+else
+    for subject=1:6
+        
+        % exclude NaN probes keeping 1 probe for 1 entrezID.
+        fprintf(1,'Combining and saving the data for subject %u\n', subject)
+        Expression = squeeze(expressionSelected(:,:,subject));
+        
+        % combine sample information variables to a structure.
+        SampleInformation.StructureNames = DataTable.StructureName{subject,1};
+        SampleInformation.MMCoordinates = DataTable.MMcoordinates{subject,1};
+        SampleInformation.MRIvoxCoordinates = DataTable.MRIvoxCoordinates{subject,1};
+        
+    end
+    ProbeInformation.EntrezID = unique(EntrezID, 'stable');
+    ProbeInformation.GeneID = unique(GeneID, 'stable');
+    ProbeInformation.GeneSymbol = unique(GeneSymbol, 'stable');
+    ProbeInformation.GeneName = unique(GeneName, 'stable');
+    ProbeInformation.ProbeName = unique(ProbeName, 'stable');
     
 end
+
+%% save files according to the selected option
+for subject = 1:6
+    cd ..
+    cd ('processedData'); 
+    if ~UseDataWithCUSTprobes
+        save(sprintf('MicroarrayData%sS0%d.mat', probeSelection, subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
+    else
+        save(sprintf('MicroarrayDataWITHcust%sS0%d.mat', probeSelection, subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
+    end
+    clearvars -except DataTable DataTableProbe UseMaxVarProbes UseHighestPCProbes UseDataWithCUSTprobes
+end
+
 
 
