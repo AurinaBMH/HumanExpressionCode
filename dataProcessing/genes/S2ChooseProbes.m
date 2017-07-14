@@ -17,9 +17,7 @@
 % without cust probes.
 
 UseDataWithCUSTprobes = false;
-probeSelection = 'PC';% ('variance', lessNoise', 'mean')
-ChooseMaxPC = true;
-ChooseMaxVAR = false;
+probeSelection = 'Mean';% (Variance', LessNoise', 'Mean')
 
 %------------------------------------------------------------------------------
 % Load the data
@@ -68,14 +66,14 @@ fileNoise = 'PACall.csv';
 
 for subj = 1:6
     expression = (DataTable.Expression{subj})';
-    if strcmp (probeSelection, 'lessNoise')
+    if strcmp (probeSelection, 'LessNoise')
         folder = sprintf('normalized_microarray_donor0%d', subj);
         cd (folder);
         noise = csvread(fileNoise);
         [~,probeList] = intersect(noise(:,1),ProbeID, 'stable');
         noise = (noise(probeList,2:end))';
         cd ..
-    elseif strcmp(probeSelection, 'mean')
+    elseif strcmp(probeSelection, 'Mean')
         expressionSelected = zeros(size(expression,1), length(Uniq), 6);
         
     end
@@ -93,7 +91,7 @@ for subj = 1:6
             % calculate variances for expression data for a selected entrezID
             switch probeSelection
                 
-                case 'variance'
+                case 'Variance'
                     fprintf(1,'Performing probe selection using Max variance\n')
                     measure = var(expRepEntrezIDs,0,1);
                     % determine max var value
@@ -105,7 +103,7 @@ for subj = 1:6
                     % determine max PC loading
                     [MaxV, indMaxV] = max(measure(:,1));
                     
-                case 'lessNoise'
+                case 'LessNoise'
                     fprintf(1,'Performing probe selection using less noise criteria\n')
                     noiseRepEntrezIDs = noise(:,indRepEntrezIDs);
                     % find probe with most signal in it compared to noise
@@ -113,12 +111,14 @@ for subj = 1:6
                     % determine probe with max signal
                     [MaxV, indMaxV] = max(measure);
                     
-                case 'mean'
+                case 'Mean'
                     expressionSelected(:,k,subj) = mean(expRepEntrezIDs,2);
                     
             end
-            
-            if strcmp(probeSelection, 'variance') || strcmp(probeSelection, 'PC') || strcmp(probeSelection, 'lessNoise')
+        end
+        
+        if strcmp(probeSelection, Variance') || strcmp(probeSelection, 'PC') || strcmp(probeSelection, 'LessNoise')
+            if length(indRepEntrezIDs) >=2
                 indMsubj(k,subj) = indRepEntrezIDs(indMaxV);
                 
                 
@@ -129,7 +129,7 @@ for subj = 1:6
     end
 end
 
-if strcmp(probeSelection, 'variance') || strcmp(probeSelection, 'PC') || strcmp(probeSelection, 'lessNoise')
+if strcmp(probeSelection, 'Variance') || strcmp(probeSelection, 'PC') || strcmp(probeSelection, 'LessNoise')
     indProbe = zeros(length(Uniq),1);
     for j=1:length(Uniq)
         [hcount,index] = hist(indMsubj(j,:),unique(indMsubj(j,:)));
@@ -180,7 +180,14 @@ if strcmp(probeSelection, 'variance') || strcmp(probeSelection, 'PC') || strcmp(
         SampleInformation.StructureNames = DataTable.StructureName{subject,1};
         SampleInformation.MMCoordinates = DataTable.MMcoordinates{subject,1};
         SampleInformation.MRIvoxCoordinates = DataTable.MRIvoxCoordinates{subject,1};
-        
+        cd ..
+        cd ('processedData');
+        if ~UseDataWithCUSTprobes
+            save(sprintf('MicroarrayData%sS0%d.mat', probeSelection, subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
+        else
+            save(sprintf('MicroarrayDataWITHcust%sS0%d.mat', probeSelection, subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
+        end
+       
     end
     
 else
@@ -195,26 +202,24 @@ else
         SampleInformation.MMCoordinates = DataTable.MMcoordinates{subject,1};
         SampleInformation.MRIvoxCoordinates = DataTable.MRIvoxCoordinates{subject,1};
         
+        
+        ProbeInformation.EntrezID = unique(EntrezID, 'stable');
+        ProbeInformation.GeneID = unique(GeneID, 'stable');
+        ProbeInformation.GeneSymbol = unique(GeneSymbol, 'stable');
+        ProbeInformation.GeneName = unique(GeneName, 'stable');
+        ProbeInformation.ProbeName = unique(ProbeName, 'stable');
+        cd ..
+        cd ('processedData');
+        if ~UseDataWithCUSTprobes
+            save(sprintf('MicroarrayData%sS0%d.mat', probeSelection, subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
+        else
+            save(sprintf('MicroarrayDataWITHcust%sS0%d.mat', probeSelection, subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
+        end
+        
     end
-    ProbeInformation.EntrezID = unique(EntrezID, 'stable');
-    ProbeInformation.GeneID = unique(GeneID, 'stable');
-    ProbeInformation.GeneSymbol = unique(GeneSymbol, 'stable');
-    ProbeInformation.GeneName = unique(GeneName, 'stable');
-    ProbeInformation.ProbeName = unique(ProbeName, 'stable');
     
 end
 
-%% save files according to the selected option
-for subject = 1:6
-    cd ..
-    cd ('processedData'); 
-    if ~UseDataWithCUSTprobes
-        save(sprintf('MicroarrayData%sS0%d.mat', probeSelection, subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
-    else
-        save(sprintf('MicroarrayDataWITHcust%sS0%d.mat', probeSelection, subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
-    end
-    clearvars -except DataTable DataTableProbe UseMaxVarProbes UseHighestPCProbes UseDataWithCUSTprobes
-end
 
 
 
