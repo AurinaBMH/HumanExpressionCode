@@ -1,5 +1,6 @@
 %% Author: Aurina
 %% Date modified: 2016-03-22
+%% Date modified: 2017-07-14
 %% This script:
 %   1. Loads all microarray data from excell files for each subject
 %   2. Excludes custom probes;
@@ -8,15 +9,15 @@
 %   5. Saves data for separate subjects to DataTable
 %   6. Saves data for all subjects combined as variables 'MicorarrayData.mat' file
 %%
-clear all;
+%------------------------------------------------------------------------------
+% Choose options
+%------------------------------------------------------------------------------
+% RemoveCUSTProbes = true; will exclude CUST probes
+% ExcludeCBandBS = true; will exclude samples from brainstem and cerebellum
+RemoveCUSTProbes = true;
+ExcludeCBandBS = true;
 
-%choose options (if you'd like to exclude braintem and cerebellum data
-%points before choosing most relevant probes: ExcludeCBandBS = 1; if not ExcludeCBandBS = 0;
-RemoveCUSTProbes = 1;
-ExcludeCBandBS = 0;
-
-
-        cd ('/gpfs/M2Scratch/Monash076/aurina/Gen_Cog/code/Microarray/');
+        cd ('data/genes/rawData');
         %% load probe information (same for all subjects)
         fprintf(1,'Loading Probes.xlsx file\n')
         FileProbes = 'Probes.xlsx';                     
@@ -28,35 +29,38 @@ ExcludeCBandBS = 0;
         GeneID = ProbeTable.gene_id;
         GeneSymbol = ProbeTable.gene_symbol;
         GeneName = ProbeTable.gene_name;
-        %------------------------------------------------------------------------------
-        %Remove probes:
-        %------------------------------------------------------------------------------
-        if RemoveCUSTProbes ==1
+%------------------------------------------------------------------------------
+% Remove CUST probes:
+%------------------------------------------------------------------------------
+        if RemoveCUSTProbes
         % Remove all CUST probes (assign NaN values for all custom probes)
             fprintf(1,'Removing CUST probes\n')
-            for prob=1:size(ProbeName)
-                Probe = ProbeName{prob}; 
-                if strcmp(Probe(1),'C')
-                   ProbeName{prob} = NaN; 
-                   ProbeID(prob) = NaN;
-                end
-            end
+            cust = strfind(ProbeName, 'CUST'); 
+            remInd = find(~cellfun(@isempty,cust)); 
+            fprintf(1,'%d CUST probes removed\n', length(remInd))
+            ProbeName(remInd) = {NaN}; 
+            ProbeID(remInd) = NaN;
         end
+
         % assign NaN values for all probes with missing entrezIDs
         % this is the final list of probes to be used in max var calculations
         ProbeID(isnan(EntrezID)) = NaN;
+        fprintf(1,'%d probes with missing entrez IDs\n', sum(isnan(EntrezID))); 
         % creat a Data cell to store the output
         headerdata = {'Expression' , 'MMcoordinates', 'StructureName', 'MRIvoxCoordinates'};
         headerprobe = { 'ProbeID', 'EntrezID','ProbeName', 'GeneID', 'GeneSymbol', 'GeneName'};
         Data = cell(6,4);
         DataProbe = cell(1,6);
+%%
+%------------------------------------------------------------------------------
+%Go to each subject's directory and take the data
+%------------------------------------------------------------------------------
 
-        %% go to each subject's directory and take the data
         for subj=1:6
             fprintf(1,'Loading data for %u subject\n', subj)
             folder = sprintf('normalized_microarray_donor0%d', subj);
             cd (folder);
-                %% load information specific for each subject
+                %%load information specific for each subject
                 FileMicroarray = 'MicroarrayExpression.csv';
                 FileAnnot = 'SampleAnnot.xlsx';
                 Expression = csvread(FileMicroarray);
@@ -69,24 +73,27 @@ ExcludeCBandBS = 0;
                 StructureName(1) = [];                      % remove headline
                 MMcoordinates = xlsread(FileAnnot, 'K:M');
                 MRIvoxCoordinates = xlsread(FileAnnot, 'H:J');
-                                             
 
                 % keep only non custom probes with existing entrezIDs
                 Expression(isnan(ProbeID),:) = [];   
 
                 % To exclude expression data and coordinates for braintem (BS) and cerebellum (CB)
                 % exclude columns in expression and rows in coordinates if slabtype is CB or BS
-                if ExcludeCBandBS == 1
+                if ExcludeCBandBS
                     fprintf('Excluding brainstem and cerebellum data\n')
-                    for roi = 1:size(Expression,2)
-                        if strcmp(SlabType{roi}, 'BS') || strcmp(SlabType{roi}, 'CB')
-                            Expression(:,roi) = NaN;
-                            MMcoordinates(roi,:) = NaN;
-                            MRIvoxCoordinates(roi,:) = NaN;
-                            StructureName{roi} = NaN;
-                        end
-                    end
+                    
+                    BS = strfind(SlabType, 'BS'); BSind = find(~cellfun(@isempty,BS));
+                    CB = strfind(SlabType, 'CB'); CBind = find(~cellfun(@isempty,CB));
+                    BSandCBind = [BSind;CBind]; 
+                    
+                    fprintf(1,'%d cerebellum and brainstem samples to remove\n', length(BSandCBind))
+                    
+                    Expression(:,BSandCBind) = NaN;
+                    MMcoordinates(BSandCBind,:) = NaN;
+                    MRIvoxCoordinates(BSandCBind,:) = NaN;
+                    StructureName(BSandCBind) = {NaN};
                 end
+                    
                  % for nan columns 
                  % keep only existing expression values
                  Expression = Expression(:,all(~isnan(Expression))); 
@@ -101,25 +108,26 @@ ExcludeCBandBS = 0;
                  Data{subj,2} = MMcoordinates;
                  Data{subj,3} = StructureName;
                  Data{subj,4} = MRIvoxCoordinates;
-                 cd ('/gpfs/M2Scratch/Monash076/aurina/Gen_Cog/code/Microarray/');
-        % 
+                 cd .. 
+         
         end
-        %% keep only existing ProbeNames, EntrezIDs and ProbeIDs and other gene related information.
+%%
+%------------------------------------------------------------------------------
+% Keep only existing ProbeNames, EntrezIDs and ProbeIDs and other gene related information.
+%------------------------------------------------------------------------------ 
             fprintf(1,'Removing irrelevant probes\n')
+            fprintf(1,'Removing %d irrelevant probes\n', sum(isnan(ProbeID)))
             
             ProbeName(isnan(ProbeID)) = [];
-
-            EntrezID(isnan(ProbeID)) = [];
-  
+            EntrezID(isnan(ProbeID)) = []; 
             GeneID(isnan(ProbeID)) = [];
-
             GeneSymbol(isnan(ProbeID)) = [];
-  
             GeneName(isnan(ProbeID)) = [];
-            
             ProbeID(isnan(ProbeID)) = [];
 
-        %% assign ProbeIDs, EntrezIDs and ProbeNames to Data cell.   
+%------------------------------------------------------------------------------
+% Assign ProbeIDs, EntrezIDs and ProbeNames to Data cell.   
+%------------------------------------------------------------------------------ 
 
             DataProbe{1,1} = ProbeID;
             DataProbe{1,2} = EntrezID;
@@ -127,26 +135,31 @@ ExcludeCBandBS = 0;
             DataProbe{1,4} = GeneID;
             DataProbe{1,5} = GeneSymbol;
             DataProbe{1,6} = GeneName;
-  
-
-        %% make a table from all the data
+ 
+%------------------------------------------------------------------------------
+% Make a table from all the data
+%------------------------------------------------------------------------------ 
         DataTable = dataset({Data, headerdata{:}});
         DataTableProbe = dataset({DataProbe, headerprobe{:}});
 
-        %% combine expression and coordinate values for all subjects
+%------------------------------------------------------------------------------
+% Combine data for all subjects
+%------------------------------------------------------------------------------ 
         fprintf(1,'Combining data for all subjects\n')
         Expressionall = horzcat(DataTable{1,1}, DataTable{2,1}, DataTable{3,1}, DataTable{4,1}, DataTable{5,1}, DataTable{6,1});
         Coordinatesall = vertcat(DataTable{1,2}, DataTable{2,2}, DataTable{3,2}, DataTable{4,2}, DataTable{5,2}, DataTable{6,2});
         StructureNamesall = vertcat(DataTable{1,3}, DataTable{2,3}, DataTable{3,3}, DataTable{4,3}, DataTable{5,3}, DataTable{6,3});
         MRIvoxCoordinatesAll = vertcat(DataTable{1,4}, DataTable{2,4}, DataTable{3,4}, DataTable{4,4}, DataTable{5,4}, DataTable{6,4});
-
-        %% save relevant variables to a MicroarrayData.mat file
+        
+%------------------------------------------------------------------------------
+% Save relevant variables to a MicroarrayData.mat file
+%------------------------------------------------------------------------------ 
+        cd ..
+        cd ('processedData');
         if ~RemoveCUSTProbes
          fprintf(1,'Saving data with CUST probes to the file\n')
          save('MicroarrayDataWITHCUST.mat', 'DataTable','DataTableProbe', 'Expressionall', 'Coordinatesall', 'StructureNamesall', 'MRIvoxCoordinatesAll');
-         clear all; 
         else
          fprintf(1,'Saving data without CUST probes to the file\n')
          save('MicroarrayData.mat', 'DataTable','DataTableProbe', 'Expressionall', 'Coordinatesall', 'StructureNamesall', 'MRIvoxCoordinatesAll');
-         clear all;
         end
