@@ -46,16 +46,16 @@ GeneName = DataTableProbe.GeneName{1,1};
 % Choose probe with max probe selection criteria on average
 %------------------------------------------------------------------------------
 % sigmoid normalise data for MaxVariance calculation
-%ExpressionallNorm = BF_NormalizeMatrix(Expressionall');
-%ExpressionallNorm = ExpressionallNorm';
+% ExpressionallNorm = BF_NormalizeMatrix(Expressionall');
+% ExpressionallNorm = ExpressionallNorm';
 
 
 
 
 %% find repeating entrezIDs and calculate variances for them, then take a probe of max variance.
 %
-%         % ------------------------------------------------------------------------------
-%         % Find best representative in a set of duplicates using maxVar and remove all others:
+% % ------------------------------------------------------------------------------
+% % Find best representative in a set of duplicates using maxVar and remove all others:
 % % ------------------------------------------------------------------------------
 Uniq = unique(EntrezID(:,1));
 N = histc(EntrezID, Uniq);
