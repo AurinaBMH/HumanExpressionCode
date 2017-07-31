@@ -1,7 +1,19 @@
-%
-clear all; close all;
+%% Author: Aurina
+%Last modiffied: 2017-07-31
 
- 
+%------------------------------------------------------------------------------
+% Choose options
+%------------------------------------------------------------------------------
+% choose if you want to use data with CUST probes
+useCUSTprobes = false;
+% choose what type of probe selection to use, hemisphere, subject list, parcellations, threshols.
+probeSelection = 'Variance';% (Variance', LessNoise', 'Mean')
+parcellations = {'aparcaseg'};%, 'cust100', 'cust250'};
+distanceThreshold = 2; % first run 30, then with the final threshold 2
+subjects = 1:6;
+percent = 5;
+
+
 Parcellation = {'cust100'};
 Threshold = 2; 
 NormMethod = {'zscore'};
@@ -11,11 +23,9 @@ LEFTcortex = 1;
 % choose 3 if you want to normalise the whole brain. 
 % choose 4 if you want to normalise left cortex + right cortex. 
 
-Thr = 0;
-
 %Fit = {'exp'};
 %Choose what proportion of top DS genes to keep
-percent = 5;
+
 
 
 % choose 1 if want to normalise samples assigned to left cortex separately; choose 0 if want to normalise all samples together. 

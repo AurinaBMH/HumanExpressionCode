@@ -10,6 +10,7 @@
 % Choose what to separate
 %------------------------------------------------------------------------------
 % separate according to sides
+probeSelection = 'Variance';% (Variance', LessNoise', 'Mean')
 sides = {'right', 'left'};
 % separate according to brain part: cortex/subcortex
 brainParts = {'Cortex', 'Subcortex'};
@@ -21,7 +22,7 @@ cd ('data/genes/processedData')
 %------------------------------------------------------------------------------
 for subject = subjects
     % load data file
-    FileName = sprintf('MicroarrayDataPCS0%d.mat', subject);
+    FileName = sprintf('MicroarrayData%sS0%d.mat',probeSelection, subject);
     load(FileName);
     
     % select words that belong to cortex
@@ -97,7 +98,7 @@ for subject = subjects
 %------------------------------------------------------------------------------
 % Save data for each subject separately
 %------------------------------------------------------------------------------
-    SaveFileName = sprintf('MicroarrayDataPCsepS0%d.mat', subject);
+    SaveFileName = sprintf('MicroarrayData%ssepS0%d.mat',probeSelection, subject);
     save (SaveFileName, 'expression', 'probeInformation', 'sampleInformation');
 end
 cd ../../..

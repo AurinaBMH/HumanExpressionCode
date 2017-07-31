@@ -144,6 +144,7 @@ if strcmp(probeSelection, 'Variance') || strcmp(probeSelection, 'PC') || strcmp(
             EntrezID(q) = NaN;
         end
     end
+    
     EntrezID(isnan(EntrezID)) = [];
     ProbeInformation.EntrezID = EntrezID;
     
@@ -185,10 +186,11 @@ if strcmp(probeSelection, 'Variance') || strcmp(probeSelection, 'PC') || strcmp(
         else
             save(sprintf('MicroarrayDataWITHcust%sS0%d.mat', probeSelection, subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
         end
-       
+        
     end
     
 else
+    
     for subject=1:6
         
         % exclude NaN probes keeping 1 probe for 1 entrezID.

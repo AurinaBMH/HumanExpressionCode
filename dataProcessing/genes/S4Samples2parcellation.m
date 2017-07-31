@@ -18,7 +18,7 @@
 % choose if you want to use data with CUST probes
 useCUSTprobes = false;
 % choose what type of probe selection to use, hemisphere, subject list, parcellations, threshols.
-probeSelection = 'PC';% (Variance', LessNoise', 'Mean')
+probeSelection = 'Variance';% (Variance', LessNoise', 'Mean')
 parcellations = {'aparcaseg'};%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 subjects = 1:6;
@@ -35,7 +35,6 @@ DataCoordinates = cell(length(subjects),1);
 sides = {'left', 'right'};
 brainParts = {'Cortex', 'Subcortex'};
       
-
 %------------------------------------------------------------------------------
 % Do assignment for all subjects
 %------------------------------------------------------------------------------
@@ -46,7 +45,6 @@ for subject = subjects
     for parcellation = parcellations
         
         fprintf('Subject %u parcellation %s assignment distance threshold %u\n; ', subject, parcellation{1}, distanceThreshold )
-        
         
         %------------------------------------------------------------------------------
         % Load parcellations
