@@ -17,7 +17,7 @@
 % without cust probes.
 
 UseDataWithCUSTprobes = false;
-probeSelection = 'Mean';% (Variance', LessNoise', 'Mean')
+probeSelection = 'Variance';% (Variance', LessNoise', 'Mean', 'PC')
 
 %------------------------------------------------------------------------------
 % Load the data
@@ -61,6 +61,7 @@ Uniq = unique(EntrezID(:,1));
 N = histc(EntrezID, Uniq);
 ProbeList = zeros(length(Uniq),2);
 indMsubj = zeros(length(Uniq),6);
+expressionSelected = cell(6,1);
 
 fileNoise = 'PACall.csv';
 
@@ -73,9 +74,6 @@ for subj = 1:6
         [~,probeList] = intersect(noise(:,1),ProbeID, 'stable');
         noise = (noise(probeList,2:end))';
         cd ..
-    elseif strcmp(probeSelection, 'Mean')
-        expressionSelected = zeros(size(expression,1), length(Uniq), 6);
-        
     end
     % load noise level matrix for each subject here
     
@@ -84,7 +82,7 @@ for subj = 1:6
         % find indexes for repeating entrexIDs
         indRepEntrezIDs = find(EntrezID==(Uniq(k)));
         if length(indRepEntrezIDs) >=2
-            fprintf(1,'%d duplicates found\n', length(length(indRepEntrezIDs)))
+            fprintf(1,'%d duplicates found\n', length(length(indRepEntrezIDs)));
             
             % take expression values for a selected entrezID
             expRepEntrezIDs = expression(:,indRepEntrezIDs);
@@ -92,19 +90,19 @@ for subj = 1:6
             switch probeSelection
                 
                 case 'Variance'
-                    fprintf(1,'Performing probe selection using Max variance\n')
+                    fprintf(1,'Performing probe selection using Max variance\n');
                     measure = var(expRepEntrezIDs,0,1);
                     % determine max var value
                     [MaxV, indMaxV] = max(measure);
                     
                 case 'PC'
-                    fprintf(1,'Performing probe selection using max PC\n')
+                    fprintf(1,'Performing probe selection using max PC\n');
                     measure = pca(expRepEntrezIDs,'Centered',false);
                     % determine max PC loading
                     [MaxV, indMaxV] = max(measure(:,1));
                     
                 case 'LessNoise'
-                    fprintf(1,'Performing probe selection using less noise criteria\n')
+                    fprintf(1,'Performing probe selection using less noise criteria\n');
                     noiseRepEntrezIDs = noise(:,indRepEntrezIDs);
                     % find probe with most signal in it compared to noise
                     measure = sum(noiseRepEntrezIDs,1);
@@ -112,12 +110,12 @@ for subj = 1:6
                     [MaxV, indMaxV] = max(measure);
                     
                 case 'Mean'
-                    expressionSelected(:,k,subj) = mean(expRepEntrezIDs,2);
+                    expressionSelected{subj}(:,k) = mean(expRepEntrezIDs,2);
                     
             end
         end
         
-        if strcmp(probeSelection, Variance') || strcmp(probeSelection, 'PC') || strcmp(probeSelection, 'LessNoise')
+        if strcmp(probeSelection, 'Variance') || strcmp(probeSelection, 'PC') || strcmp(probeSelection, 'LessNoise')
             if length(indRepEntrezIDs) >=2
                 indMsubj(k,subj) = indRepEntrezIDs(indMaxV);
                 
@@ -195,7 +193,7 @@ else
         
         % exclude NaN probes keeping 1 probe for 1 entrezID.
         fprintf(1,'Combining and saving the data for subject %u\n', subject)
-        Expression = squeeze(expressionSelected(:,:,subject));
+        Expression = expressionSelected{subject};
         
         % combine sample information variables to a structure.
         SampleInformation.StructureNames = DataTable.StructureName{subject,1};
