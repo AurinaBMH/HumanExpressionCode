@@ -1,6 +1,7 @@
 %% Author: Aurina
 %Last modiffied: 2016-04-14
 %Last modiffied: 2017-07-20
+%Last modiffied: 2017-07-31
 
 % It assigns samples to parcellation separately for cortex/subcortex,
 % right/left sides using only relevant parcellation voxels to make an assignment.
@@ -12,119 +13,80 @@
 
 
 %------------------------------------------------------------------------------
-% Clear grounds
+% Choose options
 %------------------------------------------------------------------------------
-
-
-%% choose if you want to use data with CUST probes
+% choose if you want to use data with CUST probes
 useCUSTprobes = false;
-
-%% choose what type of probe selection to use, hemisphere, subject list, parcellations, threshols.
+% choose what type of probe selection to use, hemisphere, subject list, parcellations, threshols.
 probeSelection = 'PC';% (Variance', LessNoise', 'Mean')
-
-% UsePCAprobes=1;
-% UseMaxVarprobes=0;
-
-%LeftHemisphere = 0; % Hemisphere = 1 - left; Hemisphere = 0 - right.
-%OnlyCortex = 1; % OnlyCortex = 1 - only cortex; OnlyCortex = 0 - only subcortex;
-
-%if LeftHemisphere == 1
-% subjects = [1 2 3 4 5 6]; % for subjects 1,2 run with both hemispheres; for 3:6 run only with left.
-%elseif LeftHemisphere == 0
-% subjects = [1 2];
-%end
 parcellations = {'aparcaseg'};%, 'cust100', 'cust250'};
-distanceThreshold = 30;
+distanceThreshold = 2; % first run 30, then with the final threshold 2
 subjects = 1:6;
 
-%% select variables according to side/brain part selections
+%------------------------------------------------------------------------------
+% Create variables to save data in
+%------------------------------------------------------------------------------
+DataExpression = cell(length(subjects),1); 
+DataCoordinates = cell(length(subjects),1); 
+
+%------------------------------------------------------------------------------
+% Select variables according to side/brain part selections
+%------------------------------------------------------------------------------
 sides = {'left', 'right'};
 brainParts = {'Cortex', 'Subcortex'};
-% if LeftHemisphere == 1
-%     Side = Sides{1};
-% elseif LeftHemisphere == 0
-%     Side = Sides{2};
-% else
-%     error('Incorrect index for choosing hemisphere: must be 1 or 0');
-% end
+      
 
-
-%
-% if OnlyCortex == 1
-%     BrainPart = brainParts {1};
-% elseif OnlyCortex == 0
-%     BrainPart = brainParts {2};
-% else
-%     error('Incorrect index for choosing cortexVS subcortex: must be 1 or 0');
-% end
-
-
-%% define subject numbers, parcellations and assignment distance thresholds
-
-% Subj = cell(6,1);
-% Subj{1} = '/gpfs/M2Scratch/Monash076/aurina/Gen_Cog/code/Microarray/S01_H0351_2001';
-% Subj{2} = '/gpfs/M2Scratch/Monash076/aurina/Gen_Cog/code/Microarray/S02_H0351_2002';
-% Subj{3} = '/gpfs/M2Scratch/Monash076/aurina/Gen_Cog/code/Microarray/S03_H0351_1009';
-% Subj{4} = '/gpfs/M2Scratch/Monash076/aurina/Gen_Cog/code/Microarray/S04_H0351_1012';
-% Subj{5} = '/gpfs/M2Scratch/Monash076/aurina/Gen_Cog/code/Microarray/S05_H0351_1015';
-% Subj{6} = '/gpfs/M2Scratch/Monash076/aurina/Gen_Cog/code/Microarray/S06_H0351_1016';
-
-
+%------------------------------------------------------------------------------
+% Do assignment for all subjects
+%------------------------------------------------------------------------------
 for subject = subjects
     cd ('data/genes/parcellations')
     subjectDir = sprintf('S0%d_H0351', subject);
     cd (subjectDir)
     for parcellation = parcellations
         
-        %for DistanceThreshold = distanceThreshold
-        
         fprintf('Subject %u parcellation %s assignment distance threshold %u\n; ', subject, parcellation{1}, distanceThreshold )
         
         
         %------------------------------------------------------------------------------
         % Load parcellations
-        %------------------------------------------------------------------------------%%
-        %S = Subj{subject};
-        % load the parcellation
+        %------------------------------------------------------------------------------
         if strcmp(parcellation, 'aparcaseg')
             Folder = 'default_NativeAnat';
-            %FolderName = strcat(S, Folder);
             cd (Folder);
-            [~, data_parcel]=read2('defaultparc_NativeAnat.nii');
+            [~, data_parcel]=read('defaultparc_NativeAnat.nii');
             NumNodes = 82;
-            LeftCortex = 34;
-            LeftSubcortex = 41;
-            RightCortex = 75;
-            RightSubcortex = NumNodes;
+            LeftCortex = 1:34;
+            LeftSubcortex = 35:41;
+            RightCortex = 42:75;
+            RightSubcortex = 76:82;
         elseif strcmp(parcellation, 'cust100')
             Folder = 'custom100_NativeAnat';
-            %FolderName = strcat(S, Folder);
-            cd (FolderName);
-            [~, data_parcel]=read2('customparc_NativeAnat.nii');
+            cd (Folder);
+            [~, data_parcel]=read('customparc_NativeAnat.nii');
             NumNodes = 220;
-            LeftCortex = 100;
-            LeftSubcortex = 110;
-            RightCortex = 210;
-            RightSubcortex = NumNodes;
+            LeftCortex = 1:100;
+            LeftSubcortex = 101:110;
+            RightCortex = 111:210;
+            RightSubcortex = 211:220;
         elseif strcmp(parcellation, 'cust250')
             Folder = 'custom250_NativeAnat';
-            %FolderName = strcat(S, Folder);
-            cd (FolderName);
-            [~, data_parcel]=read2('customparc_NativeAnat.nii');
+            cd (Folder);
+            [~, data_parcel]=read('customparc_NativeAnat.nii');
             NumNodes = 530;
-            LeftCortex = 250;
-            LeftSubcortex = 265;
-            RightCortex = 515;
-            RightSubcortex = NumNodes;
+            LeftCortex = 1:250;
+            LeftSubcortex = 251:265;
+            RightCortex = 266:515;
+            RightSubcortex = 516:530;
             
         end
         cd ../../../
-        %%
+        
         %------------------------------------------------------------------------------
         % Load microarray data
         %------------------------------------------------------------------------------
         cd ('processedData');
-        
+        load(sprintf('ProbeInformation%s.mat', probeSelection));
         if  useCUSTprobes
             fprintf('Loading MicroarrayDataWITHcust%ssepS0%d.mat\n', probeSelection, subject)
             load(sprintf('MicroarrayDataWITHcust%ssepS0%d.mat', probeSelection, subject));
@@ -138,12 +100,11 @@ for subject = subjects
                 
                 coords2assign = sampleInformation.(side{1}).(brainPart{1}).MRIvoxCoordinates;
                 
-                if distanceThreshold <30
-
-                    load('CoordsAssignedAll.mat');
-                    cd ../../../
+                if distanceThreshold < 30
+                    
+                    load(sprintf('CoordsAssignedAllS0%d.mat', subject));
+                    
                 end
-                %%
                 %------------------------------------------------------------------------------
                 % Find coordinates for nonzero elements in parcellation according to side and brain part (will be used to assign microarray samples to)
                 %------------------------------------------------------------------------------
@@ -151,44 +112,43 @@ for subject = subjects
                 if strcmp(side, 'left') && strcmp(brainPart, 'Cortex')
                     Text = sprintf('Subject %d LEFT cortex\n', subject);
                     fprintf(1,Text)
-                    [Coordx,Coordy,Coordz] = ind2sub(size(data_parcel),find(data_parcel > 0 & data_parcel <= LeftCortex));
+                    [Coordx,Coordy,Coordz] = ind2sub(size(data_parcel),find(ismember(data_parcel, LeftCortex)));
                 elseif strcmp(side, 'left') && strcmp(brainPart, 'Subcortex')
                     Text = sprintf('Subject %d LEFT subcortex\n', subject);
                     fprintf(1,Text)
-                    [Coordx,Coordy,Coordz] = ind2sub(size(data_parcel),find(data_parcel > LeftCortex & data_parcel <= LeftSubcortex));
+                    [Coordx,Coordy,Coordz] = ind2sub(size(data_parcel),find(ismember(data_parcel, LeftSubcortex)));
                 elseif strcmp(side, 'right') && strcmp(brainPart, 'Cortex')
                     Text = sprintf('Subject %d RIGHT cortex\n', subject);
                     fprintf(1,Text)
-                    [Coordx,Coordy,Coordz] = ind2sub(size(data_parcel),find(data_parcel > LeftSubcortex & data_parcel <= RightCortex));
+                    [Coordx,Coordy,Coordz] = ind2sub(size(data_parcel),find(ismember(data_parcel, RightCortex)));
                 elseif strcmp(side, 'right') && strcmp(brainPart, 'Subcortex')
                     Text = sprintf('Subject %d RIGHT subcortex\n', subject);
                     fprintf(1,Text)
-                    [Coordx,Coordy,Coordz] = ind2sub(size(data_parcel),find(data_parcel > RightCortex & data_parcel <= RightSubcortex));
+                    [Coordx,Coordy,Coordz] = ind2sub(size(data_parcel),find(ismember(data_parcel, RightSubcortex)));
                 end
                 
                 coordsNonzeroParcel = cat(2,Coordx,Coordy,Coordz);
-                %%
+                
                 %------------------------------------------------------------------------------
                 % For each microarray coordinate find a closest coordinate in parcellation
                 %------------------------------------------------------------------------------
                 
                 coordsAssigned =  zeros(size(coords2assign));
-                % finds closest point
-                % T = delaunayn(unique(coordsNonzeroParcel));
+                % find closest point
                 k = dsearchn(coordsNonzeroParcel,coords2assign);
                 
-                for i = 1:length(k)
+                for i = 1:size(k,1)
                     coordsAssigned(i,:) = coordsNonzeroParcel(k(i),:);
                 end
                 
                 %------------------------------------------------------------------------------
                 % Salculate the distance between original and reassigned coordinate
                 %------------------------------------------------------------------------------
-                assignDistance = zeros(length(coordsAssigned),1);
-                coordsNONassigned = zeros(length(coordsAssigned),3);
+                assignDistance = zeros(size(coordsAssigned,1),1);
+                coordsNONassigned = zeros(size(coordsAssigned,1),3);
                 coordsToAssignAll = coords2assign;
                 
-                for j=1:length(coordsAssigned)
+                for j=1:size(coordsAssigned,1)
                     
                     assignDistance(j,1) = pdist2(coordsAssigned(j,:), coords2assign(j,:));
                     
@@ -211,11 +171,8 @@ for subject = subjects
                 
                 if distanceThreshold == 30
                     
-                    %cd ('processedData')
                     coordsAssignedALL.(side{1}).(brainPart{1}) = coordsAssigned;
-                    save(sprintf('CoordsAssignedAllS0%d.mat', subject), 'coordsAssignedALL');
-                
-                
+                    
                 elseif distanceThreshold <30
                     
                     Int=nonzeros(data_parcel);
@@ -230,16 +187,18 @@ for subject = subjects
                         
                     end
                     
-                    %% sort nonzero coordinates according to intensity value
-                    full_informationALL = [coordsAssigned intensity_all];
+                    %------------------------------------------------------------------------------
+                    % sort nonzero coordinates according to intensity value
+                    %------------------------------------------------------------------------------
+                    full_informationALL = [intensity_all coordsAssigned];
                     full_information = full_informationALL;
                     full_informationALL(any(isnan(full_informationALL),2),:) = NaN;
                     full_information(any(isnan(full_informationALL),2),:) = [];
                     
-                    full_information_sorted = sortrows(full_information,4);
+                    full_information_sorted = sortrows(full_information,1);
                     
-                    sampleIntensity = full_informationALL(:,4);
-                    IntANDExpression = [sampleIntensity Expression];
+                    sampleIntensity = full_informationALL(:,1);
+                    IntANDExpression = [sampleIntensity expression.(side{1}).(brainPart{1})];
                     % exclude nonassigned points
                     IntANDExpression(any(isnan(IntANDExpression),2),:) = NaN;
                     IntANDExpression(any(isnan(IntANDExpression),2),:) = [];
@@ -258,18 +217,7 @@ for subject = subjects
                     
                     data.(side{1}).(brainPart{1}).expression = IntANDExpressionSorted;
                     data.(side{1}).(brainPart{1}).information = full_information_sorted;
-                    %------------------------------------------------------------------------------
-                    % Save output
-                    %------------------------------------------------------------------------------
                     
-                    %save(sprintf('%d_DistThresh%d_S0%d_MRIvoxCoordsAssigned.mat', NumNodes, distanceThreshold, subject), ...
-                      %  'coordinates', 'information');
-                    
-                    %save (sprintf('%d_DistThresh%d_S0%d_ExpressionProbe%s.mat', NumNodes, distanceThreshold, subject, probeSelection ), 'data' );
-                    %savefig (L, sprintf('%d_DistThresh%d_S0%d_ExpressionProbeMaxVar.fig', NumNodes, Threshold, subject));
-                    
-                    
-                    %savefig (L, sprintf('%d_DistThresh%d_S0%d_ExpressionProbePCA_%s%s.fig', NumNodes, Threshold, subject, Side, BrainPart));
                 end
                 
                 %% plot
@@ -292,6 +240,32 @@ for subject = subjects
         end
         
     end
-    cd ../../..
+    %------------------------------------------------------------------------------
+    % Save output
+    %------------------------------------------------------------------------------
+    
+    nSamples = size(data.left.Cortex.information,1)+size(data.left.Subcortex.information,1)+size(data.right.Cortex.information,1)+size(data.right.Subcortex.information,1); 
+    SUBJECT = zeros(nSamples,1);
+    SUBJECT(:,1) = subject;
+    
+    Expression = cat(1,data.left.Cortex.expression,data.left.Subcortex.expression, data.right.Cortex.expression, data.right.Subcortex.expression); 
+    Coordinates = cat(1,data.left.Cortex.information,data.left.Subcortex.information, data.right.Cortex.information, data.right.Subcortex.information);  
+    DataExpression{subject} = [SUBJECT, Expression];
+    DataCoordinates{subject} = [SUBJECT, Coordinates];
+    
+    
+    if distanceThreshold < 30
+        save(sprintf('MicroarrayDatad%s%dDistThresh%d_CoordsAssigned_S0%d.mat', probeSelection, NumNodes, distanceThreshold, subject), ...
+            'data');
+        cd ../../..
+    elseif distanceThreshold == 30
+        save(sprintf('CoordsAssignedAllS0%d.mat', subject), 'coordsAssignedALL');
+        cd ../../..
+    end
+
+    
 end
+%% save data for all subjects
+cd ('data/genes/processedData')
+save(sprintf('MicroarrayDatad%s%dDistThresh%d_CoordsAssigned.mat', probeSelection, NumNodes, distanceThreshold), 'DataExpression', 'DataCoordinates', 'probeInformation');
 
