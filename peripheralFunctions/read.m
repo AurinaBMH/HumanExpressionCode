@@ -1,4 +1,4 @@
-function [hdr,data]=read2(filename)
+function [hdr,data]=read(filename)
 
 machineformat='ieee-le'; 
 
@@ -20,7 +20,8 @@ elseif exist(strcat(fileprefix,'.nii'),'file')
 else
     error('File missing.\n'); 
 end
-     
+
+    
 fid=fopen(hdr_filename,'r',machineformat); 
 hdr=read_hdr(fid); 
 fclose(fid);
@@ -51,7 +52,7 @@ precision=get_precision(hdr);
 % data=squeeze(reshape(raw_data,[hdr.dim.dim(2:5)]));
 % fclose(fid);
 
-if type==1
+if type==1;
     of=double(hdr.dim.vox_offset);
 else
     of=0; 
@@ -119,21 +120,21 @@ return;
 function precision=get_precision(hdr)
 
 switch hdr.dim.datatype
-    case   1
+    case   1,
         precision = 'ubit1';
-    case   2
+    case   2,
         precision = 'uint8';
-    case   4
+    case   4,
         precision = 'int16';
-    case   8
+    case   8,
         precision = 'int32';
-    case  16
+    case  16,
         precision = 'single';
-    case  32
+    case  32,
         precision = 'single';
-    case  64
+    case  64,
         precision = 'double';
-    case 128
+    case 128,
         precision = 'uint8';
     case 256 
         precision = 'int8';
@@ -147,7 +148,7 @@ switch hdr.dim.datatype
         precision = 'int64';
     case 1280
         precision = 'uint64';
-    case 1792
+    case 1792,
         precision = 'float64';
     otherwise
         error('Unknown data precision.\n'); 
