@@ -1,309 +1,356 @@
 %% Author: Aurina
+
 %Last modiffied: 2017-07-31
+%Last modiffied: 2017-08-01
 
 %------------------------------------------------------------------------------
 % Choose options
 %------------------------------------------------------------------------------
-% choose if you want to use data with CUST probes
-useCUSTprobes = false;
-% choose what type of probe selection to use, hemisphere, subject list, parcellations, threshols.
+useCUSTprobes = false; % choose if you want to use data with CUST probes
 probeSelection = 'Variance';% (Variance', LessNoise', 'Mean')
-parcellations = {'aparcaseg'};%, 'cust100', 'cust250'};
+parcellation = 'aparcaseg';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
-subjects = 1:6;
-percent = 5;
+percentDS = 5;
+coexpressionFor = 'all'; 
+Fit = {'exp'}; 
+normMethod = 'scaledRobustSigmoid';
+normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex)
+% choose Lcortex if want to normalise samples assigned to left cortex separately; 
+% choose LcortexSubcortex if want to normalise LEFT cortex + left subcortex together
+% choose wholeBrain if you want to normalise the whole brain. 
+% choose LRcortex if you want to normalise left cortex + right cortex. 
 
+%------------------------------------------------------------------------------
+% Define number of subjects and parcellation details based on choises
+%------------------------------------------------------------------------------
 
-Parcellation = {'cust100'};
-Threshold = 2; 
-NormMethod = {'zscore'};
-LEFTcortex = 1; 
-% choose 1 if want to normalise samples assigned to left cortex separately; 
-% choose 2 if want to normalise LEFT cortex + left subcortex together
-% choose 3 if you want to normalise the whole brain. 
-% choose 4 if you want to normalise left cortex + right cortex. 
-
-%Fit = {'exp'};
-%Choose what proportion of top DS genes to keep
-
-
-
-% choose 1 if want to normalise samples assigned to left cortex separately; choose 0 if want to normalise all samples together. 
-if LEFTcortex == 1 || LEFTcortex == 2
-    NumSubjects = 6;
-elseif LEFTcortex == 3 || LEFTcortex == 4
-    NumSubjects = 2;
+switch normaliseWhat
+    case 'Lcortex'
+        subjects = 1:6;
+    case 'LcortexSubcortex'
+        subjects = 1:6;
+    case 'wholeBrain'
+        subjects = 1:2;
+    case 'LRcortex'
+        subjects = 1:2;
 end
 
-if strcmp(Parcellation, 'aparcaseg')
+if strcmp(parcellation, 'aparcaseg')
      
                 NumNodes = 82;
                 LeftCortex = 34;
                 LeftSubcortex = 41; 
                 RightCortex = 75;
                 RightSubcortex = NumNodes;
-    elseif strcmp(Parcellation, 'cust100')
+                
+    elseif strcmp(parcellation, 'cust100')
                 NumNodes = 220;
                 LeftCortex = 100;
                 LeftSubcortex = 110; 
                 RightCortex = 210;
                 RightSubcortex = NumNodes;
-    elseif strcmp(Parcellation, 'cust250')
+                
+    elseif strcmp(parcellation, 'cust250')
                 NumNodes = 530;
                 LeftCortex = 250;
                 LeftSubcortex = 265; 
                 RightCortex = 515;
                 RightSubcortex = NumNodes;
+                
 end
-cd ('/Users/Aurina/GoogleDrive/Genetics_connectome/Gen_Cog/Data/Microarray/S01-S06_combined/');
-load(sprintf('%d_DistThresh%d_%s_combined_ExpressionProbePCA_GeneThr%d.mat', NumNodes, Threshold, Parcellation{1}, round(Thr)));
+
+cd ('data/genes/processedData');
+load(sprintf('MicroarrayDatad%s%dDistThresh%d_CoordsAssigned.mat', probeSelection, NumNodes, distanceThreshold)); 
 
 
- ExpressionSubjROI = cell(6,1);
- CoordinatesSubjROI = cell(6,1);
- CoordSample = cell(6,1);
- ExpSampNorm = cell(6,1); 
+ expressionSubjROI = cell(6,1);
+ coordinatesSubjROI = cell(6,1);
+ coordSample = cell(6,1);
+ expSampNorm = cell(6,1); 
  
-for i=1:NumSubjects
-  % normalise data for each subject separately using samples  
-    ExpSubj1 = DataExpression{i,1};
-    Coord1 = DataCoordinates{i,1};
-    
-    if LEFTcortex == 1
-        ExpSubj = ExpSubj1((ExpSubj1(:,2)<=LeftCortex),:);
-        Coord = Coord1((Coord1(:,5)<=LeftCortex),2:4);
-    elseif LEFTcortex == 2
-        ExpSubj = ExpSubj1((ExpSubj1(:,2)<=LeftSubcortex),:);
-        Coord = Coord1((Coord1(:,5)<=LeftSubcortex),2:4);
-    elseif LEFTcortex == 3
-        ExpSubj = ExpSubj1;
-        Coord = Coord1(:,2:4);
-    elseif LEFTcortex == 4
-        ExpSubj3 = ExpSubj1((ExpSubj1(:,2)>=LeftSubcortex & ExpSubj1(:,2)<=RightCortex),:);
-        Coord3 = Coord1((Coord1(:,5)>=LeftSubcortex & Coord1(:,5)<=RightCortex),2:4);
-        
-        ExpSubj2 = ExpSubj1((ExpSubj1(:,2)<=LeftCortex),:);
-        Coord2 = Coord1((Coord1(:,5)<=LeftCortex),2:4);
-        
-        ExpSubj = cat(1, ExpSubj2, ExpSubj3);
-        Coord = cat(1, Coord2, Coord3); 
-    end
-    
-    data = ExpSubj(:,3:size(ExpSubj,2));
-    CoordSample{i} = Coord;
-    % normalise sample x gene data for each subject separately   
-    %% commented - not normalise
-      if strcmp(NormMethod, 'hampel')
-            ExpressionSampleNorm = Norm_hampel(data);
-      else
-            ExpressionSampleNorm = BF_NormalizeMatrix(data, NormMethod{1});
-      end
-
-    ROI = ExpSubj(:,2); 
-
-    ExpSampNorm{i} = [ROI, ExpressionSampleNorm]; 
-    ROIs = unique(ExpSubj(:,2));
-  
-    
-%% do differential stability calculation:
-        %1. average samples to ROIs for each subject
+%----------------------------------------------------------------------------------
+% Normalise data for each subject separately 
+% Do differential stability calculation:
+        %1. average expression values for each ROI for differential stability calculation
         %2. get DS values for each gene
         %3. take top 5% of DS genes
-        
-%1. average samples to ROIs for each subject
+%----------------------------------------------------------------------------------
 
-    ExpressionROI = zeros(length(ROIs),size(data,2));
-    CoordinatesROI = zeros(length(ROIs),3);
+for sub=subjects
+  % normalise data for each subject separately using samples  
+    expSingleSubj = DataExpression{sub,1};
+    coordSingle = DataCoordinates{sub,1};
+    
+    switch normaliseWhat
+        
+        case 'Lcortex'
+            
+        expSubj = expSingleSubj((expSingleSubj(:,2)<=LeftCortex),:);
+        coord = coordSingle((coordSingle(:,2)<=LeftCortex),3:5);
+        
+        case 'LcortexSubcortex'
+            
+        expSubj = expSingleSubj((expSingleSubj(:,2)<=LeftSubcortex),:);
+        coord = coordSingle((coordSingle(:,2)<=LeftSubcortex),3:5);
+        
+        case 'wholeBrain'
+            
+        expSubj = expSingleSubj;
+        coord = coordSingle(:,3:5);
+        
+        case 'LRcortex'
+            
+        expSubjRight = expSingleSubj((expSingleSubj(:,2)>=LeftSubcortex & expSingleSubj(:,2)<=RightCortex),:);
+        coordRight = coordSingle((coordSingle(:,2)>=LeftSubcortex & coordSingle(:,2)<=RightCortex),3:5);
+        
+        expSubjLeft = expSingleSubj((expSingleSubj(:,2)<=LeftCortex),:);
+        coordLeft = coordSingle((coordSingle(:,2)<=LeftCortex),3:5);
+        
+        expSubj = cat(1, expSubjLeft, expSubjRight);
+        coord = cat(1, coordLeft, coordRight); 
+        
+    end
+    
+    data = expSubj(:,3:size(expSubj,2));
+    coordSample{sub} = coord;
+    ROI = expSubj(:,2);
+    % normalise sample x gene data for each subject separately   
+    %% commented - not normalise
+    switch normMethod
+        case 'hampel'
+            dataNorm = Norm_hampel(data);
+            fprintf('Normalising gene expression data\n')
+        otherwise
+            dataNorm = BF_NormalizeMatrix(data, normMethod);
+            fprintf('Normalising gene expression data\n')
+    end
+    
+    expSampNorm{sub} = [ROI, dataNorm]; 
+    ROIs = unique(expSubj(:,2));
+
+% average expression values for each ROI for differential stability calculation
+
+    expressionROI = zeros(length(ROIs),size(data,2));
+    coordinatesROI = zeros(length(ROIs),3);
     
           for j=1:length(ROIs)
-              IndForROI = find(ExpSubj(:,2)==(ROIs(j)));
-              NumberOfProbes = length(IndForROI);
-                   fprintf(1,'%u samples for %u ROI found \n', NumberOfProbes, ROIs(j))      
+              indROI = find(expSubj(:,2)==(ROIs(j)));
+              noProbes = length(indROI);
+                   fprintf(1,'%u samples for %u ROI found \n', noProbes, ROIs(j))      
              % take expression values for a selected entrezID
-             %% changed into averaging non normalised data ("ExpressionSampleNorm" changed to "data")
-             ExpressionRepIntensity = data(IndForROI,:);
-             CoordinatesRepIntensity = Coord(IndForROI,:); 
+             expressionRepInt = data(indROI,:);
+             coordinatesRepInt = coord(indROI,:); 
 
              % calculate the mean for expression data for a selected entrezID
-             ExpressionROI(j,:)= mean(ExpressionRepIntensity,1);
-             CoordinatesROI(j,:)= mean(CoordinatesRepIntensity,1);
+             expressionROI(j,:)= mean(expressionRepInt,1);
+             coordinatesROI(j,:)= mean(coordinatesRepInt,1);
              
           end
 
        S = zeros(length(ROIs),1);
-       S(:) = i; 
-       ExpressionSubjROI{i} = [ROIs, S, ExpressionROI];
-       CoordinatesSubjROI{i} = [ROIs, S, CoordinatesROI];
+       S(:) = sub; 
+       expressionSubjROI{sub} = [S, ROIs, expressionROI];
+       coordinatesSubjROI{sub} = [S, ROIs, coordinatesROI];
 end
-% combine noramlised data for all subjects. 
+%----------------------------------------------------------------------------------
+% Combine noramlised data for all subjects.
+%----------------------------------------------------------------------------------
 
-ExpSampNormalisedAll = vertcat(ExpSampNorm{1}, ExpSampNorm{2},ExpSampNorm{3},ExpSampNorm{4},ExpSampNorm{5},ExpSampNorm{6});
-CombinedCoord = cat(1,CoordSample{1}, CoordSample{2}, CoordSample{3},...
-                      CoordSample{4}, CoordSample{5}, CoordSample{6});
-%2. get DS values for each gene     
-inter = cell(NumSubjects,NumSubjects);
-indexj = cell(NumSubjects,NumSubjects);
-indexk = cell(NumSubjects,NumSubjects);
-indexjp = cell(NumSubjects,NumSubjects);
-Corellations = cell(NumSubjects,NumSubjects);
-NumGenes = size(ExpressionSubjROI{1,1},2)-2;  
- 
+expSampNormalisedAll = vertcat(expSampNorm{1}, expSampNorm{2},expSampNorm{3},expSampNorm{4},expSampNorm{5},expSampNorm{6});
+combinedCoord = cat(1,coordSample{1}, coordSample{2}, coordSample{3},...
+                      coordSample{4}, coordSample{5}, coordSample{6});
 
+%----------------------------------------------------------------------------------
+% Pre-define variables for DS calculation 
+%----------------------------------------------------------------------------------
 
-%get ROIs that are in all subjects
-R = cell(1,NumSubjects);
-for o=1:NumSubjects
-R{:,o} = ExpressionSubjROI{o}(:,1);
+numSubjects = max(subjects); 
+inter = cell(numSubjects,numSubjects);
+indexj = cell(numSubjects,numSubjects);
+indexk = cell(numSubjects,numSubjects);
+indexjp = cell(numSubjects,numSubjects);
+corellations = cell(numSubjects,numSubjects);
+numGenes = size(expressionSubjROI{1,1},2)-2;  
+
+%----------------------------------------------------------------------------------
+% Get ROIs that are in all subjects 
+%----------------------------------------------------------------------------------
+fprintf('Selecting ROIs for DS calculation\n')
+R = cell(1,numSubjects);
+for o=1:numSubjects
+R{:,o} = expressionSubjROI{o}(:,2);
 end
-Intersect = mintersect(R{1}, R{2}, R{3}, R{4}, R{5}, R{6});
+intersectROIs = mintersect(R{1}, R{2}, R{3}, R{4}, R{5}, R{6});
 
-ROIsindex = zeros(length(Intersect),NumSubjects); % use a set list of ROIS that are present in all subjects
-for j=1:NumSubjects
+% use a set list of ROIS that are present in all subjects
+ROIsindex = zeros(length(intersectROIs),numSubjects); 
+for j=1:numSubjects
 
-    for w=1:length(Intersect)
-        ROIsindex(w,j) = find(R{j}==Intersect(w));
+    for w=1:length(intersectROIs)
+        ROIsindex(w,j) = find(R{j}==intersectROIs(w));
     end
+    
 end
+
+%----------------------------------------------------------------------------------
+% For each pair of cubjects, calculate correlation (Spearman) of regional expression
+% for each gene to select genes that have consistent expression patterns
+% through regions between pairs of subjects. 
+%----------------------------------------------------------------------------------
+fprintf('Calculating differential stability\n')
+for j=1:numSubjects
+    for k=j+1:numSubjects
         
-
-for j=1:NumSubjects
-    for k=j+1:NumSubjects
-        % use a set list of ROIS that are present in all subjects
-%         [inter{j,k}, indexj{j,k}, indexk{j,k}] = intersect(ExpressionSubjROI{j}(:,1), ExpressionSubjROI{k}(:,1));
-%         Exp1 = ExpressionSubjROI{j}(indexj{j,k},3:NumGenes+2);
-%         Exp2 = ExpressionSubjROI{k}(indexk{j,k},3:NumGenes+2);
-        Exp1 = ExpressionSubjROI{j}(ROIsindex(:,j),3:NumGenes+2);
-        Exp2 = ExpressionSubjROI{k}(ROIsindex(:,k),3:NumGenes+2);
-        Genes = zeros(1,NumGenes);
-        for g=1:NumGenes
-           
-            Genes(g) = corr(Exp1(:,g),Exp2(:,g),'type','Spearman'); 
+        expSubone = expressionSubjROI{j}(ROIsindex(:,j),3:numGenes+2);
+        expSubtwo = expressionSubjROI{k}(ROIsindex(:,k),3:numGenes+2);
+        genes = zeros(1,numGenes);
+        
+        for g=1:numGenes
+            genes(g) = corr(expSubone(:,g),expSubtwo(:,g),'type','Spearman'); 
         end
-        Corellations{j,k} = Genes; 
+        
+        corellations{j,k} = genes; 
     end
 end
 
-if NumSubjects == 2
-    C = vertcat(Corellations{1,2});
-elseif NumSubjects == 6
-C = vertcat(Corellations{1,2}, Corellations{1,3}, Corellations{1,4}, Corellations{1,5}, Corellations{1,6}, ... 
-    Corellations{2,3}, Corellations{2,4}, Corellations{2,5}, Corellations{2,6}, Corellations{3,4}, Corellations{3,5}, ... 
-    Corellations{3,6}, Corellations{4,5}, Corellations{4,6}, Corellations{5,6});
+%----------------------------------------------------------------------------------
+% Combina data for all pairs of subjects
+%----------------------------------------------------------------------------------
+if numSubjects == 2
+    C = vertcat(corellations{1,2});
+elseif numSubjects == 6
+C = vertcat(corellations{1,2}, corellations{1,3}, corellations{1,4}, corellations{1,5}, corellations{1,6}, ... 
+    corellations{2,3}, corellations{2,4}, corellations{2,5}, corellations{2,6}, corellations{3,4}, corellations{3,5}, ... 
+    corellations{3,6}, corellations{4,5}, corellations{4,6}, corellations{5,6});
 end
-
+%----------------------------------------------------------------------------------
+% Take the mean for each gene - this is DS score for a gene
+% gene that have most consistent expression pattern through regions will
+% get highest scores
+%----------------------------------------------------------------------------------
 DS = mean(C,1); 
 
-% combined
-% CombinedExp = cat(1,ExpressionSubjROI{1},  ExpressionSubjROI{2}, ExpressionSubjROI{3},...
-%     ExpressionSubjROI{4}, ExpressionSubjROI{5}, ExpressionSubjROI{6});
-
-%3. take top % of DS genes 
-
-NrGenes = round(length(DS)*percent/100);
+%----------------------------------------------------------------------------------
+% Take top % of DS genes 
+%----------------------------------------------------------------------------------
+fprintf('Selecting genes with highest differential stability \n')
+nrGenes = round(length(DS)*percentDS/100);
 
     [ b, ix ] = sort( DS(:), 'descend' );
 
-    DSvalues = zeros(NrGenes, 2);
-    for ii=1:NrGenes
+    DSvalues = zeros(nrGenes, 2);
+    for ii=1:nrGenes
         DSvalues(ii,2) = b(ii);
         DSvalues(ii,1) = ix(ii);
     end
+    
+%----------------------------------------------------------------------------------
+% Get probeIDs for selected DS genes
+%----------------------------------------------------------------------------------
 
-% get probeIDs for selected DS genes
-Probes = ProbeInformation.ProbeName(DSvalues(:,1));
-DSProbeTable = table(Probes, DSvalues(:,2));
+probes = probeInformation.ProbeName(DSvalues(:,1));
+DSProbeTable = table(probes, DSvalues(:,2));
 
-%% select selected genes and calculate sample - sample coexpression
+switch coexpressionFor
+    case 'all'
+%----------------------------------------------------------------------------------
+% Take selected genes and calculate sample - sample coexpression
+%----------------------------------------------------------------------------------
+selectedGenes = expSampNormalisedAll(:,2:end);
+selectedGenes = selectedGenes(:,DSvalues(:,1)); % take genes with highest DS values
+SampleCoexpression = corr(selectedGenes', 'type', 'Spearman'); % calculate sample-sample coexpression
 
-SelectedGenes = ExpSampNormalisedAll(:,2:end);
-% take genes with highest DS values
-SelectedGenes = SelectedGenes(:,DSvalues(:,1));
-% calculate sample-sample coexpression
-SampleCoexpression = corr(SelectedGenes', 'type', 'Spearman'); 
-%% check coexpression - distance relationship. 
+%----------------------------------------------------------------------------------
+% Check coexpression - distance relationship. 
+%----------------------------------------------------------------------------------
 
-MRIvoxCoordinates = pdist2(CombinedCoord, CombinedCoord);
+MRIvoxCoordinates = pdist2(combinedCoord, combinedCoord);
+distExpVect(:,1) = MRIvoxCoordinates(:); % make a vector for distances
+SampleCoexpression(logical(eye(size(SampleCoexpression)))) = 0; % replace diagonal with zeros
+distExpVect(:,2) = SampleCoexpression(:); % make a vector for coexpression values
+distExpVect( ~any(distExpVect,2), : ) = [];  % remove rows for diagonal elememns as thay will have 0 distance and 1 coexpression
 
-%make a vector for coexpression and distances
-
-DistExpVect(:,1) = MRIvoxCoordinates(:);
-%b replace diagonal with zeros
-%SampleCoexpression(logical(eye(size(SampleCoexpression)))) = 0;
-DistExpVect(:,2) = SampleCoexpression(:);
-DistExpVect( ~any(DistExpVect,2), : ) = [];  %rows
-
-Dvect = DistExpVect(:,1);
-Rvect = DistExpVect(:,2);
+Dvect = distExpVect(:,1);
+Rvect = distExpVect(:,2);
 
 figure; imagesc(SampleCoexpression); caxis([-1,1]);title('Sample-sample coexpression');
 colormap([flipud(BF_getcmap('blues',9));[1 1 1]; BF_getcmap('reds',9)]);
 
-% fit distance correction according to a defined rule
-%[f_handle,Stats,c] = GiveMeFit(DistExpVect(:,1),DistExpVect(:,2),Fit{1});
-% fit sigmoid
-[param,stat] = sigm_fit(DistExpVect(:,1),DistExpVect(:,2));
-
-% plot original doexpression-distance .
-BF_PlotQuantiles(DistExpVect(:,1),DistExpVect(:,2),50,0,1); title('Coexpresion vs distance'); ylim([-0.8 1]); 
-%hold on; plot(c); 
-hold on; scatter(DistExpVect(:,1),stat.ypred,1, '.', 'r');
-
-
-% switch Fit{1}
+%----------------------------------------------------------------------------------
+% Fit distance correction according to a defined rule
+%----------------------------------------------------------------------------------
 % 
-%         case 'linear'
-%             FitCurve = c.p1*Dvect + c.p2;
-%         case 'exp'
-%             FitCurve = c.A*exp(-c.n*Dvect) + c.B;
-%         case 'exp_1_0'
-%             FitCurve = exp(-c.n*Dvect);
-%         case 'decay'
-%             FitCurve = c.A/Dvect + c.B;
-%             Residuals = Rvect' - FitCurve;
-%         case 'exp0'
-%             FitCurve = c.A.*exp(-c.n*Dvect);
-%         case 'exp1'
-%             FitCurve = exp(-c.n*Dvect) + c.B;
-% end
+[f_handle,Stats,c] = GiveMeFit(distExpVect(:,1),distExpVect(:,2),Fit{1});
+
+%[param,stat] = sigm_fit(distExpVect(:,1),distExpVect(:,2));
+
+% plot original coexpression-distance .
+BF_PlotQuantiles(distExpVect(:,1),distExpVect(:,2),50,0,1); title('Coexpresion vs distance'); ylim([-0.8 1]); 
+%hold on; plot(c); 
+
+
+
+switch Fit{1}
+
+        case 'linear'
+            FitCurve = c.p1*Dvect + c.p2;
+        case 'exp'
+            FitCurve = c.A*exp(-c.n*Dvect) + c.B;
+        case 'exp_1_0'
+            FitCurve = exp(-c.n*Dvect);
+        case 'decay'
+            FitCurve = c.A/Dvect + c.B;
+            Residuals = Rvect' - FitCurve;
+        case 'exp0'
+            FitCurve = c.A.*exp(-c.n*Dvect);
+        case 'exp1'
+            FitCurve = exp(-c.n*Dvect) + c.B;
+            
+end
+hold on; scatter(distExpVect(:,1),FitCurve,1, '.', 'r');
 % get residuals
-%Residuals = Rvect - FitCurve;
-Residuals = Rvect - stat.ypred;
-BF_PlotQuantiles(DistExpVect(:,1),nonzeros(Residuals(:)),50,0,1); title('Coexpresion vs distance corrected'); ylim([-0.8 1]); 
+Residuals = Rvect - FitCurve;
+%Residuals = Rvect - stat.ypred;
+BF_PlotQuantiles(distExpVect(:,1),nonzeros(Residuals(:)),50,0,1); title('Coexpresion vs distance corrected'); ylim([-0.8 1]); 
 
 
-%% Plot corrected sample - sample coexpression matrix; 
 
+%----------------------------------------------------------------------------------
+% Plot corrected sample - sample coexpression matrix
+%----------------------------------------------------------------------------------
 
-NumSamples = size(MRIvoxCoordinates,1);
-CorrectedCoexpression = reshape(Residuals,[NumSamples, NumSamples]);
+numSamples = size(MRIvoxCoordinates,1);
+CorrectedCoexpression = reshape(Residuals,[numSamples, numSamples]);
 figure; imagesc(CorrectedCoexpression); caxis([-1,1]);title('Corrected Sample-sample coexpression');
 colormap([flipud(BF_getcmap('blues',9));[1 1 1]; BF_getcmap('reds',9)]);
 
-%% average coexpression values within a ROI and plot the corrected matirx (ROI-ROI coexpression);
-W = unique(ExpSampNormalisedAll(:,1));
+%----------------------------------------------------------------------------------
+% Plot corrected ROI-ROI coexpression matrix
+%----------------------------------------------------------------------------------
+
+W = unique(expSampNormalisedAll(:,1));
 
 ParcelCoexpression = zeros(length(W),length(W));
-ROIs = ExpSampNormalisedAll(:,1);
+ROIs = expSampNormalisedAll(:,1);
 
 [sROIs, ind] = sort(ROIs);
 CorrectedCoexpressionSorted = CorrectedCoexpression(ind, ind);
 CoexpressionSorted = SampleCoexpression(ind, ind);
 
-
 figure; subplot(1,25,[1 2]); imagesc(sROIs);
 subplot(1,25,[3 25]); imagesc(CoexpressionSorted); caxis([-1,1]); title('Corrected coexpression sorted samples');
 colormap([flipud(BF_getcmap('blues',9));[1 1 1]; BF_getcmap('reds',9)]);
 
-for i=1:length(W)
+for sub=1:length(W)
     for j=1:length(W)
 
-        A = find(sROIs == W(i));
+        A = find(sROIs == W(sub));
         B = find(sROIs == W(j));
         %for corrected
         P = CorrectedCoexpressionSorted(A, B);
         %for uncorrected
         %P = CoexpressionSorted(A, B);
-        ParcelCoexpression(i,j) = mean(mean(P));
+        ParcelCoexpression(sub,j) = mean(mean(P));
 
     end
 end
@@ -312,7 +359,7 @@ figure; imagesc(ParcelCoexpression); caxis([-1,1]); title('Parcellation coexpres
 colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]);
 
 % add zeros values to missing ROIs; p - missing ROI
-p = setdiff(linspace(1,LeftCortex,LeftCortex), unique(ExpSampNormalisedAll(:,1)));  
+p = setdiff(linspace(1,LeftCortex,LeftCortex), unique(expSampNormalisedAll(:,1)));  
 Exp = ParcelCoexpression;
 N1 = nan(LeftCortex,1);
 N2 = nan(1, LeftCortex-1);
@@ -320,6 +367,11 @@ N2 = nan(1, LeftCortex-1);
 
 B = vertcat(Exp(1:p-1,:), N2, Exp(p:end,:));
 Exp = horzcat(B(:,1:p-1), N1, B(:,p:end));
+    case 'separate'
+        
+        
+        
+end
 
 
 

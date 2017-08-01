@@ -5,7 +5,6 @@ Parcellation = {'aparcaseg'};
 Threshold = 2; 
 NormMethod = {'scaledRobustSigmoid'};
 LEFTcortex = 1; 
-Thr = 0;
 % choose 1 if want to normalise samples assigned to left cortex separately; 
 % choose 2 if want to normalise LEFT cortex + left subcortex together
 % choose 3 if you want to normalise the whole brain. 
