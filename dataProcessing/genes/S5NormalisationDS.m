@@ -7,12 +7,12 @@
 % Choose options
 %------------------------------------------------------------------------------
 useCUSTprobes = false; % choose if you want to use data with CUST probes
-probeSelection = 'Variance';% (Variance', LessNoise', 'Mean')
+probeSelection = 'PC';% (Variance', LessNoise', 'Mean')
 parcellation = 'aparcaseg';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 percentDS = 5;
 coexpressionFor = 'all';
-Fit = {'exp'};
+Fit = {'removeMean'};
 normMethod = 'scaledRobustSigmoid';
 normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex)
 % choose Lcortex if want to normalise samples assigned to left cortex separately;
@@ -23,18 +23,6 @@ normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex)
 %------------------------------------------------------------------------------
 % Define number of subjects and parcellation details based on choises
 %------------------------------------------------------------------------------
-
-switch normaliseWhat
-    case 'Lcortex'
-        subjects = 1:6;
-    case 'LcortexSubcortex'
-        subjects = 1:6;
-    case 'wholeBrain'
-        subjects = 1:2;
-    case 'LRcortex'
-        subjects = 1:2;
-end
-
 if strcmp(parcellation, 'aparcaseg')
     
     NumNodes = 82;
@@ -58,6 +46,23 @@ elseif strcmp(parcellation, 'cust250')
     RightSubcortex = NumNodes;
     
 end
+
+switch normaliseWhat
+    case 'Lcortex'
+        subjects = 1:6;
+        nROIs = 1:LeftCortex;
+    case 'LcortexSubcortex'
+        subjects = 1:6;
+        nROIs = 1:LeftSubcortex;
+    case 'wholeBrain'
+        subjects = 1:2;
+        nROIs = 1:NumNodes;
+    case 'LRcortex'
+        subjects = 1:2;
+        nROIs = [1:LeftCortex,LeftSubcortex+1:RightCortex];
+end
+
+
 
 cd ('data/genes/processedData');
 load(sprintf('MicroarrayDatad%s%dDistThresh%d_CoordsAssigned.mat', probeSelection, NumNodes, distanceThreshold));
@@ -216,6 +221,7 @@ end
 %----------------------------------------------------------------------------------
 % Combina data for all pairs of subjects
 %----------------------------------------------------------------------------------
+fprintf('Combining data for all subjects\n')
 if numSubjects == 2
     c = vertcat(corellations{1,2});
 elseif numSubjects == 6
@@ -251,285 +257,44 @@ end
 probes = probeInformation.ProbeName(DSvalues(:,1));
 DSProbeTable = table(probes, DSvalues(:,2));
 
+fprintf('Calculating coexpression between samples and ROIs\n')
 switch coexpressionFor
     case 'all'
         %----------------------------------------------------------------------------------
         % Take selected genes and calculate sample - sample coexpression
         %----------------------------------------------------------------------------------
         selectedGenes = expSampNormalisedAll(:,2:end);
-        selectedGenes = selectedGenes(:,DSvalues(:,1)); % take genes with highest DS values
-        sampleCoexpression = corr(selectedGenes', 'type', 'Spearman'); % calculate sample-sample coexpression
-        
-        %----------------------------------------------------------------------------------
-        % Check coexpression - distance relationship.
-        %----------------------------------------------------------------------------------
-        
         MRIvoxCoordinates = pdist2(combinedCoord, combinedCoord);
-        distExpVect(:,1) = MRIvoxCoordinates(:); % make a vector for distances
-        sampleCoexpression(logical(eye(size(sampleCoexpression)))) = 0; % replace diagonal with NaN
-        distExpVect(:,2) = sampleCoexpression(:); % make a vector for coexpression values
-        distExpVect( ~any(distExpVect,2), : ) = [];  % remove rows for diagonal elememns as thay will have 0 distance and 1 coexpression
-        
-        Dvect = distExpVect(:,1);
-        Rvect = distExpVect(:,2);
-        
-        figure; imagesc(sampleCoexpression); caxis([-1,1]);title('Sample-sample coexpression');
-        colormap([flipud(BF_getcmap('blues',9));[1 1 1]; BF_getcmap('reds',9)]);
-        
-        %----------------------------------------------------------------------------------
-        % Fit distance correction according to a defined rule
-        %----------------------------------------------------------------------------------
-        %
-        [f_handle,Stats,c] = GiveMeFit(distExpVect(:,1),distExpVect(:,2),Fit{1});
-        
-        %[param,stat] = sigm_fit(distExpVect(:,1),distExpVect(:,2));
-        
-        % plot original coexpression-distance .
-        [xThresholds,yMeans] = BF_PlotQuantiles(distExpVect(:,1),distExpVect(:,2),50,0,1); title('Coexpresion vs distance'); ylim([-0.8 1]);
-        switch Fit{1}
-            
-            case 'linear'
-                FitCurve = c.p1*Dvect + c.p2;
-            case 'exp'
-                FitCurve = c.A*exp(-c.n*Dvect) + c.B;
-            case 'exp_1_0'
-                FitCurve = exp(-c.n*Dvect);
-            case 'decay'
-                FitCurve = c.A/Dvect + c.B;
-                Residuals = Rvect' - FitCurve;
-            case 'exp0'
-                FitCurve = c.A.*exp(-c.n*Dvect);
-            case 'exp1'
-                FitCurve = exp(-c.n*Dvect) + c.B;
-            otherwise
-                Y = discretize(distExpVect(:,1),xThresholds);
-                Residuals = zeros(length(Y),1);
-                for val=1:length(Y)
-                    
-                    Residuals(val) = distExpVect(val,2) - yMeans(Y(val));
-                    
-                end
-                
-        end
-        
-        if strcmp(Fit{1}, 'linear') || strcmp(Fit{1}, 'exp') || strcmp(Fit{1}, 'exp_1_0') || strcmp(Fit{1}, 'decay') || strcmp(Fit{1}, 'exp0') || strcmp(Fit{1}, 'exp1')
-            hold on; scatter(distExpVect(:,1),FitCurve,1, '.', 'r');
-            % get residuals
-            Residuals = Rvect - FitCurve;
-            %Residuals = Rvect - stat.ypred;
-            BF_PlotQuantiles(distExpVect(:,1),nonzeros(Residuals(:)),50,0,1); title('Coexpresion vs distance corrected'); ylim([-0.8 1]);
-        else
-            BF_PlotQuantiles(distExpVect(:,1),Residuals(:),50,0,1); title('Coexpresion vs distance corrected'); ylim([-0.8 1]);
-        end
-        
-        
-        %----------------------------------------------------------------------------------
-        % Plot corrected sample - sample coexpression matrix
-        %----------------------------------------------------------------------------------
-        
-        numSamples = size(MRIvoxCoordinates,1);
-        % add NaNs to diagonal for reshaping
-        
-        Idx=linspace(1, 1276*1276,1276);
-        c=false(1,length(Residuals)+length(Idx));
-        c(Idx)=true;
-        nResiduals=nan(size(c));
-        nResiduals(~c)=Residuals;
-        nResiduals(c)=NaN;
-   
-        correctedCoexpression = reshape(nResiduals,[numSamples, numSamples]);
-        figure; imagesc(correctedCoexpression); caxis([-1,1]);title('Corrected Sample-sample coexpression');
-        colormap([flipud(BF_getcmap('blues',9));[1 1 1]; BF_getcmap('reds',9)]);
-        
-        %----------------------------------------------------------------------------------
-        % Plot corrected ROI-ROI coexpression matrix
-        %----------------------------------------------------------------------------------
-        
         W = unique(expSampNormalisedAll(:,1));
-        
-        ParcelCoexpression = zeros(length(W),length(W));
         ROIs = expSampNormalisedAll(:,1);
-        
-        [sROIs, ind] = sort(ROIs);
-        correctedCoexpressionSorted = correctedCoexpression(ind, ind);
-        coexpressionSorted = sampleCoexpression(ind, ind);
-        
-        figure; subplot(1,25,[1 2]); imagesc(sROIs);
-        subplot(1,25,[3 25]); imagesc(coexpressionSorted); caxis([-1,1]); title('Corrected coexpression sorted samples');
-        colormap([flipud(BF_getcmap('blues',9));[1 1 1]; BF_getcmap('reds',9)]);
-        
-        for sub=1:length(W)
-            for j=1:length(W)
-                
-                A = find(sROIs == W(sub));
-                B = sROIs == W(j);
-                %for corrected
-                P = correctedCoexpressionSorted(A, B);
-                %for uncorrected
-                %P = CoexpressionSorted(A, B);
-                ParcelCoexpression(sub,j) = mean(mean(P));
-                
-            end
-        end
-        
-        % add zeros values to missing ROIs; p - missing ROI
-        p = setdiff(linspace(1,LeftCortex,LeftCortex), unique(expSampNormalisedAll(:,1)));
-        expPlot = ParcelCoexpression;
-        if ~isempty(p)
-     
-        N1 = nan(LeftCortex,1);
-        N2 = nan(1, LeftCortex-1);
-        
-        
-        B = vertcat(expPlot(1:p-1,:), N2, expPlot(p:end,:));
-        expPlot = horzcat(B(:,1:p-1), N1, B(:,p:end));
-        end
-        figure; imagesc(expPlot); caxis([-1,1]); title('Parcellation coexpression ROIs');
-        colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]);
-        
-        
+        [expPlot, correctedCoexpression, parcelCoexpression] = calculateCoexpression(MRIvoxCoordinates, selectedGenes, DSvalues, W, ROIs,nROIs, Fit);
     case 'separate'
-        for sub = subjects
+        
+        expPlotALL = zeros(max(nROIs),max(nROIs),max(subjects));
+        expPlotALL2 = cell(6,1); 
+        correctedCoexpressionALL = cell(max(subjects),1);
+        parcelCoexpressionALL = cell(max(subjects),1);
+        
+        for sub=subjects
             
-        %----------------------------------------------------------------------------------
-        % Take selected genes and calculate sample - sample coexpression
-        %----------------------------------------------------------------------------------
-        selectedGenes = expSampNorm{sub}(:,2:end);
-        selectedGenes = selectedGenes(:,DSvalues(:,1)); % take genes with highest DS values
-        sampleCoexpression = corr(selectedGenes', 'type', 'Spearman'); % calculate sample-sample coexpression
-        
-        %----------------------------------------------------------------------------------
-        % Check coexpression - distance relationship.
-        %----------------------------------------------------------------------------------
-        
-        MRIvoxCoordinates = pdist2(coordSample{sub}, coordSample{sub});
-        distExpVect(:,1) = MRIvoxCoordinates(:); % make a vector for distances
-        sampleCoexpression(logical(eye(size(sampleCoexpression)))) = 0; % replace diagonal with 0
-        distExpVect(:,2) = sampleCoexpression(:); % make a vector for coexpression values
-        distExpVect( ~any(distExpVect,2), : ) = [];  % remove rows for diagonal elememns as thay will have 0 distance and 1 coexpression
-        
-        Dvect = distExpVect(:,1);
-        Rvect = distExpVect(:,2);
-        
-        figure; imagesc(sampleCoexpression); caxis([-1,1]);title('Sample-sample coexpression');
-        colormap([flipud(BF_getcmap('blues',9));[1 1 1]; BF_getcmap('reds',9)]);
-        
-        %----------------------------------------------------------------------------------
-        % Fit distance correction according to a defined rule
-        %----------------------------------------------------------------------------------
-        %
-        [f_handle,Stats,c] = GiveMeFit(distExpVect(:,1),distExpVect(:,2),Fit{1});
-        
-        %[param,stat] = sigm_fit(distExpVect(:,1),distExpVect(:,2));
-        
-        % plot original coexpression-distance .
-        [xThresholds,yMeans] = BF_PlotQuantiles(distExpVect(:,1),distExpVect(:,2),50,0,1); title('Coexpresion vs distance'); ylim([-0.8 1]);
-        switch Fit{1}
+            selectedGenes = expSampNorm{sub}(:,2:end);
+            MRIvoxCoordinates = pdist2(coordSample{sub}, coordSample{sub});
+            W = unique(expSampNorm{sub}(:,1));
+            ROIs = expSampNorm{sub}(:,1);
             
-            case 'linear'
-                FitCurve = c.p1*Dvect + c.p2;
-            case 'exp'
-                FitCurve = c.A*exp(-c.n*Dvect) + c.B;
-            case 'exp_1_0'
-                FitCurve = exp(-c.n*Dvect);
-            case 'decay'
-                FitCurve = c.A/Dvect + c.B;
-                Residuals = Rvect' - FitCurve;
-            case 'exp0'
-                FitCurve = c.A.*exp(-c.n*Dvect);
-            case 'exp1'
-                FitCurve = exp(-c.n*Dvect) + c.B;
-            otherwise
-                Y = discretize(distExpVect(:,1),xThresholds);
-                Residuals = zeros(length(Y),1);
-                for val=1:length(Y)
-                    
-                    Residuals(val) = distExpVect(val,2) - yMeans(Y(val));
-                    
-                end
-                
+            [expPlot, correctedCoexpression, parcelCoexpression] = calculateCoexpression(MRIvoxCoordinates, selectedGenes, DSvalues, W, ROIs,nROIs, Fit);
+            expPlotALL(:,:,sub) = expPlot;
+            expPlotALL2{sub} = expPlot;
+            correctedCoexpressionALL{sub} = correctedCoexpression;
+            parcelCoexpressionALL{sub} = parcelCoexpression;
+            
         end
-        
-        if strcmp(Fit{1}, 'linear') || strcmp(Fit{1}, 'exp') || strcmp(Fit{1}, 'exp_1_0') || strcmp(Fit{1}, 'decay') || strcmp(Fit{1}, 'exp0') || strcmp(Fit{1}, 'exp1')
-            hold on; scatter(distExpVect(:,1),FitCurve,1, '.', 'r');
-            % get residuals
-            Residuals = Rvect - FitCurve;
-            %Residuals = Rvect - stat.ypred;
-            BF_PlotQuantiles(distExpVect(:,1),nonzeros(Residuals(:)),50,0,1); title('Coexpresion vs distance corrected'); ylim([-0.8 1]);
-        else
-            BF_PlotQuantiles(distExpVect(:,1),Residuals(:),50,0,1); title('Coexpresion vs distance corrected'); ylim([-0.8 1]);
-        end
-        
-        
-        %----------------------------------------------------------------------------------
-        % Plot corrected sample - sample coexpression matrix
-        %----------------------------------------------------------------------------------
-        
-        numSamples = size(MRIvoxCoordinates,1);
-        % add NaNs to diagonal for reshaping
-        
-        Idx=linspace(1, 1276*1276,1276);
-        c=false(1,length(Residuals)+length(Idx));
-        c(Idx)=true;
-        nResiduals=nan(size(c));
-        nResiduals(~c)=Residuals;
-        nResiduals(c)=NaN;
-   
-        correctedCoexpression = reshape(nResiduals,[numSamples, numSamples]);
-        figure; imagesc(correctedCoexpression); caxis([-1,1]);title('Corrected Sample-sample coexpression');
-        colormap([flipud(BF_getcmap('blues',9));[1 1 1]; BF_getcmap('reds',9)]);
-        
-        %----------------------------------------------------------------------------------
-        % Plot corrected ROI-ROI coexpression matrix
-        %----------------------------------------------------------------------------------
-        
-        W = unique(expSampNorm{subj}(:,1));
-        
-        ParcelCoexpression = zeros(length(W),length(W));
-        ROIs = expSampNorm(:,1);
-        
-        [sROIs, ind] = sort(ROIs);
-        correctedCoexpressionSorted = correctedCoexpression(ind, ind);
-        coexpressionSorted = sampleCoexpression(ind, ind);
-        
-        figure; subplot(1,25,[1 2]); imagesc(sROIs);
-        subplot(1,25,[3 25]); imagesc(coexpressionSorted); caxis([-1,1]); title('Corrected coexpression sorted samples');
-        colormap([flipud(BF_getcmap('blues',9));[1 1 1]; BF_getcmap('reds',9)]);
-        
-        for subj=1:length(W)
-            for j=1:length(W)
-                
-                A = find(sROIs == W(subj));
-                B = sROIs == W(j);
-                %for corrected
-                P = correctedCoexpressionSorted(A, B);
-                %for uncorrected
-                %P = CoexpressionSorted(A, B);
-                ParcelCoexpression(subj,j) = mean(mean(P));
-                
-            end
-        end
-        
-        % add zeros values to missing ROIs; p - missing ROI
-        p = setdiff(linspace(1,LeftCortex,LeftCortex), unique(expSampNormalisedAll(:,1)));
-        expPlot = ParcelCoexpression;
-        if ~isempty(p)
-     
-        N1 = nan(LeftCortex,1);
-        N2 = nan(1, LeftCortex-1);
-        
-        
-        B = vertcat(expPlot(1:p-1,:), N2, expPlot(p:end,:));
-        expPlot = horzcat(B(:,1:p-1), N1, B(:,p:end));
-        end
-        figure; imagesc(expPlot); caxis([-1,1]); title('Parcellation coexpression ROIs');
-        colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]);
-
-        end
-        
-        
-        
 end
+
+averageCoexpression = nanmean(expPlot,3); 
+
+
+
 
 
 
