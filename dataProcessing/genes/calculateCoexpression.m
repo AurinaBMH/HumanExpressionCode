@@ -1,4 +1,4 @@
-function [expPlot, correctedCoexpression, parcelCoexpression] = calculateCoexpression(MRIvoxCoordinates, selectedGenes, DSvalues, W, ROIs,nROIs, Fit)
+function [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect] = calculateCoexpression(MRIvoxCoordinates, selectedGenes, DSvalues, W, ROIs,nROIs, Fit)
 
 
 distExpVect(:,1) = MRIvoxCoordinates(:); % make a vector for distances
@@ -57,7 +57,6 @@ if strcmp(Fit{1}, 'linear') || strcmp(Fit{1}, 'exp') || strcmp(Fit{1}, 'exp_1_0'
     hold on; scatter(distExpVect(:,1),FitCurve,1, '.', 'r');
     % get residuals
     Residuals = Rvect - FitCurve;
-    %Residuals = Rvect - stat.ypred;
     BF_PlotQuantiles(distExpVect(:,1),nonzeros(Residuals(:)),50,0,1); title('Coexpresion vs distance corrected'); ylim([-0.8 1]);
 else
     BF_PlotQuantiles(distExpVect(:,1),Residuals(:),50,0,1); title('Coexpresion vs distance corrected'); ylim([-0.8 1]);
@@ -69,8 +68,8 @@ end
 %----------------------------------------------------------------------------------
 
 numSamples = size(MRIvoxCoordinates,1);
-% add NaNs to diagonal for reshaping
 
+% add NaNs to diagonal for reshaping
 Idx=linspace(1, size(MRIvoxCoordinates,1)*size(MRIvoxCoordinates,1),size(MRIvoxCoordinates,1));
 c=false(1,length(Residuals)+length(Idx));
 c(Idx)=true;
@@ -86,10 +85,7 @@ colormap([flipud(BF_getcmap('blues',9));[1 1 1]; BF_getcmap('reds',9)]);
 % Plot corrected ROI-ROI coexpression matrix
 %----------------------------------------------------------------------------------
 
-%W = unique(expSampNormalisedAll(:,1));
-
 parcelCoexpression = zeros(length(W),length(W));
-%ROIs = expSampNormalisedAll(:,1);
 
 [sROIs, ind] = sort(ROIs);
 correctedCoexpressionSorted = correctedCoexpression(ind, ind);
@@ -121,12 +117,7 @@ if ~isempty(p)
     
     expPlot = insertrows(expPlot,NaN,p); 
     expPlot = insertrows(expPlot.', NaN,p).' ; % insert columns
-%     N1 = nan(LeftCortex,1);
-%     N2 = nan(1, LeftCortex-1);
-%     
-%     
-%     B = vertcat(expPlot(1:p-1,:), N2, expPlot(p:end,:));
-%     expPlot = horzcat(B(:,1:p-1), N1, B(:,p:end));
+
 end
 figure; imagesc(expPlot); caxis([-1,1]); title('Parcellation coexpression ROIs');
 colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]);
