@@ -11,9 +11,9 @@ probeSelection = 'PC';% (Variance', LessNoise', 'Mean')
 parcellation = 'aparcaseg';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 percentDS = 5;
-coexpressionFor = 'all';
+coexpressionFor = 'separate';
 Fit = {'removeMean'};
-normMethod = 'scaledRobustSigmoid';
+normMethod = 'maxmin';
 normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex)
 % choose Lcortex if want to normalise samples assigned to left cortex separately;
 % choose LcortexSubcortex if want to normalise LEFT cortex + left subcortex together
@@ -72,6 +72,7 @@ expressionSubjROI = cell(6,1);
 coordinatesSubjROI = cell(6,1);
 coordSample = cell(6,1);
 expSampNorm = cell(6,1);
+expSample = cell(6,1);
 
 %----------------------------------------------------------------------------------
 % Normalise data for each subject separately
@@ -131,6 +132,7 @@ for sub=subjects
     end
     
     expSampNorm{sub} = [ROI, dataNorm];
+    expSample{sub} = [ROI, data];
     ROIs = unique(expSubj(:,2));
     
     % average expression values for each ROI for differential stability calculation
@@ -256,18 +258,18 @@ end
 
 probes = probeInformation.ProbeName(DSvalues(:,1));
 DSProbeTable = table(probes, DSvalues(:,2));
-
-fprintf('Calculating coexpression between samples and ROIs\n')
+%----------------------------------------------------------------------------------
+% Take selected genes and calculate sample - sample coexpression
+%----------------------------------------------------------------------------------
+fprintf('Calculating coexpression between samples, performing coexpression-distance correctio and averaging coexpression to ROIs\n')
 switch coexpressionFor
     case 'all'
-        %----------------------------------------------------------------------------------
-        % Take selected genes and calculate sample - sample coexpression
-        %----------------------------------------------------------------------------------
+
         selectedGenes = expSampNormalisedAll(:,2:end);
         MRIvoxCoordinates = pdist2(combinedCoord, combinedCoord);
         W = unique(expSampNormalisedAll(:,1));
         ROIs = expSampNormalisedAll(:,1);
-        [expPlot, correctedCoexpression, parcelCoexpression] = calculateCoexpression(MRIvoxCoordinates, selectedGenes, DSvalues, W, ROIs,nROIs, Fit);
+        [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect] = calculateCoexpression(MRIvoxCoordinates, selectedGenes, DSvalues, W, ROIs,nROIs, Fit);
     case 'separate'
         
         expPlotALL = zeros(max(nROIs),max(nROIs),max(subjects));
@@ -277,12 +279,13 @@ switch coexpressionFor
         
         for sub=subjects
             
-            selectedGenes = expSampNorm{sub}(:,2:end);
-            MRIvoxCoordinates = pdist2(coordSample{sub}, coordSample{sub});
-            W = unique(expSampNorm{sub}(:,1));
-            ROIs = expSampNorm{sub}(:,1);
             
-            [expPlot, correctedCoexpression, parcelCoexpression] = calculateCoexpression(MRIvoxCoordinates, selectedGenes, DSvalues, W, ROIs,nROIs, Fit);
+            
+            MRIvoxCoordinates = pdist2(coordSample{sub}, coordSample{sub});
+            W = unique(expSampleNorm{sub}(:,1));
+            ROIs = expSampleNorm{sub}(:,1);
+            
+            [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect] = calculateCoexpression(MRIvoxCoordinates, selectedGenes, DSvalues, W, ROIs,nROIs, Fit);
             expPlotALL(:,:,sub) = expPlot;
             expPlotALL2{sub} = expPlot;
             correctedCoexpressionALL{sub} = correctedCoexpression;
