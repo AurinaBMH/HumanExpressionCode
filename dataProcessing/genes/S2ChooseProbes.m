@@ -17,7 +17,7 @@
 % without cust probes.
 
 UseDataWithCUSTprobes = false;
-probeSelection = 'Variance';% (Variance', LessNoise', 'Mean', 'PC')
+probeSelection = 'Mean';% (Variance', LessNoise', 'Mean', 'PC')
 
 %------------------------------------------------------------------------------
 % Load the data
@@ -81,11 +81,12 @@ for subj = 1:6
         fprintf(1,'Processing entrez ID %u\n',Uniq(k))
         % find indexes for repeating entrexIDs
         indRepEntrezIDs = find(EntrezID==(Uniq(k)));
+        expRepEntrezIDs = expression(:,indRepEntrezIDs);
         if length(indRepEntrezIDs) >=2
             fprintf(1,'%d duplicates found\n', length(length(indRepEntrezIDs)));
             
             % take expression values for a selected entrezID
-            expRepEntrezIDs = expression(:,indRepEntrezIDs);
+            
             % calculate variances for expression data for a selected entrezID
             switch probeSelection
                 
@@ -112,6 +113,11 @@ for subj = 1:6
                 case 'Mean'
                     expressionSelected{subj}(:,k) = mean(expRepEntrezIDs,2);
                     
+            end
+        else
+            switch probeSelection
+                case 'Mean'
+                   expressionSelected{subj}(:,k) = expRepEntrezIDs; 
             end
         end
         
