@@ -18,7 +18,7 @@
 % choose if you want to use data with CUST probes
 useCUSTprobes = false;
 % choose what type of probe selection to use, hemisphere, subject list, parcellations, threshols.
-probeSelection = 'Variance';% (Variance', LessNoise', 'Mean')
+probeSelection = 'Mean';% (Variance', LessNoise', 'Mean')
 parcellations = {'aparcaseg'};%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 subjects = 1:6;

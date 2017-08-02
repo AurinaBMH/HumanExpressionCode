@@ -3,19 +3,19 @@
 %Last modiffied: 2017-07-31
 %Last modiffied: 2017-08-01
 close all; 
-%clear all; 
+clear all; 
 %------------------------------------------------------------------------------
 % Choose options
 %------------------------------------------------------------------------------
 useCUSTprobes = false; % choose if you want to use data with CUST probes
-probeSelection = 'PC';% (Variance', LessNoise', 'Mean')
+probeSelection = 'PC';% (Variance', LessNoise', 'Mean', 'PC')
 parcellation = 'aparcaseg';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 percentDS = 5;
-coexpressionFor = 'separate';
+coexpressionFor = 'all';
 Fit = {'removeMean'};
 normMethod = 'zscore';
-normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex)
+normaliseWhat = 'LcortexSubcortex'; %(LcortexSubcortex, wholeBrain, LRcortex)
 % choose Lcortex if want to normalise samples assigned to left cortex separately;
 % choose LcortexSubcortex if want to normalise LEFT cortex + left subcortex together
 % choose wholeBrain if you want to normalise the whole brain.
@@ -295,12 +295,13 @@ switch coexpressionFor
         end
 end
 
-averageCoexpression = nanmean(expPlotALL,3); 
-figure; imagesc(averageCoexpression); caxis([-1 1]); colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]); title('Average coexpression')
+averageCoexpression = nanmean(expPlot,3); 
+figure; imagesc(expPlot); caxis([-1 1]); colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]); title('Average coexpression')
 
-A = [averageCoexpressionTogetherSRS(:),averageCoexpressionTogetherZscore(:)];
+A = [averageCoexpressionSeparateMasMin(:),averageCoexpressionSeparateZscore(:)];
 A = A(~any(isnan(A),2),:); 
 figure; scatter(A(:,1), A(:,2)); 
+[r,p] = corr(A(:,1), A(:,2), 'type', 'Spearman')
 
 
 

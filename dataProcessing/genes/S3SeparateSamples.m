@@ -10,7 +10,7 @@
 % Choose what to separate
 %------------------------------------------------------------------------------
 % separate according to sides
-probeSelection = 'Variance';% (Variance', LessNoise', 'Mean')
+probeSelection = 'Mean';% (Variance', LessNoise', 'Mean')
 sides = {'right', 'left'};
 % separate according to brain part: cortex/subcortex
 brainParts = {'Cortex', 'Subcortex'};
