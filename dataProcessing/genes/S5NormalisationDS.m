@@ -2,7 +2,8 @@
 
 %Last modiffied: 2017-07-31
 %Last modiffied: 2017-08-01
-
+close all; 
+%clear all; 
 %------------------------------------------------------------------------------
 % Choose options
 %------------------------------------------------------------------------------
@@ -13,7 +14,7 @@ distanceThreshold = 2; % first run 30, then with the final threshold 2
 percentDS = 5;
 coexpressionFor = 'separate';
 Fit = {'removeMean'};
-normMethod = 'maxmin';
+normMethod = 'zscore';
 normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex)
 % choose Lcortex if want to normalise samples assigned to left cortex separately;
 % choose LcortexSubcortex if want to normalise LEFT cortex + left subcortex together
@@ -273,30 +274,33 @@ switch coexpressionFor
     case 'separate'
         
         expPlotALL = zeros(max(nROIs),max(nROIs),max(subjects));
-        expPlotALL2 = cell(6,1); 
+        %expPlotALL2 = cell(6,1); 
         correctedCoexpressionALL = cell(max(subjects),1);
         parcelCoexpressionALL = cell(max(subjects),1);
         
         for sub=subjects
             
             
-            
+            selectedGenes = expSampNorm{sub}(:,2:end);
             MRIvoxCoordinates = pdist2(coordSample{sub}, coordSample{sub});
-            W = unique(expSampleNorm{sub}(:,1));
-            ROIs = expSampleNorm{sub}(:,1);
+            W = unique(expSampNorm{sub}(:,1));
+            ROIs = expSampNorm{sub}(:,1);
             
             [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect] = calculateCoexpression(MRIvoxCoordinates, selectedGenes, DSvalues, W, ROIs,nROIs, Fit);
             expPlotALL(:,:,sub) = expPlot;
-            expPlotALL2{sub} = expPlot;
+            %expPlotALL2{sub} = expPlot;
             correctedCoexpressionALL{sub} = correctedCoexpression;
             parcelCoexpressionALL{sub} = parcelCoexpression;
             
         end
 end
 
-averageCoexpression = nanmean(expPlot,3); 
+averageCoexpression = nanmean(expPlotALL,3); 
+figure; imagesc(averageCoexpression); caxis([-1 1]); colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]); title('Average coexpression')
 
-
+A = [averageCoexpressionTogetherSRS(:),averageCoexpressionTogetherZscore(:)];
+A = A(~any(isnan(A),2),:); 
+figure; scatter(A(:,1), A(:,2)); 
 
 
 
