@@ -1,6 +1,7 @@
 %% Author: Aurina
 %% Date modified: 2016-03-10
 %% Date modified: 2017-07-14
+%% Date modified: 2017-08-02
 %% This script:
 %   1. Loads all microarray data MicroarrayData.mat file
 %   2. Uses 1 of 2 possible probe selection options: by max variance or by highest PC
