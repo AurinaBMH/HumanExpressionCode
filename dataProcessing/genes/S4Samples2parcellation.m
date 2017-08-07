@@ -50,8 +50,8 @@ for subject = subjects
         % Load parcellations
         %------------------------------------------------------------------------------
         if strcmp(parcellation, 'aparcaseg')
-            Folder = 'default_NativeAnat';
-            cd (Folder);
+            parcName = 'default_NativeAnat';
+            cd (parcName);
             [~, data_parcel]=read('defaultparc_NativeAnat.nii');
             NumNodes = 82;
             LeftCortex = 1:34;
@@ -59,8 +59,8 @@ for subject = subjects
             RightCortex = 42:75;
             RightSubcortex = 76:82;
         elseif strcmp(parcellation, 'cust100')
-            Folder = 'custom100_NativeAnat';
-            cd (Folder);
+            parcName = 'custom100_NativeAnat';
+            cd (parcName);
             [~, data_parcel]=read('customparc_NativeAnat.nii');
             NumNodes = 220;
             LeftCortex = 1:100;
@@ -68,8 +68,8 @@ for subject = subjects
             RightCortex = 111:210;
             RightSubcortex = 211:220;
         elseif strcmp(parcellation, 'cust250')
-            Folder = 'custom250_NativeAnat';
-            cd (Folder);
+            parcName = 'custom250_NativeAnat';
+            cd (parcName);
             [~, data_parcel]=read('customparc_NativeAnat.nii');
             NumNodes = 530;
             LeftCortex = 1:250;
