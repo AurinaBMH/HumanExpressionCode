@@ -15,21 +15,20 @@ elseif strcmp(parcellation, 'cust250')
 end
 
 cd ('data/genes/processedData')
+%------------------------------------------------------------------------------
+% Load microarray samples for distance calculations
+%------------------------------------------------------------------------------
 load(sprintf('MicroarrayDatad%s%dDistThresh%d_CoordsAssigned.mat', probeSelection, NumNodes, distanceThreshold));
-
+cd ../../..
 %------------------------------------------------------------------------------
 % Select variables according to side/brain part selections
 %------------------------------------------------------------------------------
-sides = {'left', 'right'};
-brainParts = {'Cortex', 'Subcortex'};
+%side = 'left'; % 'right';
+brainPart = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex)
 
 
 for subject = subjects
-    %------------------------------------------------------------------------------
-    % Load microarray samples for distance calculations
-    %------------------------------------------------------------------------------
-    LcortexIND = find(DataCoordinates{subject}(:,2)<=34);
-    samples = DataCoordinates{subject}(LcortexIND,3:5);
+    
     
     cd ('data/genes/parcellations')
     subjectDir = sprintf('S0%d_H0351', subject);
@@ -71,22 +70,45 @@ for subject = subjects
         
     end
     
-    %[~, data_parcel]=read('defaultparc_NativeAnat.nii');
+    % find samples from microarray that you want to calculate distance on
+    switch brainPart
+        case 'Lcortex'
+            nROIs = LeftCortex;
+        case 'LcortexSubcortex'
+            nROIs = 1:max(LeftSubcortex);
+        case 'wholeBrain'
+            nROIs = 1:NumNodes;
+        case 'LRcortex'
+            nROIs = [LeftCortex,RightCortex];
+    end
     
-    data = (0<data_parcel) & (data_parcel<=length(LeftCortex));
+    samplesIND = find(ismember(DataCoordinates{subject}(:,2),nROIs));
+    
+    %if strcmp(side,'left') && strcmp(brainPart, 'Cortex')
+    %elseif strcmp(side,'left') && strcmp(brainPart, 'Subcortex')
+        %samplesIND = find(ismember(DataCoordinates{subject}(:,2),LeftSubcortex));
+    %elseif strcmp(side,'right') && strcmp(brainPart, 'Cortex')
+        %samplesIND = find(ismember(DataCoordinates{subject}(:,2),RightCortex));
+    %elseif strcmp(side,'right') && strcmp(brainPart, 'Subcortex')
+       % samplesIND = find(ismember(DataCoordinates{subject}(:,2),RightSubcortex));
+    %end
+    % get coordinates for those samples
+    samples = DataCoordinates{subject}(samplesIND,3:5);
+    
+    %
+    data = ismember(data_parcel,nROIs); 
     ind = 1:(size(data,1)*size(data,2)*size(data,3));
     
     dataNew = reshape(ind,size(data));
     nodes = length(nonzeros(data(:)));
-    arround = zeros(nodes,3,3,3);
-    arroundDist = zeros(nodes,3,3,3);
+    %arround = zeros(nodes,3,3,3);
+    %arroundDist = zeros(nodes,3,3,3);
     nodeList = zeros(nodes*3,3);
     
-    
-    n=1;
-    a=1;
-    i=1;
-    c=sqrt(a^2+a^2);
+
+    a=1;             % distance between adjacent voxels
+    c=sqrt(a^2+a^2); % distance between diagonal voxels according to pythagoras. 
+    i=1;             % counting index to 
     % assign distance values to the selected plain
     surrValues2 = [c,a,c; a,0,a; c,a,c];
     % assign distance values to the more distant planes
@@ -116,6 +138,7 @@ for subject = subjects
                     i=i+27;
                 end
             end
+            %fprintf('Y loop nr %d out of %d\n', y, size(data,2))
         end
         fprintf('X loop nr %d out of %d\n', x, size(data,1))
     end
@@ -124,20 +147,19 @@ for subject = subjects
     nodeList(indices,:) = [];
     
     % remove duplicate edges
+    nodeINDlist = nodeList(:,1:2); % select
+    %B = [nodeINDlist(:,2),nodeINDlist(:,1)];
+    %C = [nodeINDlist;B];
+    weightList = nodeList(:,3); %;nodeList(:,3)];
     
-    A = nodeList(:,1:2);
-    B = [A(:,2),A(:,1)];
-    C = [A;B];
-    W = [nodeList(:,3);nodeList(:,3)];
+    [tf, loc]=ismember(nodeINDlist(:,[2 1]),nodeINDlist,'rows');
+    nodeINDlist = nodeINDlist(loc>=(1:size(loc,1))',:);
+    weightList = weightList(loc>=(1:size(loc,1))',:);
+    nodeListUnique(:,1:2) = nodeINDlist;
+    nodeListUnique(:,3) = weightList;
     
-    [tf, loc]=ismember(C(:,[2 1]),C,'rows');
-    C = C(loc>=(1:size(loc,1))',:);
-    W = W(loc>=(1:size(loc,1))',:);
-    nodeListUnique(:,1:2) = C;
-    nodeListUnique(:,3) = W;
-
     
-    % make a graph from a list of edges
+    % make an undirected graph from a list of edges
     G = graph(nodeListUnique(:,1),nodeListUnique(:,2),nodeListUnique(:,3));
     
     % get index values for samples
@@ -147,21 +169,15 @@ for subject = subjects
     end
     
     % calculate distance between each pair of samples
-    shortDist = zeros(size(samples,1));
-    for sam1 = 1:size(samples,1)
-        for sam2=sam1+1:size(samples,1)
+    shortestDist = zeros(size(samples,1));
+    for samp1 = 1:size(samples,1)
+        for samp2=samp1+1:size(samples,1)
             
-            [~,shortDist(sam1,sam2)] = shortestpath(G,indSamples(sam1),indSamples(sam2));
+            [~,shortestDist(samp1,samp2)] = shortestpath(G,indSamples(samp1),indSamples(samp2));
             
         end
     end
-    
-    
-    
-    
-    
-    
-    % for each pair of
+ 
     
 end
 cd ../../../

@@ -15,7 +15,7 @@ percentDS = 5;
 coexpressionFor = 'all';
 Fit = {'removeMean'};
 normMethod = 'zscore';
-normaliseWhat = 'LcortexSubcortex'; %(LcortexSubcortex, wholeBrain, LRcortex)
+normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex)
 % choose Lcortex if want to normalise samples assigned to left cortex separately;
 % choose LcortexSubcortex if want to normalise LEFT cortex + left subcortex together
 % choose wholeBrain if you want to normalise the whole brain.
