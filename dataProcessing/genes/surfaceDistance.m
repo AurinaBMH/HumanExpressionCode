@@ -34,7 +34,7 @@ for subject = subjects
     subjectDir = sprintf('S0%d_H0351', subject);
     cd (subjectDir)
     %for parcellation = parcellations
-    
+   
     fprintf('Subject %u parcellation %s assignment distance threshold %u\n; ', subject, parcellation{1}, distanceThreshold )
     
     %------------------------------------------------------------------------------
@@ -92,10 +92,10 @@ for subject = subjects
     %elseif strcmp(side,'right') && strcmp(brainPart, 'Subcortex')
        % samplesIND = find(ismember(DataCoordinates{subject}(:,2),RightSubcortex));
     %end
+    
     % get coordinates for those samples
     samples = DataCoordinates{subject}(samplesIND,3:5);
     
-    %
     data = ismember(data_parcel,nROIs); 
     ind = 1:(size(data,1)*size(data,2)*size(data,3));
     
@@ -158,7 +158,6 @@ for subject = subjects
     nodeListUnique(:,1:2) = nodeINDlist;
     nodeListUnique(:,3) = weightList;
     
-    
     % make an undirected graph from a list of edges
     G = graph(nodeListUnique(:,1),nodeListUnique(:,2),nodeListUnique(:,3));
     
@@ -178,8 +177,9 @@ for subject = subjects
         end
     end
  
-    
-end
+%end
 cd ../../../
+end
+
 
 
