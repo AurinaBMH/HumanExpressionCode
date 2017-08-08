@@ -25,6 +25,7 @@ surrValues3D(2,:,:) = surrValues2;
 surrValues3D(3,:,:) = surrValues13;
 
 % loop for each voxel in the parcellation
+tic
 for x=1:size(data,1)
     for y=1:size(data,2)
         for z=1:size(data,3)
@@ -46,13 +47,14 @@ for x=1:size(data,1)
     end
     fprintf('X loop nr %d out of %d\n', x, size(data,1))
 end
+toc
 % remove edges with zero weight
 indices = nodeList(:,3)==0;
 nodeList(indices,:) = [];
 
 % remove duplicate edges
 nodeINDlist = nodeList(:,1:2); % select IDs for samples on parcellation
-weightList = nodeList(:,3); % select weights for samples on parcellation 
+weightList = nodeList(:,3); % select weights for samples on parcellation
 
 [~, loc]=ismember(nodeINDlist(:,[2 1]),nodeINDlist,'rows');
 nodeINDlist = nodeINDlist(loc>=(1:size(loc,1))',:);
@@ -70,6 +72,7 @@ for j=1:size(samples,1)
 end
 
 % calculate distance between each pair of samples
+tic
 shortestDist = zeros(size(samples,1));
 for samp1 = 1:size(samples,1)
     for samp2=samp1+1:size(samples,1)
@@ -78,4 +81,5 @@ for samp1 = 1:size(samples,1)
         
     end
 end
+toc
 end

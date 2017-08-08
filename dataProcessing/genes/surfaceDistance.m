@@ -81,8 +81,12 @@ for subject = subjects
         case 'LRcortex'
             nROIs = [LeftCortex,RightCortex];
     end
+    allSamplesID = [DataCoordinates{1}(:,2); DataCoordinates{2}(:,2); DataCoordinates{3}(:,2); DataCoordinates{4}(:,2); DataCoordinates{5}(:,2); DataCoordinates{6}(:,2)]; 
+    allSamples = [DataCoordinates{1}(:,3:5); DataCoordinates{2}(:,3:5); DataCoordinates{3}(:,3:5); DataCoordinates{4}(:,3:5); DataCoordinates{5}(:,3:5); DataCoordinates{6}(:,3:5)]; 
+    allsamplesIND = find(ismember(allSamplesID,nROIs));
     
-    samplesIND = find(ismember(DataCoordinates{subject}(:,2),nROIs));
+    % for each subject
+    %samplesIND = find(ismember(DataCoordinates{subject}(:,2),nROIs));
     
     %if strcmp(side,'left') && strcmp(brainPart, 'Cortex')
     %elseif strcmp(side,'left') && strcmp(brainPart, 'Subcortex')
@@ -94,7 +98,8 @@ for subject = subjects
     %end
     
     % get coordinates for those samples
-    samples = DataCoordinates{subject}(samplesIND,3:5);
+    %samples = DataCoordinates{subject}(samplesIND,3:5);
+    samples = allSamples(allsamplesIND,:);
     
     data = ismember(data_parcel,nROIs); 
     ind = 1:(size(data,1)*size(data,2)*size(data,3));

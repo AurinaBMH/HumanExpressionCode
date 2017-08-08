@@ -2,8 +2,8 @@
 
 %Last modiffied: 2017-07-31
 %Last modiffied: 2017-08-01
-close all; 
-clear all; 
+%close all; 
+%clear all; 
 %------------------------------------------------------------------------------
 % Choose options
 %------------------------------------------------------------------------------
@@ -267,7 +267,7 @@ switch coexpressionFor
     case 'all'
 
         selectedGenes = expSampNormalisedAll(:,2:end);
-        MRIvoxCoordinates = pdist2(combinedCoord, combinedCoord);
+        MRIvoxCoordinates = shortestDist2; %pdist2(combinedCoord, combinedCoord);
         W = unique(expSampNormalisedAll(:,1));
         ROIs = expSampNormalisedAll(:,1);
         [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect] = calculateCoexpression(MRIvoxCoordinates, selectedGenes, DSvalues, W, ROIs,nROIs, Fit);
@@ -282,7 +282,7 @@ switch coexpressionFor
             
             
             selectedGenes = expSampNorm{sub}(:,2:end);
-            MRIvoxCoordinates = pdist2(coordSample{sub}, coordSample{sub});
+            MRIvoxCoordinates = shortestDist2; %pdist2(coordSample{sub}, coordSample{sub});
             W = unique(expSampNorm{sub}(:,1));
             ROIs = expSampNorm{sub}(:,1);
             
@@ -298,10 +298,10 @@ end
 averageCoexpression = nanmean(expPlot,3); 
 figure; imagesc(expPlot); caxis([-1 1]); colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]); title('Average coexpression')
 
-A = [averageCoexpressionSeparateMasMin(:),averageCoexpressionSeparateZscore(:)];
-A = A(~any(isnan(A),2),:); 
-figure; scatter(A(:,1), A(:,2)); 
-[r,p] = corr(A(:,1), A(:,2), 'type', 'Spearman')
+% A = [averageCoexpressionSeparateMasMin(:),averageCoexpressionSeparateZscore(:)];
+% A = A(~any(isnan(A),2),:); 
+% figure; scatter(A(:,1), A(:,2)); 
+% [r,p] = corr(A(:,1), A(:,2), 'type', 'Spearman')
 
 
 
