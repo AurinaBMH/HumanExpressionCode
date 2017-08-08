@@ -12,7 +12,7 @@ probeSelection = 'PC';% (Variance', LessNoise', 'Mean', 'PC')
 parcellation = 'aparcaseg';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 percentDS = 5;
-coexpressionFor = 'all';
+coexpressionFor = 'separate';
 Fit = {'removeMean'};
 normMethod = 'zscore';
 normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex)
@@ -50,7 +50,7 @@ end
 
 switch normaliseWhat
     case 'Lcortex'
-        subjects = 1:6;
+        subjects = 1; %; :6;
         nROIs = 1:LeftCortex;
     case 'LcortexSubcortex'
         subjects = 1:6;
@@ -267,7 +267,7 @@ switch coexpressionFor
     case 'all'
 
         selectedGenes = expSampNormalisedAll(:,2:end);
-        MRIvoxCoordinates = shortestDist2; %pdist2(combinedCoord, combinedCoord);
+        MRIvoxCoordinates = pdist2(combinedCoord, combinedCoord);
         W = unique(expSampNormalisedAll(:,1));
         ROIs = expSampNormalisedAll(:,1);
         [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect] = calculateCoexpression(MRIvoxCoordinates, selectedGenes, DSvalues, W, ROIs,nROIs, Fit);
@@ -282,7 +282,7 @@ switch coexpressionFor
             
             
             selectedGenes = expSampNorm{sub}(:,2:end);
-            MRIvoxCoordinates = shortestDist2; %pdist2(coordSample{sub}, coordSample{sub});
+            MRIvoxCoordinates = pdist2(coordSample{sub}, coordSample{sub});
             W = unique(expSampNorm{sub}(:,1));
             ROIs = expSampNorm{sub}(:,1);
             
