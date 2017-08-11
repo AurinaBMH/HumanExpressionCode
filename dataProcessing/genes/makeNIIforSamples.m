@@ -1,8 +1,13 @@
 % for each subject make a .nii file with all zeros and assign indexes for
 % the coordinates of mappped samples.
-subjects = 1; 
-brainPart = 'Leftcortex'; 
-numSamples = 1; 
+subjects = 1:6;
+brainPart = 'Lcortex';
+numSamples = 1;
+parcellation = {'aparcaseg'};%, 'cust100', 'cust250'};
+distanceThreshold = 2;
+sampleIND = cell(6,1);
+%cd ('data/genes/processedData')
+%load(sprintf('MicroarrayData%s%dDistThresh%d_CoordsAssigned.nii',)
 for subject = subjects
     cd ('data/genes/parcellations')
     subjectDir = sprintf('S0%d_H0351', subject);
@@ -44,7 +49,7 @@ for subject = subjects
         
     end
     % make an empty image
-    image = zeros(size(data_parcel)); 
+    image = zeros(size(data_parcel));
     coordinates = DataCoordinatesMRI{subject}(:,3:5);
     switch brainPart
         case 'Lcortex'
@@ -57,18 +62,25 @@ for subject = subjects
             nROIs = [LeftCortex,RightCortex];
     end
     samplesIND = find(ismember(DataCoordinatesMRI{subject}(:,2),nROIs));
-    index = numSamples:numSamples+max(samplesIND)-1; 
-    numSamples = numSamples+length(index); 
+    coordinates2 = coordinates(samplesIND,:);
+    index = numSamples:numSamples+max(samplesIND)-1;
     
-    for samp=1:length(index)
-        point = coordinates(samp,:); 
-        image(point(1), point(2), point(3)) = index(samp); 
+    [C,ia,ic] = unique(coordinates2, 'rows', 'stable');
+    numSamples = numSamples+length(ia);
+    sampleIND{subject} = ia;
+    coordinates3 = coordinates2(ia,:);
+    for samp=1:length(ia)
+        point = coordinates3(samp,:);
+        image(point(1), point(2), point(3)) = index(samp);
     end
     cd ../../..
     cd ('processedData')
-    filename = sprintf('S%dsamples.nii', subject); 
-    write(hdr,image,filename); 
+    filename1 = sprintf('S%dsamples.nii', subject);
+    write(hdr,image,filename1);
+    
     cd ../../..
-   
+    
 end
-
+cd ('data/genes/processedData')
+% when calculating sample-smple coexpression keep only those samples
+save('samples2keep.mat', 'sampleIND');
