@@ -12,7 +12,7 @@ probeSelection = 'PC';% (Variance', LessNoise', 'Mean', 'PC')
 parcellation = 'aparcaseg';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 percentDS = 5;
-coexpressionFor = 'separate';
+coexpressionFor = 'all';
 Fit = {'removeMean'};
 normMethod = 'zscore';
 normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex)
@@ -50,7 +50,7 @@ end
 
 switch normaliseWhat
     case 'Lcortex'
-        subjects = 1; %; :6;
+        subjects = 1:6;
         nROIs = 1:LeftCortex;
     case 'LcortexSubcortex'
         subjects = 1:6;
@@ -86,7 +86,7 @@ expSample = cell(6,1);
 for sub=subjects
     % normalise data for each subject separately using samples
     expSingleSubj = DataExpression{sub,1};
-    coordSingle = DataCoordinates{sub,1};
+    coordSingle = DataCoordinatesMNI{sub,1};
     
     switch normaliseWhat
         

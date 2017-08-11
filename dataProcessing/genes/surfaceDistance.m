@@ -43,7 +43,7 @@ for subject = subjects
     if strcmp(parcellation, 'aparcaseg')
         parcName = 'default_NativeAnat';
         cd (parcName);
-        [~, data_parcel]=read('defaultparc_NativeAnat.nii');
+        [header, data_parcel]=read('defaultparc_NativeAnat.nii');
         NumNodes = 82;
         LeftCortex = 1:34;
         LeftSubcortex = 35:41;
