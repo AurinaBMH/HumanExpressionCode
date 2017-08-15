@@ -29,7 +29,7 @@ plot(h3(1,ab),h3(2,ab),'*');
 
 %% Vertices in voxel space for samples and T1
 newVertices = h3(1:3,:).';
-[xx yy zz] = meshgrid(1:size(data2.vol,2),1:size(data2.vol,1),1:size(data2.vol,3));
+[xx, yy, zz] = meshgrid(1:size(data2.vol,2),1:size(data2.vol,1),1:size(data2.vol,3));
 figure;slice(xx,yy,zz,data2.vol,[120],[120],[120]);shading interp;
 hold on;
 patch('Vertices',newVertices,'faces',faces+1,'FaceColor','none');
@@ -38,19 +38,38 @@ patch('Vertices',newVertices,'faces',faces+1,'FaceColor','none');
 
 % now a position on newVertices corresponds to a position in voxel space,
 % so it is in voxel co-ordinates.
+% load overlay for a subject
+dataOrig = MRIread('S1samples.mgz');
+dataOrig.vol = zeros(size(dataOrig.vol)); 
 
 % an example voxel 120,120,120
 keepSamples = sampleIND{1}; 
 coordinates = DataCoordinatesMRI{1}(keepSamples,3:5); 
+coordinatesNEWvox = zeros(length(keepSamples),3); 
+coordinatesNEWvert = zeros(length(keepSamples),3); 
+overlay = zeros(size(vertices)); 
+for i=1:length(keepSamples)
+x = coordinates(i,1); 
+y = coordinates(i,2);
+z = coordinates(i,3);
 
-
-[minval ind] =min(sqrt((newVertices(:,1)-120).^2 + (newVertices(:,2)-120).^2 + (newVertices(:,3)-120).^2));
+[minval, ind] =min(sqrt((newVertices(:,1)-x).^2 + (newVertices(:,2)-y).^2 + (newVertices(:,3)-z).^2));
 vertexind = ind;
 
 % In voxel space vertex coordinate is:
-disp([newVertices(vertexind,1),newVertices(vertexind,2),newVertices(vertexind,3)]);
+%disp([newVertices(vertexind,1),newVertices(vertexind,2),newVertices(vertexind,3)]);
+ % save coordinates
+coordinatesNEWvox(i,:) = [newVertices(vertexind,1),newVertices(vertexind,2),newVertices(vertexind,3)];
+coordinatesNEWvert(i,:) = [vertices(vertexind,1),vertices(vertexind,2),vertices(vertexind,3)];
 
-% In freesurfer space vertex co-ordinate is:
-disp([vertices(vertexind,1),vertices(vertexind,2),vertices(vertexind,3)]);
+overlay(vertexind) = i; 
+dataOrig.vol(vertexind) = 1; 
+% In freesurfecoordinatesNEWvertr space vertex co-ordinate is:
+%disp([vertices(vertexind,1),vertices(vertexind,2),vertices(vertexind,3)]);
+end
+MRIwrite(dataOrig,'S1samples_mod.mgz'); 
+% find index of each sample in vertex space based on the coordinates
+%write_surf('S1samples_vertex.mgz', coordinatesNEWvert, faces); 
+
 
 % Use this information to check if its working correctly.
