@@ -1,10 +1,11 @@
 % Just a set of scripts to get the code started
 cd ('data/genes/processedData')
-load('samples2keep.mat')
 load('MicroarrayDatadPC82DistThresh2_CoordsAssigned.mat'); 
-cd ../
+cd ../forFreesurfer
+keepSamples = cell(6,1); 
+
 for sub = 1:6
-    cd (sprintf('forFreesurfer/S0%d', sub))
+    cd (sprintf('S0%d', sub))
 % Here first load up the freesurfer volume and lh pial surface
 data = MRIread('orig.mgz');
 [vertices,faces] = read_surf('lh.white');
@@ -12,7 +13,7 @@ data = MRIread('orig.mgz');
 vert2 = [vertices-1 ones(size(vertices,1),1)];
 h2 = inv(data.tkrvox2ras)*vert2.';
 
-ab = find(abs(h2(3,:)-120)<0.5);
+%ab = find(abs(h2(3,:)-120)<0.5);
 %figure;
 %imagesc(data.vol(:,:,120));
 %hold on;
@@ -26,7 +27,7 @@ data2 = MRIread('001.nii');
 %h3 = inv(data2.vox2ras)*vert2.';
 h3 = inv(data.tkrvox2ras*inv(data.vox2ras)*(data2.niftihdr.sform))*vert2.';
 
-ab = find(abs(h3(3,:)-120)<0.5);
+%ab = find(abs(h3(3,:)-120)<0.5);
 %figure;
 %imagesc(data2.vol(:,:,120));
 %hold on;
@@ -48,7 +49,7 @@ dataOrig = MRIread(sprintf('S%dsamples.mgz', sub));
 dataOrig.vol = zeros(size(dataOrig.vol)); 
 
 %keepSamples = sampleIND{sub}; 
-Lcortex = 1:34; 
+%Lcortex = 1:34; 
 coordinatesall = DataCoordinatesMRI{sub}; 
 ROI = coordinatesall(:,2); keep = find(ROI<=34); 
 coordinates = coordinatesall(keep,3:5); 
@@ -70,13 +71,18 @@ vertexind = ind;
 coordinatesNEWvox(i,:) = [newVertices(vertexind,1),newVertices(vertexind,2),newVertices(vertexind,3)];
 coordinatesNEWvert(i,:) = [vertices(vertexind,1),vertices(vertexind,2),vertices(vertexind,3)];
 
+
 overlay(vertexind) = i; 
 dataOrig.vol(vertexind) = 1; 
 % In freesurfecoordinatesNEWvertr space vertex co-ordinate is:
 %disp([vertices(vertexind,1),vertices(vertexind,2),vertices(vertexind,3)]);
 end
-MRIwrite(dataOrig,sprintf('S%dsamples_mod.mgz', sub)); 
+[~,ia] = unique(coordinatesNEWvert, 'rows', 'stable');
+keepSamples{sub} = ia; 
+MRIwrite(dataOrig,sprintf('S%dsamples_singleVert.mgz', sub)); 
+cd ..
 end
+save('keepSamples.mat', 'keepSamples'); 
 % find index of each sample in vertex space based on the coordinates
 %write_surf('S1samples_vertex.mgz', coordinatesNEWvert, faces); 
 
