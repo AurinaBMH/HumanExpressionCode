@@ -31,6 +31,7 @@ for sub = 1:6
     coordinatesNEWvox = zeros(length(keep),3);
     coordinatesNEWvert = zeros(length(keep),3);
     overlay = zeros(size(vertices));
+    
     for i=1:length(keep)
         
         x = coordinates(i,1);
@@ -43,7 +44,6 @@ for sub = 1:6
         % save coordinates
         coordinatesNEWvox(i,:) = [newVertices(vertexind,1),newVertices(vertexind,2),newVertices(vertexind,3)];
         coordinatesNEWvert(i,:) = [vertices(vertexind,1),vertices(vertexind,2),vertices(vertexind,3)];
-        
         
         overlay(vertexind) = i;
         dataOrig.vol(vertexind) = 1;
