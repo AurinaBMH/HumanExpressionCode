@@ -277,12 +277,14 @@ switch coexpressionFor
         %expPlotALL2 = cell(6,1); 
         correctedCoexpressionALL = cell(max(subjects),1);
         parcelCoexpressionALL = cell(max(subjects),1);
-        
+        indSub1 = 1; 
         for sub=subjects
             
             
             selectedGenes = expSampNorm{sub}(:,2:end);
-            MRIvoxCoordinates = pdist2(coordSample{sub}, coordSample{sub});
+            indSub = size(expSampNorm{sub},1); 
+            MRIvoxCoordinates = pdist2(coordSample{sub}, coordSample{sub}); %distancesMNI(indSub1:indSub, indSub1:indSub); %
+            indSub1 = indSub+1; 
             W = unique(expSampNorm{sub}(:,1));
             ROIs = expSampNorm{sub}(:,1);
             
@@ -296,7 +298,7 @@ switch coexpressionFor
 end
 
 averageCoexpression = nanmean(expPlot,3); 
-figure; imagesc(expPlot); caxis([-1 1]); colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]); title('Average coexpression')
+figure; imagesc(expPlotMNI); caxis([-1 1]); colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]); title('Average coexpression')
 
 % A = [averageCoexpressionSeparateMasMin(:),averageCoexpressionSeparateZscore(:)];
 % A = A(~any(isnan(A),2),:); 
