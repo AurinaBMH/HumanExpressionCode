@@ -3,7 +3,7 @@ cd ('data/genes/processedData')
 load('MicroarrayDatadPC82DistThresh2_CoordsAssigned.mat');
 cd ../forFreesurfer
 keepSamples = cell(6,1);
-
+k=1;
 for sub = 1:6
     cd (sprintf('S0%d', sub))
     % Here first load up the freesurfer volume and lh pial surface
@@ -12,7 +12,7 @@ for sub = 1:6
     
     vert2 = [vertices-1 ones(size(vertices,1),1)];
     h2 = inv(data.tkrvox2ras)*vert2.';
-
+    
     data2 = MRIread('001.nii');
     h3 = inv(data.tkrvox2ras*inv(data.vox2ras)*(data2.niftihdr.sform))*vert2.';
     
@@ -31,6 +31,7 @@ for sub = 1:6
     coordinatesNEWvox = zeros(length(keep),3);
     coordinatesNEWvert = zeros(length(keep),3);
     overlay = zeros(size(vertices));
+    %int=linspace(1,1249,1249);
     
     for i=1:length(keep)
         
@@ -46,13 +47,16 @@ for sub = 1:6
         coordinatesNEWvert(i,:) = [vertices(vertexind,1),vertices(vertexind,2),vertices(vertexind,3)];
         
         overlay(vertexind) = i;
-        dataOrig.vol(vertexind) = i;
+        dataOrig.vol(vertexind) = i+k-1;
+        
         % In freesurfecoordinatesNEWvertr space vertex co-ordinate is:
         % disp([vertices(vertexind,1),vertices(vertexind,2),vertices(vertexind,3)]);
     end
-    
+   
     [~,ia] = unique(coordinatesNEWvert, 'rows', 'stable');
     keepSamples{sub} = ia;
+    
+    k=k+length(ia);
     MRIwrite(dataOrig,sprintf('S%dsamples_singleVert.mgz', sub));
     cd ..
     
