@@ -46,7 +46,7 @@ for sub = 1:6
         coordinatesNEWvert(i,:) = [vertices(vertexind,1),vertices(vertexind,2),vertices(vertexind,3)];
         
         overlay(vertexind) = i;
-        dataOrig.vol(vertexind) = 1;
+        dataOrig.vol(vertexind) = i;
         % In freesurfecoordinatesNEWvertr space vertex co-ordinate is:
         % disp([vertices(vertexind,1),vertices(vertexind,2),vertices(vertexind,3)]);
     end
