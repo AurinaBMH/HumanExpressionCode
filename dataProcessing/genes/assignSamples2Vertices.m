@@ -52,15 +52,15 @@ for sub = 1:6
         
         lab = i+k-1; 
         overlay(vertexind) = i;
-        dataOrig.vol(vertexind) = lab;
+        dataOrig.vol(vertexind) = i;
         
-        MRIwrite(dataOrig,sprintf('S%dsample%d_singleVert.mgz', sub, lab));
+        MRIwrite(dataOrig,sprintf('S%dsample%d_singleVert.mgz', sub, i));
         % In freesurfecoordinatesNEWvertr space vertex co-ordinate is:
         % disp([vertices(vertexind,1),vertices(vertexind,2),vertices(vertexind,3)]);
     end
     
     [~,ia] = unique(coordinatesNEWvert, 'rows', 'stable');
-    keepSamplesOrig{sub} = ia+k-1;
+    keepSamplesOrig{sub} = keep;
     k=k+length(ia);
     keepSamples{sub} = ia;
     sampleList = keepSamplesOrig{sub}; 
