@@ -50,9 +50,6 @@ GeneName = DataTableProbe.GeneName{1,1};
 % ExpressionallNorm = BF_NormalizeMatrix(Expressionall');
 % ExpressionallNorm = ExpressionallNorm';
 
-
-
-
 %% find repeating entrezIDs and calculate variances for them, then take a probe of max variance.
 %
 % % ------------------------------------------------------------------------------

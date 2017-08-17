@@ -2,13 +2,17 @@
 cd ('data/genes/processedData')
 load('MicroarrayDatadPC82DistThresh2_CoordsAssigned.mat');
 cd ../forFreesurfer
+keepSamplesOrig = cell(6,1);
 keepSamples = cell(6,1);
+
+[verticesFSaverage,facesFSaverage] = read_surf('lhfsaverage.white');
+
 k=1;
 for sub = 1:6
     cd (sprintf('S0%d', sub))
     % Here first load up the freesurfer volume and lh pial surface
     data = MRIread('orig.mgz');
-    [vertices,faces] = read_surf('lh.white');
+    [vertices,faces] = read_surf('lh.pial');
     
     vert2 = [vertices-1 ones(size(vertices,1),1)];
     h2 = inv(data.tkrvox2ras)*vert2.';
@@ -22,7 +26,6 @@ for sub = 1:6
     
     % load overlay for a subject
     dataOrig = MRIread(sprintf('S%dsamples.mgz', sub));
-    dataOrig.vol = zeros(size(dataOrig.vol));
     
     coordinatesall = DataCoordinatesMRI{sub};
     ROI = coordinatesall(:,2); keep = find(ROI<=34);
@@ -34,7 +37,8 @@ for sub = 1:6
     %int=linspace(1,1249,1249);
     
     for i=1:length(keep)
-        
+        dataOrig.vol = zeros(size(dataOrig.vol));
+    
         x = coordinates(i,1);
         y = coordinates(i,2);
         z = coordinates(i,3);
@@ -46,18 +50,27 @@ for sub = 1:6
         coordinatesNEWvox(i,:) = [newVertices(vertexind,1),newVertices(vertexind,2),newVertices(vertexind,3)];
         coordinatesNEWvert(i,:) = [vertices(vertexind,1),vertices(vertexind,2),vertices(vertexind,3)];
         
+        lab = i+k-1; 
         overlay(vertexind) = i;
-        dataOrig.vol(vertexind) = i+k-1;
+        dataOrig.vol(vertexind) = lab;
         
+        MRIwrite(dataOrig,sprintf('S%dsample%d_singleVert.mgz', sub, lab));
         % In freesurfecoordinatesNEWvertr space vertex co-ordinate is:
         % disp([vertices(vertexind,1),vertices(vertexind,2),vertices(vertexind,3)]);
     end
-   
-    [~,ia] = unique(coordinatesNEWvert, 'rows', 'stable');
-    keepSamples{sub} = ia;
     
+    [~,ia] = unique(coordinatesNEWvert, 'rows', 'stable');
+    keepSamplesOrig{sub} = ia+k-1;
     k=k+length(ia);
-    MRIwrite(dataOrig,sprintf('S%dsamples_singleVert.mgz', sub));
+    keepSamples{sub} = ia;
+    sampleList = keepSamplesOrig{sub}; 
+    
+    fileID = fopen(sprintf('S%dsampleList.txt', sub),'w');
+    nbytes = fprintf(fileID,'%1d\n',sampleList); 
+    fclose(fileID);
+    
+    
+    %MRIwrite(dataOrig,sprintf('S%dsamples_singleVert.mgz', sub));
     cd ..
     
 end
