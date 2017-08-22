@@ -23,8 +23,10 @@ cd ('data/genes/processedData')
 %------------------------------------------------------------------------------
 
 if useCUSTprobes
+    fprintf(1,'Using the data with CUST probes\n')
     startFileName = 'MicroarrayDataWITHcust';
 else
+    fprintf(1,'Using the data without CUST probes\n')
     startFileName = 'MicroarrayData';
 end
 

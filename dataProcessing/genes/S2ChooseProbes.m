@@ -217,11 +217,8 @@ if strcmp(probeSelection, 'Variance') || strcmp(probeSelection, 'PC') || strcmp(
         SampleInformation.MRIvoxCoordinates = DataTable.MRIvoxCoordinates{subject,1};
         cd ..
         cd ('processedData');
-        if ~UseDataWithCUSTprobes
-            save(sprintf('MicroarrayData%sS0%d.mat', probeSelection, subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
-        else
-            save(sprintf('MicroarrayDataWITHcust%sS0%d.mat', probeSelection, subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
-        end
+            save(sprintf('%s%sS0%d.mat', startFileName, probeSelection, subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
+
         
     end
     
@@ -252,6 +249,7 @@ else
     end
     
 end
+cd ../../..
 
 
 

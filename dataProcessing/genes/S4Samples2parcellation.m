@@ -26,16 +26,16 @@ subjects = 1:6;
 %------------------------------------------------------------------------------
 % Create variables to save data in
 %------------------------------------------------------------------------------
-DataExpression = cell(length(subjects),1); 
-DataCoordinatesMRI = cell(length(subjects),1); 
-DataCoordinatesMNI = cell(length(subjects),1); 
+DataExpression = cell(length(subjects),1);
+DataCoordinatesMRI = cell(length(subjects),1);
+DataCoordinatesMNI = cell(length(subjects),1);
 
 %------------------------------------------------------------------------------
 % Select variables according to side/brain part selections
 %------------------------------------------------------------------------------
 sides = {'left', 'right'};
 brainParts = {'Cortex', 'Subcortex'};
-      
+
 %------------------------------------------------------------------------------
 % Do assignment for all subjects
 %------------------------------------------------------------------------------
@@ -85,14 +85,18 @@ for subject = subjects
         % Load microarray data
         %------------------------------------------------------------------------------
         cd ('processedData');
-        load(sprintf('ProbeInformation%s.mat', probeSelection));
-        if  useCUSTprobes
-            fprintf('Loading MicroarrayDataWITHcust%ssepS0%d.mat\n', probeSelection, subject)
-            load(sprintf('MicroarrayDataWITHcust%ssepS0%d.mat', probeSelection, subject));
+        if useCUSTprobes
+            fprintf(1,'Using the data with CUST probes %s for %d\n', probeSelection, subject)
+            startFileName = 'MicroarrayDataWITHcust';
         else
-            fprintf('Loading MicroarrayData%ssepS0%d.mat\n', probeSelection, subject)
-            load(sprintf('MicroarrayData%ssepS0%d.mat', probeSelection, subject));
+            fprintf(1,'Using the data without CUST probes %s for %d\n', probeSelection, subject)
+            startFileName = 'MicroarrayData';
         end
+        
+        
+        load(sprintf('ProbeInformation%s.mat', probeSelection));
+        load(sprintf('%s%ssepS0%d.mat', startFileName, probeSelection, subject));
+        
         
         for side = sides
             for brainPart = brainParts
@@ -193,7 +197,7 @@ for subject = subjects
                     MNIcoordinates = sampleInformation.(side{1}).(brainPart{1}).MMCoordinates;
                     full_informationALLmni = [intensity_all MNIcoordinates];
                     full_information = full_informationALL;
-                    full_informationmni = full_informationALLmni; 
+                    full_informationmni = full_informationALLmni;
                     
                     full_informationALL(any(isnan(full_informationALL),2),:) = NaN;
                     full_information(any(isnan(full_informationALL),2),:) = [];
@@ -253,24 +257,19 @@ for subject = subjects
     % Save output
     %------------------------------------------------------------------------------
     
-    nSamples = size(data.left.Cortex.informationMRI,1)+size(data.left.Subcortex.informationMRI,1)+size(data.right.Cortex.informationMRI,1)+size(data.right.Subcortex.informationMRI,1); 
+    nSamples = size(data.left.Cortex.informationMRI,1)+size(data.left.Subcortex.informationMRI,1)+size(data.right.Cortex.informationMRI,1)+size(data.right.Subcortex.informationMRI,1);
     SUBJECT = zeros(nSamples,1);
     SUBJECT(:,1) = subject;
     
-    Expression = cat(1,data.left.Cortex.expression,data.left.Subcortex.expression, data.right.Cortex.expression, data.right.Subcortex.expression); 
-    CoordinatesMRI = cat(1,data.left.Cortex.informationMRI,data.left.Subcortex.informationMRI, data.right.Cortex.informationMRI, data.right.Subcortex.informationMRI);  
-    CoordinatesMNI = cat(1,data.left.Cortex.informationMNI,data.left.Subcortex.informationMNI, data.right.Cortex.informationMNI, data.right.Subcortex.informationMNI);  
+    Expression = cat(1,data.left.Cortex.expression,data.left.Subcortex.expression, data.right.Cortex.expression, data.right.Subcortex.expression);
+    CoordinatesMRI = cat(1,data.left.Cortex.informationMRI,data.left.Subcortex.informationMRI, data.right.Cortex.informationMRI, data.right.Subcortex.informationMRI);
+    CoordinatesMNI = cat(1,data.left.Cortex.informationMNI,data.left.Subcortex.informationMNI, data.right.Cortex.informationMNI, data.right.Subcortex.informationMNI);
     DataExpression{subject} = [SUBJECT, Expression];
     DataCoordinatesMRI{subject} = [SUBJECT, CoordinatesMRI];
     DataCoordinatesMNI{subject} = [SUBJECT, CoordinatesMNI];
     
     
-    if useCUSTprobes
-    startFileName = 'MicroarrayDataWITHcust'; 
-    else
-    startFileName = 'MicroarrayData'; 
-    end
-        
+    
     if distanceThreshold < 30
         save(sprintf('%sd%s%dDistThresh%d_CoordsAssigned_S0%d.mat', startFileName, probeSelection, NumNodes, distanceThreshold, subject), ...
             'data');
@@ -279,7 +278,7 @@ for subject = subjects
         save(sprintf('CoordsAssignedAllS0%d.mat', subject), 'coordsAssignedALL');
         cd ../../..
     end
-
+    
     
 end
 %% save data for all subjects
