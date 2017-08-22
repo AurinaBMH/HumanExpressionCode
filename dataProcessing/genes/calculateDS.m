@@ -38,16 +38,16 @@ end
 switch normaliseWhat
     case 'Lcortex'
         subjects = 1:6;
-        %nROIs = 1:LeftCortex;
+
     case 'LcortexSubcortex'
         subjects = 1:6;
-        %nROIs = 1:LeftSubcortex;
+
     case 'wholeBrain'
         subjects = 1:2;
-        %nROIs = 1:NumNodes;
+
     case 'LRcortex'
         subjects = 1:2;
-        %nROIs = [1:LeftCortex,LeftSubcortex+1:RightCortex];
+
 end
 
 
@@ -134,23 +134,12 @@ for sub=subjects
     expressionSubjROI{sub} = [S, ROIs, expressionROI];
     coordinatesSubjROI{sub} = [S, ROIs, coordinatesROI];
 end
-%----------------------------------------------------------------------------------
-% Combine noramlised data for all subjects.
-%----------------------------------------------------------------------------------
-
-%expSampNormalisedAll = vertcat(expSampNorm{1}, expSampNorm{2},expSampNorm{3},expSampNorm{4},expSampNorm{5},expSampNorm{6});
-%combinedCoord = cat(1,coordSample{1}, coordSample{2}, coordSample{3},...
-%coordSample{4}, coordSample{5}, coordSample{6});
 
 %----------------------------------------------------------------------------------
 % Pre-define variables for DS calculation
 %----------------------------------------------------------------------------------
 
 numSubjects = max(subjects);
-%inter = cell(numSubjects,numSubjects);
-%indexj = cell(numSubjects,numSubjects);
-%indexk = cell(numSubjects,numSubjects);
-%indexjp = cell(numSubjects,numSubjects);
 corellations = cell(numSubjects,numSubjects);
 numGenes = size(expressionSubjROI{1,1},2)-2;
 
@@ -212,29 +201,6 @@ end
 % get highest scores
 %----------------------------------------------------------------------------------
 DS = mean(c,1);
-
-%----------------------------------------------------------------------------------
-% Take top % of DS genes
-%----------------------------------------------------------------------------------
-% fprintf('Selecting genes with highest differential stability \n')
-% nrGenes = round(length(DS)*percentDS/100);
-% 
-% [ b, ix ] = sort( DS(:), 'descend' );
-% 
-% DSvalues = zeros(nrGenes, 2);
-% for ii=1:nrGenes
-%     DSvalues(ii,2) = b(ii);
-%     DSvalues(ii,1) = ix(ii);
-% end
-
-%----------------------------------------------------------------------------------
-% Get probeIDs for selected DS genes
-%----------------------------------------------------------------------------------
-
-%probes = probeInformation.ProbeName; %(DSvalues(:,1));
-%DSProbeTable = table(probes, DS);
-
-
 
 end
 
