@@ -71,7 +71,7 @@ else
 end
 
 cd ('data/genes/processedData');
-load(sprintf('%sd%s%dDistThresh%d_CoordsAssigned.mat', startFileName, probeSelection, NumNodes, distanceThreshold));
+load(sprintf('%s%s%dDistThresh%d_CoordsAssigned.mat', startFileName, probeSelection, NumNodes, distanceThreshold));
 
 
 expressionSubjROI = cell(6,1);

@@ -14,8 +14,14 @@
 %------------------------------------------------------------------------------
 % RemoveCUSTProbes = true; will exclude CUST probes
 % ExcludeCBandBS = true; will exclude samples from brainstem and cerebellum
-RemoveCUSTProbes = false;
+useCUSTprobes = true;
 ExcludeCBandBS = true;
+
+if useCUSTprobes
+    startFileName = 'MicroarrayDataWITHcust';
+else
+    startFileName = 'MicroarrayData';
+end
 
         cd ('data/genes/rawData');
         %% load probe information (same for all subjects)
@@ -32,7 +38,7 @@ ExcludeCBandBS = true;
 %------------------------------------------------------------------------------
 % Remove CUST probes:
 %------------------------------------------------------------------------------
-        if RemoveCUSTProbes
+        if ~useCUSTprobes
         % Remove all CUST probes (assign NaN values for all custom probes)
             fprintf(1,'Removing CUST probes\n')
             cust = strfind(ProbeName, 'CUST'); 
@@ -156,10 +162,7 @@ ExcludeCBandBS = true;
 %------------------------------------------------------------------------------ 
         cd ..
         cd ('processedData');
-        if ~RemoveCUSTProbes
+
          fprintf(1,'Saving data with CUST probes to the file\n')
-         save('MicroarrayDataWITHCUST.mat', 'DataTable','DataTableProbe', 'Expressionall', 'Coordinatesall', 'StructureNamesall', 'MRIvoxCoordinatesAll');
-        else
-         fprintf(1,'Saving data without CUST probes to the file\n')
-         save('MicroarrayData.mat', 'DataTable','DataTableProbe', 'Expressionall', 'Coordinatesall', 'StructureNamesall', 'MRIvoxCoordinatesAll');
-        end
+         save(sprintf('%s.mat', startFileName), 'DataTable','DataTableProbe', 'Expressionall', 'Coordinatesall', 'StructureNamesall', 'MRIvoxCoordinatesAll');
+  

@@ -17,20 +17,25 @@
 % UseDataWithCUSTprobes = 1; if UseDataWithCUSTprobes=0, it will load data
 % without cust probes.
 
-UseDataWithCUSTprobes = true;
+useCUSTprobes = true;
 probeSelection = 'PC';% (Variance', LessNoise', 'Mean', 'PC')
 signalThreshold = 0.5; % percentage of samples that a selected probe has expression levels that are higher than background
 %------------------------------------------------------------------------------
 % Load the data
 %------------------------------------------------------------------------------
 cd ('data/genes/processedData');
-if UseDataWithCUSTprobes
+
+if useCUSTprobes
     fprintf(1,'Loading the data with CUST probes and assigning variables\n')
-    load('MicroarrayDataWITHCUST.mat');
+    startFileName = 'MicroarrayDataWITHcust';
 else
     fprintf(1,'Loading the data without CUST probes and assigning variables\n')
-    load('MicroarrayData.mat');
+    startFileName = 'MicroarrayData';
 end
+
+
+load(sprintf('%s.mat', startFileName));
+
 cd ..
 cd ('rawData');
 
@@ -50,7 +55,7 @@ cd ('rawData');
 % % Find best representative in a set of duplicates using maxVar and remove all others:
 % % ------------------------------------------------------------------------------
 expressionSelected = cell(6,1);
-noiseSUBJ = cell(6,1); 
+noiseSUBJ = cell(6,1);
 fileNoise = 'PACall.csv';
 
 ProbeID = DataTableProbe.ProbeID{1,1};
@@ -60,20 +65,20 @@ ProbeID = DataTableProbe.ProbeID{1,1};
 % % samples a probe has expression higher that background
 % % ------------------------------------------------------------------------------
 for subject = 1:6
-        folder = sprintf('normalized_microarray_donor0%d', subject);
-        cd (folder);
-        noise2filter = csvread(fileNoise);
-        [~,probeList] = intersect(noise2filter(:,1),ProbeID, 'stable');
-        noise2filter = (noise2filter(probeList,2:end))';
-        noiseSUBJ{subject} = noise2filter; 
-        cd ..
+    folder = sprintf('normalized_microarray_donor0%d', subject);
+    cd (folder);
+    noise2filter = csvread(fileNoise);
+    [~,probeList] = intersect(noise2filter(:,1),ProbeID, 'stable');
+    noise2filter = (noise2filter(probeList,2:end))';
+    noiseSUBJ{subject} = noise2filter;
+    cd ..
 end
 % combine noise data for all subjects
-noiseALL = vertcat(noiseSUBJ{1}, noiseSUBJ{2}, noiseSUBJ{3}, noiseSUBJ{4}, noiseSUBJ{5}, noiseSUBJ{6}); 
+noiseALL = vertcat(noiseSUBJ{1}, noiseSUBJ{2}, noiseSUBJ{3}, noiseSUBJ{4}, noiseSUBJ{5}, noiseSUBJ{6});
 % calculate the percentage of samples that each probe has expression value
 % higher than a selected number
 signalLevel = sum(noiseALL,1)./size(noiseALL,1);
-indKeepProbes = find(signalLevel>signalThreshold); 
+indKeepProbes = find(signalLevel>signalThreshold);
 
 % remove selected probes from data and perform other calculations only on
 % non-noisy probes
@@ -92,13 +97,13 @@ indMsubj = zeros(length(Uniq),6);
 for subj = 1:6
     expression = (DataTable.Expression{subj}(indKeepProbes,:))';
     %if strcmp (probeSelection, 'LessNoise')
-        %folder = sprintf('normalized_microarray_donor0%d', subj);
-        %cd (folder);
-        noise = noiseSUBJ{subj}; %csvread(fileNoise);
-        %[~,probeList] = intersect(noise(:,1),ProbeID, 'stable');
-        noise = (noise(:,indKeepProbes));
-        %noiseALL{subj} = noise; 
-        %cd ..
+    %folder = sprintf('normalized_microarray_donor0%d', subj);
+    %cd (folder);
+    noise = noiseSUBJ{subj}; %csvread(fileNoise);
+    %[~,probeList] = intersect(noise(:,1),ProbeID, 'stable');
+    noise = (noise(:,indKeepProbes));
+    %noiseALL{subj} = noise;
+    %cd ..
     %end
     % load noise level matrix for each subject here
     
@@ -142,7 +147,7 @@ for subj = 1:6
         else
             switch probeSelection
                 case 'Mean'
-                   expressionSelected{subj}(:,k) = expRepEntrezIDs; 
+                    expressionSelected{subj}(:,k) = expRepEntrezIDs;
             end
         end
         
@@ -241,11 +246,8 @@ else
         ProbeInformation.ProbeName = unique(ProbeName, 'stable');
         cd ..
         cd ('processedData');
-        if ~UseDataWithCUSTprobes
-            save(sprintf('MicroarrayData%sS0%d.mat', probeSelection, subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
-        else
-            save(sprintf('MicroarrayDataWITHcust%sS0%d.mat', probeSelection, subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
-        end
+        save(sprintf('%s%sS0%d.mat', startFileName, probeSelection, subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
+        
         
     end
     

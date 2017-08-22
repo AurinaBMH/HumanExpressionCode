@@ -10,7 +10,7 @@
 % Choose what to separate
 %------------------------------------------------------------------------------
 % separate according to sides
-UseDataWithCUSTprobes = true;
+useCUSTprobes = true;
 probeSelection = 'Mean';% (Variance', LessNoise', 'Mean')
 sides = {'right', 'left'};
 % separate according to brain part: cortex/subcortex
@@ -21,13 +21,18 @@ cd ('data/genes/processedData')
 %------------------------------------------------------------------------------
 % Separate samples according to Allen institute Structure names.
 %------------------------------------------------------------------------------
+
+if useCUSTprobes
+    startFileName = 'MicroarrayDataWITHcust';
+else
+    startFileName = 'MicroarrayData';
+end
+
 for subject = subjects
     % load data file
-    if UseDataWithCUSTprobes
-        FileName = sprintf('MicroarrayDataWITHcust%sS0%d.mat',probeSelection, subject);
-    else 
-        FileName = sprintf('MicroarrayData%sS0%d.mat',probeSelection, subject);
-    end
+    
+    FileName = sprintf('%s%sS0%d.mat',startFileName, probeSelection, subject);
+    
     load(FileName);
     
     % select words that belong to cortex
@@ -75,40 +80,37 @@ for subject = subjects
                 end
                 % there are several samples that are not labeled 'left',
                 % 'right' - like corpus {'corpus callosum'}, so we exclude them.
-                 index2 = strfind(Structure, side{1});
-                 if isempty(index2)
-                     expressionS(i,:) = NaN;
-                     sampleInformationS.MRIvoxCoordinates(i,:) = NaN;
-                     sampleInformationS.MMCoordinates(i,:) = NaN;
-                     sampleInformationS.StructureNames{i} = 'remove'; %"; %{double.empty(0)};
-                 end
+                index2 = strfind(Structure, side{1});
+                if isempty(index2)
+                    expressionS(i,:) = NaN;
+                    sampleInformationS.MRIvoxCoordinates(i,:) = NaN;
+                    sampleInformationS.MMCoordinates(i,:) = NaN;
+                    sampleInformationS.StructureNames{i} = 'remove'; %"; %{double.empty(0)};
+                end
             end
-
-        % exclude nonexisting data
-        expressionS(any(isnan(expressionS),2),:) = [];
-        expression.(side{1}).(brainPart{1}) = expressionS;
-        
-        sampleInformationS.MRIvoxCoordinates(any(isnan(sampleInformationS.MRIvoxCoordinates),2),:) = [];
-        sampleInformation.(side{1}).(brainPart{1}).MRIvoxCoordinates = sampleInformationS.MRIvoxCoordinates;
-        
-        sampleInformationS.MMCoordinates(any(isnan(sampleInformationS.MMCoordinates),2),:) = [];
-        sampleInformation.(side{1}).(brainPart{1}).MMCoordinates = sampleInformationS.MMCoordinates ;
-        
-        sampleInformationS.StructureNames(strcmp('remove',sampleInformationS.StructureNames)) = [];
-        sampleInformation.(side{1}).(brainPart{1}).StructureNames = sampleInformationS.StructureNames;
-        
-        probeInformation = ProbeInformation;
+            
+            % exclude nonexisting data
+            expressionS(any(isnan(expressionS),2),:) = [];
+            expression.(side{1}).(brainPart{1}) = expressionS;
+            
+            sampleInformationS.MRIvoxCoordinates(any(isnan(sampleInformationS.MRIvoxCoordinates),2),:) = [];
+            sampleInformation.(side{1}).(brainPart{1}).MRIvoxCoordinates = sampleInformationS.MRIvoxCoordinates;
+            
+            sampleInformationS.MMCoordinates(any(isnan(sampleInformationS.MMCoordinates),2),:) = [];
+            sampleInformation.(side{1}).(brainPart{1}).MMCoordinates = sampleInformationS.MMCoordinates ;
+            
+            sampleInformationS.StructureNames(strcmp('remove',sampleInformationS.StructureNames)) = [];
+            sampleInformation.(side{1}).(brainPart{1}).StructureNames = sampleInformationS.StructureNames;
+            
+            probeInformation = ProbeInformation;
         end
     end
-%------------------------------------------------------------------------------
-% Save data for each subject separately
-%------------------------------------------------------------------------------
-if UseDataWithCUSTprobes
-    SaveFileName = sprintf('MicroarrayDataWITHcust%ssepS0%d.mat',probeSelection, subject);
-else
-    SaveFileName = sprintf('MicroarrayData%ssepS0%d.mat',probeSelection, subject);
-end
-
+    %------------------------------------------------------------------------------
+    % Save data for each subject separately
+    %------------------------------------------------------------------------------
+    
+    SaveFileName = sprintf('%s%ssepS0%d.mat',startFileName, probeSelection, subject);
+    
     save (SaveFileName, 'expression', 'probeInformation', 'sampleInformation');
 end
 cd ../../..
