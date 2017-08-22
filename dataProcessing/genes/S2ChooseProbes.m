@@ -17,9 +17,9 @@
 % UseDataWithCUSTprobes = 1; if UseDataWithCUSTprobes=0, it will load data
 % without cust probes.
 
-UseDataWithCUSTprobes = false;
-probeSelection = 'Mean';% (Variance', LessNoise', 'Mean', 'PC')
-
+UseDataWithCUSTprobes = true;
+probeSelection = 'PC';% (Variance', LessNoise', 'Mean', 'PC')
+signalThreshold = 0.5; % percentage of samples that a selected probe has expression levels that are higher than background
 %------------------------------------------------------------------------------
 % Load the data
 %------------------------------------------------------------------------------
@@ -34,12 +34,6 @@ end
 cd ..
 cd ('rawData');
 
-ProbeName = DataTableProbe.ProbeName{1,1};
-ProbeID = DataTableProbe.ProbeID{1,1};
-EntrezID = DataTableProbe.EntrezID{1,1};
-GeneID = DataTableProbe.GeneID{1,1};
-GeneSymbol = DataTableProbe.GeneSymbol{1,1};
-GeneName = DataTableProbe.GeneName{1,1};
 %------------------------------------------------------------------------------
 % Normalise each subject data separately
 % Calculate probe selection criteria for each subject separately (non
@@ -55,24 +49,57 @@ GeneName = DataTableProbe.GeneName{1,1};
 % % ------------------------------------------------------------------------------
 % % Find best representative in a set of duplicates using maxVar and remove all others:
 % % ------------------------------------------------------------------------------
+expressionSelected = cell(6,1);
+noiseSUBJ = cell(6,1); 
+fileNoise = 'PACall.csv';
+
+ProbeID = DataTableProbe.ProbeID{1,1};
+% % ------------------------------------------------------------------------------
+% % First, find probes that have very noisy data and remove them from consideration
+% % Threshold for removing those proges is defined as the percentage of
+% % samples a probe has expression higher that background
+% % ------------------------------------------------------------------------------
+for subject = 1:6
+        folder = sprintf('normalized_microarray_donor0%d', subject);
+        cd (folder);
+        noise2filter = csvread(fileNoise);
+        [~,probeList] = intersect(noise2filter(:,1),ProbeID, 'stable');
+        noise2filter = (noise2filter(probeList,2:end))';
+        noiseSUBJ{subject} = noise2filter; 
+        cd ..
+end
+% combine noise data for all subjects
+noiseALL = vertcat(noiseSUBJ{1}, noiseSUBJ{2}, noiseSUBJ{3}, noiseSUBJ{4}, noiseSUBJ{5}, noiseSUBJ{6}); 
+% calculate the percentage of samples that each probe has expression value
+% higher than a selected number
+signalLevel = sum(noiseALL,1)./size(noiseALL,1);
+indKeepProbes = find(signalLevel>signalThreshold); 
+
+% remove selected probes from data and perform other calculations only on
+% non-noisy probes
+ProbeName = DataTableProbe.ProbeName{1,1}(indKeepProbes);
+ProbeID = ProbeID(indKeepProbes);
+EntrezID = DataTableProbe.EntrezID{1,1}(indKeepProbes);
+GeneID = DataTableProbe.GeneID{1,1}(indKeepProbes);
+GeneSymbol = DataTableProbe.GeneSymbol{1,1}(indKeepProbes);
+GeneName = DataTableProbe.GeneName{1,1}(indKeepProbes);
+
 Uniq = unique(EntrezID(:,1));
 N = histc(EntrezID, Uniq);
 ProbeList = zeros(length(Uniq),2);
 indMsubj = zeros(length(Uniq),6);
-expressionSelected = cell(6,1);
-
-fileNoise = 'PACall.csv';
 
 for subj = 1:6
-    expression = (DataTable.Expression{subj})';
-    if strcmp (probeSelection, 'LessNoise')
-        folder = sprintf('normalized_microarray_donor0%d', subj);
-        cd (folder);
-        noise = csvread(fileNoise);
-        [~,probeList] = intersect(noise(:,1),ProbeID, 'stable');
-        noise = (noise(probeList,2:end))';
-        cd ..
-    end
+    expression = (DataTable.Expression{subj}(indKeepProbes,:))';
+    %if strcmp (probeSelection, 'LessNoise')
+        %folder = sprintf('normalized_microarray_donor0%d', subj);
+        %cd (folder);
+        noise = noiseSUBJ{subj}; %csvread(fileNoise);
+        %[~,probeList] = intersect(noise(:,1),ProbeID, 'stable');
+        noise = (noise(:,indKeepProbes));
+        %noiseALL{subj} = noise; 
+        %cd ..
+    %end
     % load noise level matrix for each subject here
     
     for k=1:length(Uniq)
@@ -174,7 +201,7 @@ if strcmp(probeSelection, 'Variance') || strcmp(probeSelection, 'PC') || strcmp(
         
         % exclude NaN probes keeping 1 probe for 1 entrezID.
         fprintf(1,'Combining and saving the data for subject %u\n', subject)
-        Expression = DataTable.Expression{subject,1};
+        Expression = DataTable.Expression{subject,1}(indKeepProbes,:);
         Expression(isnan(RemoveProbes),:) = [];
         Expression = Expression';
         

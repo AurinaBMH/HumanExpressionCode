@@ -14,7 +14,7 @@
 %------------------------------------------------------------------------------
 % RemoveCUSTProbes = true; will exclude CUST probes
 % ExcludeCBandBS = true; will exclude samples from brainstem and cerebellum
-RemoveCUSTProbes = true;
+RemoveCUSTProbes = false;
 ExcludeCBandBS = true;
 
         cd ('data/genes/rawData');

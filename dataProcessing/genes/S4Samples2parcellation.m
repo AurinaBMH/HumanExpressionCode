@@ -264,8 +264,15 @@ for subject = subjects
     DataCoordinatesMRI{subject} = [SUBJECT, CoordinatesMRI];
     DataCoordinatesMNI{subject} = [SUBJECT, CoordinatesMNI];
     
+    
+    if useCUSTprobes
+    startFileName = 'MicroarrayDataWITHcust'; 
+    else
+    startFileName = 'MicroarrayData'; 
+    end
+        
     if distanceThreshold < 30
-        save(sprintf('MicroarrayDatad%s%dDistThresh%d_CoordsAssigned_S0%d.mat', probeSelection, NumNodes, distanceThreshold, subject), ...
+        save(sprintf('%sd%s%dDistThresh%d_CoordsAssigned_S0%d.mat', startFileName, probeSelection, NumNodes, distanceThreshold, subject), ...
             'data');
         cd ../../..
     elseif distanceThreshold == 30

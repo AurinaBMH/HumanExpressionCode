@@ -2,8 +2,8 @@
 
 %Last modiffied: 2017-07-31
 %Last modiffied: 2017-08-01
-%close all; 
-%clear all; 
+%close all;
+%clear all;
 %------------------------------------------------------------------------------
 % Choose options
 %------------------------------------------------------------------------------
@@ -12,6 +12,7 @@ probeSelection = 'PC';% (Variance', LessNoise', 'Mean', 'PC')
 parcellation = 'aparcaseg';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 percentDS = 5;
+distanceCorrection = 'Euclidean';
 coexpressionFor = 'all';
 Fit = {'removeMean'};
 normMethod = 'zscore';
@@ -63,10 +64,14 @@ switch normaliseWhat
         nROIs = [1:LeftCortex,LeftSubcortex+1:RightCortex];
 end
 
-
+if useCUSTprobes
+    startFileName = 'MicroarrayDataWITHcust';
+else
+    startFileName = 'MicroarrayData';
+end
 
 cd ('data/genes/processedData');
-load(sprintf('MicroarrayDatad%s%dDistThresh%d_CoordsAssigned.mat', probeSelection, NumNodes, distanceThreshold));
+load(sprintf('%sd%s%dDistThresh%d_CoordsAssigned.mat', startFileName, probeSelection, NumNodes, distanceThreshold));
 
 
 expressionSubjROI = cell(6,1);
@@ -263,32 +268,46 @@ DSProbeTable = table(probes, DSvalues(:,2));
 % Take selected genes and calculate sample - sample coexpression
 %----------------------------------------------------------------------------------
 fprintf('Calculating coexpression between samples, performing coexpression-distance correctio and averaging coexpression to ROIs\n')
+load('DistancesONsurface.mat');
 switch coexpressionFor
     case 'all'
-
+        
         selectedGenes = expSampNormalisedAll(:,2:end);
-        MRIvoxCoordinates = pdist2(combinedCoord, combinedCoord);
+        switch distanceCorrection
+            case 'Euclidean'
+                % calculate euclidean distance on MNI coordinates
+                sampleDistances = pdist2(combinedCoord, combinedCoord);%
+            case 'GMvolume'
+                % load pre-calculated distances within GM volume
+                load('DistancesGM_MNI.mat');
+                sampleDistances = distSamples;
+            case 'Surface'
+                % load pre-calculated distances on surface
+                load('DistancesONsurface.mat');
+                sampleDistances = distSamples;
+        end
+        fprintf(sprintf('%s distance correction is chosen\n', distanceCorrection))
         W = unique(expSampNormalisedAll(:,1));
         ROIs = expSampNormalisedAll(:,1);
-        [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect] = calculateCoexpression(MRIvoxCoordinates, selectedGenes, DSvalues, W, ROIs,nROIs, Fit);
+        [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit);
     case 'separate'
         
         expPlotALL = zeros(max(nROIs),max(nROIs),max(subjects));
-        %expPlotALL2 = cell(6,1); 
+        %expPlotALL2 = cell(6,1);
         correctedCoexpressionALL = cell(max(subjects),1);
         parcelCoexpressionALL = cell(max(subjects),1);
-        indSub1 = 1; 
+        indSub1 = 1;
         for sub=subjects
             
             
             selectedGenes = expSampNorm{sub}(:,2:end);
-            indSub = size(expSampNorm{sub},1); 
-            MRIvoxCoordinates = pdist2(coordSample{sub}, coordSample{sub}); %distancesMNI(indSub1:indSub, indSub1:indSub); %
-            indSub1 = indSub+1; 
+            indSub = size(expSampNorm{sub},1);
+            sampleDistances = pdist2(coordSample{sub}, coordSample{sub}); %distancesMNI(indSub1:indSub, indSub1:indSub); %
+            indSub1 = indSub+1;
             W = unique(expSampNorm{sub}(:,1));
             ROIs = expSampNorm{sub}(:,1);
             
-            [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect] = calculateCoexpression(MRIvoxCoordinates, selectedGenes, DSvalues, W, ROIs,nROIs, Fit);
+            [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit);
             expPlotALL(:,:,sub) = expPlot;
             %expPlotALL2{sub} = expPlot;
             correctedCoexpressionALL{sub} = correctedCoexpression;
@@ -297,12 +316,12 @@ switch coexpressionFor
         end
 end
 
-averageCoexpression = nanmean(expPlot,3); 
-figure; imagesc(expPlotMNI); caxis([-1 1]); colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]); title('Average coexpression')
+averageCoexpression = nanmean(expPlot,3);
+%figure; imagesc(expPlotMNI); caxis([-1 1]); colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]); title('Average coexpression')
 
 % A = [averageCoexpressionSeparateMasMin(:),averageCoexpressionSeparateZscore(:)];
-% A = A(~any(isnan(A),2),:); 
-% figure; scatter(A(:,1), A(:,2)); 
+% A = A(~any(isnan(A),2),:);
+% figure; scatter(A(:,1), A(:,2));
 % [r,p] = corr(A(:,1), A(:,2), 'type', 'Spearman')
 
 
