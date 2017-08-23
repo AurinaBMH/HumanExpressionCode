@@ -13,6 +13,7 @@ parcellation = 'aparcaseg';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 normMethod = 'zscore';
 normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex)
+numRandom = 1000; 
 % choose Lcortex if want to normalise samples assigned to left cortex separately;
 % choose LcortexSubcortex if want to normalise LEFT cortex + left subcortex together
 % choose wholeBrain if you want to normalise the whole brain.
@@ -41,12 +42,13 @@ load(sprintf('%s%s%dDistThresh%d_CoordsAssigned.mat', startFileName, probeSelect
 %------------------------------------------------------------------------------
 doRandom = true; 
 numGenes = size(DataExpression{1,1},2)-2; 
-DSall = zeros(1000,numGenes); 
-for i=1:1000
+DSall = zeros(numRandom,numGenes); 
+for i=1:numRandom
        
 DSall(i,:) = calculateDS(DataExpression,DataCoordinatesMNI, parcellation, normaliseWhat, normMethod, doRandom); 
 
 end
+save(sprintf('DSrandom%s%s%d%d%s', startFileName, probeSelection, NumNodes, distanceThreshold, normMethod)); 
 %------------------------------------------------------------------------------
 % Generate empirical DS scores 
 %------------------------------------------------------------------------------
@@ -54,7 +56,7 @@ DSempirical = calculateDS(DataExpression,DataCoordinatesMNI, parcellation, norma
 Pvals = zeros(numGenes,1); 
 Tvals = zeros(numGenes,1); 
 %------------------------------------------------------------------------------
-% Evaluate DS value for each gene by performing ttest
+% Evaluate DS value for each gene by performing ttest2
 %------------------------------------------------------------------------------
 for gene = 1:numGenes
     
@@ -63,3 +65,8 @@ Pvals(gene) = p;
 Tvals(gene) = stats.tstat; 
     
 end
+%------------------------------------------------------------------------------
+% Determine the threshold for selecting genes and select them
+%------------------------------------------------------------------------------
+pThreshold = 0.05/numGenes; 
+selectGenes = find(Pvals<pThreshold); 
