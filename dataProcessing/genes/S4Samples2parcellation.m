@@ -16,7 +16,7 @@
 % Choose options
 %------------------------------------------------------------------------------
 % choose if you want to use data with CUST probes
-useCUSTprobes = false;
+useCUSTprobes = true;
 % choose what type of probe selection to use, hemisphere, subject list, parcellations, threshols.
 probeSelection = 'PC';% (Variance', LessNoise', 'Mean')
 parcellations = {'aparcaseg'};%, 'cust100', 'cust250'};
@@ -271,7 +271,7 @@ for subject = subjects
     
     
     if distanceThreshold < 30
-        save(sprintf('%sd%s%dDistThresh%d_CoordsAssigned_S0%d.mat', startFileName, probeSelection, NumNodes, distanceThreshold, subject), ...
+        save(sprintf('%sd%s%DistThresh%d_CoordsAssigned_S0%d.mat', startFileName, probeSelection, NumNodes, distanceThreshold, subject), ...
             'data');
         cd ../../..
     elseif distanceThreshold == 30
@@ -283,5 +283,5 @@ for subject = subjects
 end
 %% save data for all subjects
 cd ('data/genes/processedData')
-save(sprintf('MicroarrayDatad%s%dDistThresh%d_CoordsAssigned.mat', probeSelection, NumNodes, distanceThreshold), 'DataExpression', 'DataCoordinatesMRI', 'DataCoordinatesMNI', 'probeInformation');
-
+save(sprintf('%s%s%dDistThresh%d_CoordsAssigned.mat', startFileName, probeSelection, NumNodes, distanceThreshold), 'DataExpression', 'DataCoordinatesMRI', 'DataCoordinatesMNI', 'probeInformation');
+cd ../../..
