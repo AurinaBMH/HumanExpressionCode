@@ -13,7 +13,7 @@ parcellation = 'aparcaseg';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 normMethod = 'zscore';
 normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex)
-numRandom = 1000; 
+numRandom = 10; 
 % choose Lcortex if want to normalise samples assigned to left cortex separately;
 % choose LcortexSubcortex if want to normalise LEFT cortex + left subcortex together
 % choose wholeBrain if you want to normalise the whole brain.
