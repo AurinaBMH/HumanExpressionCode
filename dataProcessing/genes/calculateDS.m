@@ -87,9 +87,9 @@ for sub=subjects
     end
     %sampleInd = linspace(1,size(expSubj,2)-2,size(expSubj,2)-2);
     if doRandom
-        ix = randperm(size(expSubj,2)-2);
+        ix = randperm(size(expSubj,1));
         dataOrig = expSubj(:,3:size(expSubj,2));
-        data = dataOrig(:,ix);
+        data = dataOrig(ix,:);
     else
         data = expSubj(:,3:size(expSubj,2));
     end
