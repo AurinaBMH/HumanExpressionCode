@@ -15,7 +15,7 @@
 %------------------------------------------------------------------------------
 % RemoveCUSTProbes = true; will exclude CUST probes
 % ExcludeCBandBS = true; will exclude samples from brainstem and cerebellum
-useCUSTprobes = true;
+useCUSTprobes = false;
 ExcludeCBandBS = true;
 
 if useCUSTprobes
@@ -166,7 +166,7 @@ Expressionall = horzcat(DataTable{1,1}, DataTable{2,1}, DataTable{3,1}, DataTabl
 Coordinatesall = vertcat(DataTable{1,2}, DataTable{2,2}, DataTable{3,2}, DataTable{4,2}, DataTable{5,2}, DataTable{6,2});
 StructureNamesall = vertcat(DataTable{1,3}, DataTable{2,3}, DataTable{3,3}, DataTable{4,3}, DataTable{5,3}, DataTable{6,3});
 MRIvoxCoordinatesAll = vertcat(DataTable{1,4}, DataTable{2,4}, DataTable{3,4}, DataTable{4,4}, DataTable{5,4}, DataTable{6,4});
-noiseall = vertcat(DataTable{1,5}, DataTable{2,5}, DataTable{3,5}, DataTable{4,5}, DataTable{5,5}, DataTable{6,5});
+noiseall = horzcat(DataTable{1,5}, DataTable{2,5}, DataTable{3,5}, DataTable{4,5}, DataTable{5,5}, DataTable{6,5});
 
 %------------------------------------------------------------------------------
 % Save relevant variables to a MicroarrayData.mat file
@@ -175,5 +175,5 @@ cd ..
 cd ('processedData');
 
 fprintf(1,'Saving data to the file\n')
-save(sprintf('%s.mat', startFileName), 'DataTable','DataTableProbe', 'Expressionall', 'Coordinatesall', 'StructureNamesall', 'MRIvoxCoordinatesAll', 'noise');
+save(sprintf('%s.mat', startFileName), 'DataTable','DataTableProbe', 'Expressionall', 'Coordinatesall', 'StructureNamesall', 'MRIvoxCoordinatesAll', 'noiseall');
 cd ../../..
