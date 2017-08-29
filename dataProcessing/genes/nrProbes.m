@@ -6,6 +6,7 @@
 useCUSTprobes = true;
 probeSelection = 'PC';% (Variance', LessNoise', 'Mean', 'PC')
 signalThreshold = 0.5; % percentage of samples that a selected probe has expression levels that are higher than background
+doOriginal = false;
 %------------------------------------------------------------------------------
 % Load the data
 %------------------------------------------------------------------------------
@@ -79,24 +80,43 @@ end
 %------------------------------------------------------------------------------
 % ORIGINAL DATA OR FILTERED DATA
 %------------------------------------------------------------------------------
-doOriginal = false;
 
 if doOriginal
     genes = unique(DataTableProbe.EntrezID{1},'stable');
     listGenes = DataTableProbe.EntrezID{1};
+    expression = Expressionall; 
 else
     genes = unique(DataTableProbe.EntrezID{1}(indKeepProbes),'stable');
     listGenes = DataTableProbe.EntrezID{1}(indKeepProbes);
     signalLevel = signalLevel(indKeepProbes);
+    expression = Expressionall(indKeepProbes,:);
 end
 
 signalLevelProbes = cell(length(genes),1);
 numberProbes = zeros(length(genes),1);
+k=1; 
+l=1; 
 for gene=1:length(genes)
     
     indGene = find(listGenes==genes(gene));
     signalLevelProbes{gene} = signalLevel(indGene);
     numberProbes(gene) = length(indGene);
+    if numberProbes(gene)==2
+        [r(k),p(k)] = corr(expression(indGene(1),:)', expression(indGene(2),:)'); 
+        variance12(k) = var(expression(indGene(1),:)'); 
+        variance22(k) = var(expression(indGene(2),:)'); 
+        G{k} = indGene; 
+        k=k+1; 
+    end
+    if numberProbes(gene)==3
+        [r1(l),p1(l)] = corr(expression(indGene(1),:)', expression(indGene(2),:)'); 
+        [r2(l),p2(l)] = corr(expression(indGene(1),:)', expression(indGene(3),:)'); 
+        [r3(l),p3(l)] = corr(expression(indGene(2),:)', expression(indGene(3),:)'); 
+        variance13(l) = var(expression(indGene(1),:)'); 
+        variance23(l) = var(expression(indGene(2),:)'); 
+        variance33(l) = var(expression(indGene(3),:)'); 
+        l=l+1;  
+    end
     
 end
 
@@ -110,7 +130,7 @@ for i=1:length(uniqNrProbes)
     
 end
 probeSummary = table(HowManyGenes,HowManyProbes);
-
+figure; hist(r1,100); figure; hist(r2,100);  figure; hist(r3,100);
 % check the proportion of noise
 
 
