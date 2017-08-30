@@ -3,7 +3,7 @@
 % Choose options
 %------------------------------------------------------------------------------
 
-useCUSTprobes = false;
+useCUSTprobes = true;
 signalThreshold = 0.5; % percentage of samples that a selected probe has expression levels that are higher than background
 doOriginal = false;
 %------------------------------------------------------------------------------
@@ -57,6 +57,7 @@ signalLevelProbes = cell(length(genes),1);
 numberProbes = zeros(length(genes),1);
 k=1; 
 l=1; 
+m=1; 
 for gene=1:length(genes)
     
     indGene = find(listGenes==genes(gene));
@@ -79,11 +80,20 @@ for gene=1:length(genes)
         l=l+1;  
     end
     
+    % save entrez ID for genes with multiple probes to be used to check the
+    % influence of probe selection
+    if numberProbes(gene)>2
+        IDgene(m) = listGenes(indGene(1));
+         m=m+1; 
+    end
+   
+    
 end
 
 uniqNrProbes = unique(numberProbes);
 HowManyProbes = zeros(length(uniqNrProbes),1);
 HowManyGenes = zeros(length(uniqNrProbes),1);
+
 for i=1:length(uniqNrProbes)
     
     HowManyProbes(i) = uniqNrProbes(i);
