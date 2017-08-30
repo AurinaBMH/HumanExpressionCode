@@ -7,11 +7,12 @@
 %------------------------------------------------------------------------------
 % Choose options
 %------------------------------------------------------------------------------
-useCUSTprobes = false; % choose if you want to use data with CUST probes
+useCUSTprobes = true; % choose if you want to use data with CUST probes
 probeSelection = 'PC';% (Variance', LessNoise', 'Mean', 'PC')
 parcellation = 'aparcaseg';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 percentDS = 5;
+multipleProbes = false; % it this is true, only genes that have multiple probes will be selected. 
 distanceCorrection = 'Euclidean';
 coexpressionFor = 'all';
 Fit = {'removeMean'};
@@ -80,6 +81,9 @@ coordSample = cell(6,1);
 expSampNorm = cell(6,1);
 expSample = cell(6,1);
 
+entrezIDs = probeInformation.EntrezID; 
+load('IDgenes3plus.mat'); 
+[~, keep] = intersect(entrezIDs, IDgene); 
 %----------------------------------------------------------------------------------
 % Normalise data for each subject separately
 % Do differential stability calculation:
@@ -124,6 +128,9 @@ for sub=subjects
     end
     
     data = expSubj(:,3:size(expSubj,2));
+    if multipleProbes
+    data = data(:,keep); 
+    end
     coordSample{sub} = coord;
     ROI = expSubj(:,2);
     % normalise sample x gene data for each subject separately
