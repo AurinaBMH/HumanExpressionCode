@@ -2,7 +2,7 @@
 useCUSTprobes = true;
 % choose what type of probe selection to use, hemisphere, subject list, parcellations, threshols.
 probeSelection = 'Variance';% (Variance', LessNoise', 'Mean')
-parcellation = {'cust250'};%, aparcaseg, 'cust100', 'cust250'};
+parcellation = {'aparcaseg'};%, aparcaseg, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 subjects = 1:6;
 normaliseWhat = 'Lcortex'; % 'Lcortex'; % 'LcortexSubcortex'
@@ -123,7 +123,7 @@ geneROI = [ROIs, expressionROI];
 coordinatesROI = [ROIs, coordinatesROI];
 
 % calculate DS
-if strcmp(parcellation, 'aparcaseg')
+%if strcmp(parcellation, 'aparcaseg')
     DS = calculateDS(DataExpression,DataCoordinatesMNI,parcellation, normaliseWhat, normMethod);
     DS = DS';
     
@@ -155,11 +155,11 @@ if strcmp(parcellation, 'aparcaseg')
     geneDS = DSvalues(:,2);
     DSTable = table(geneDS, geneInd, entrezID, geneID, geneName, geneSymbol);
     probeInformation.DS = DS;
-end
+%end
 cd 'forAlex'
 save(sprintf('%dparcellation%s.mat', NumNodes, normaliseWhat), 'geneROI',  'coordinatesROI');
-if strcmp(parcellation, 'aparcaseg')
-save(sprintf('DSgenes%s.mat', normaliseWhat), 'DSTable', 'probeInformation');
-end
+%if strcmp(parcellation, 'aparcaseg')
+save(sprintf('%dDSgenes%s.mat', NumNodes, normaliseWhat), 'DSTable', 'probeInformation');
+%end
 cd ../../../..
 
