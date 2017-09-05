@@ -9,14 +9,14 @@
 %------------------------------------------------------------------------------
 useCUSTprobes = true; % choose if you want to use data with CUST probes
 probeSelection = 'Variance';% (Variance', LessNoise', 'Mean', 'PC')
-parcellation = 'aparcaseg';%, 'cust100', 'cust250'};
+parcellation = 'cust250';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 percentDS = 5;
 multipleProbes = false; % it this is true, only genes that have multiple probes will be selected. 
 distanceCorrection = 'Euclidean';
 coexpressionFor = 'all';
 Fit = {'removeMean'};
-normMethod = 'zscore';
+normMethod = 'scaledRobustSigmoid';
 normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex)
 % choose Lcortex if want to normalise samples assigned to left cortex separately;
 % choose LcortexSubcortex if want to normalise LEFT cortex + left subcortex together
@@ -128,6 +128,7 @@ for sub=subjects
     end
     
     data = expSubj(:,3:size(expSubj,2));
+    data = 2.^(data); 
     if multipleProbes
     data = data(:,keep); 
     end
@@ -158,7 +159,7 @@ for sub=subjects
         noProbes = length(indROI);
         fprintf(1,'%u samples for %u ROI found \n', noProbes, ROIs(j))
         % take expression values for a selected entrezID
-        expressionRepInt = data(indROI,:);
+        expressionRepInt = dataNorm(indROI,:);
         coordinatesRepInt = coord(indROI,:);
         
         % calculate the mean for expression data for a selected entrezID
@@ -259,11 +260,11 @@ nrGenes = round(length(DS)*percentDS/100);
 
 [ b, ix ] = sort( DS(:), 'descend' );
 
-DSvalues = zeros(nrGenes, 2);
-for ii=1:nrGenes
-    DSvalues(ii,2) = b(ii);
-    DSvalues(ii,1) = ix(ii);
-end
+% DSvalues = zeros(nrGenes, 2);
+% for ii=1:nrGenes
+%     DSvalues(ii,2) = b(ii);
+%     DSvalues(ii,1) = ix(ii);
+% end
 
 %----------------------------------------------------------------------------------
 % Get probeIDs for selected DS genes
