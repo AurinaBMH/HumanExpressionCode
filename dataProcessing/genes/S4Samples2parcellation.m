@@ -18,8 +18,8 @@
 % choose if you want to use data with CUST probes
 useCUSTprobes = true;
 % choose what type of probe selection to use, hemisphere, subject list, parcellations, threshols.
-probeSelection = 'PC';% (Variance', LessNoise', 'Mean')
-parcellations = {'aparcaseg'};%, 'cust100', 'cust250'};
+probeSelection = 'Variance';% (Variance', LessNoise', 'Mean')
+parcellations = {'cust250'};%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 subjects = 1:6;
 
@@ -256,21 +256,18 @@ for subject = subjects
     %------------------------------------------------------------------------------
     % Save output
     %------------------------------------------------------------------------------
-    
-    nSamples = size(data.left.Cortex.informationMRI,1)+size(data.left.Subcortex.informationMRI,1)+size(data.right.Cortex.informationMRI,1)+size(data.right.Subcortex.informationMRI,1);
-    SUBJECT = zeros(nSamples,1);
-    SUBJECT(:,1) = subject;
-    
-    Expression = cat(1,data.left.Cortex.expression,data.left.Subcortex.expression, data.right.Cortex.expression, data.right.Subcortex.expression);
-    CoordinatesMRI = cat(1,data.left.Cortex.informationMRI,data.left.Subcortex.informationMRI, data.right.Cortex.informationMRI, data.right.Subcortex.informationMRI);
-    CoordinatesMNI = cat(1,data.left.Cortex.informationMNI,data.left.Subcortex.informationMNI, data.right.Cortex.informationMNI, data.right.Subcortex.informationMNI);
-    DataExpression{subject} = [SUBJECT, Expression];
-    DataCoordinatesMRI{subject} = [SUBJECT, CoordinatesMRI];
-    DataCoordinatesMNI{subject} = [SUBJECT, CoordinatesMNI];
-    
-    
-    
-    if distanceThreshold < 30
+    if distanceThreshold <30
+        nSamples = size(data.left.Cortex.informationMRI,1)+size(data.left.Subcortex.informationMRI,1)+size(data.right.Cortex.informationMRI,1)+size(data.right.Subcortex.informationMRI,1);
+        SUBJECT = zeros(nSamples,1);
+        SUBJECT(:,1) = subject;
+        
+        Expression = cat(1,data.left.Cortex.expression,data.left.Subcortex.expression, data.right.Cortex.expression, data.right.Subcortex.expression);
+        CoordinatesMRI = cat(1,data.left.Cortex.informationMRI,data.left.Subcortex.informationMRI, data.right.Cortex.informationMRI, data.right.Subcortex.informationMRI);
+        CoordinatesMNI = cat(1,data.left.Cortex.informationMNI,data.left.Subcortex.informationMNI, data.right.Cortex.informationMNI, data.right.Subcortex.informationMNI);
+        DataExpression{subject} = [SUBJECT, Expression];
+        DataCoordinatesMRI{subject} = [SUBJECT, CoordinatesMRI];
+        DataCoordinatesMNI{subject} = [SUBJECT, CoordinatesMNI];
+        
         save(sprintf('%sd%s%DistThresh%d_CoordsAssigned_S0%d.mat', startFileName, probeSelection, NumNodes, distanceThreshold, subject), ...
             'data');
         cd ../../..
@@ -278,8 +275,7 @@ for subject = subjects
         save(sprintf('CoordsAssignedAllS0%d.mat', subject), 'coordsAssignedALL');
         cd ../../..
     end
-    
-    
+
 end
 %% save data for all subjects
 cd ('data/genes/processedData')

@@ -8,7 +8,7 @@
 % Choose options
 %------------------------------------------------------------------------------
 useCUSTprobes = true; % choose if you want to use data with CUST probes
-probeSelection = 'PC';% (Variance', LessNoise', 'Mean', 'PC')
+probeSelection = 'Variance';% (Variance', LessNoise', 'Mean', 'PC')
 parcellation = 'aparcaseg';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 percentDS = 5;
