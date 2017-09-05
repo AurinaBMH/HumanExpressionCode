@@ -12,26 +12,23 @@ expressionSubjROI = cell(6,1);
 coordinatesSubjROI = cell(6,1);
 
 if strcmp(parcellation, 'aparcaseg')
-    
     NumNodes = 82;
-    LeftCortex = 34;
-    LeftSubcortex = 41;
-    RightCortex = 75;
-    RightSubcortex = NumNodes;
-    
+    LeftCortex = 1:34;
+    LeftSubcortex = 35:41;
+    RightCortex = 42:75;
+    RightSubcortex = 76:82;
 elseif strcmp(parcellation, 'cust100')
     NumNodes = 220;
-    LeftCortex = 100;
-    LeftSubcortex = 110;
-    RightCortex = 210;
-    RightSubcortex = NumNodes;
-    
+    LeftCortex = 1:100;
+    LeftSubcortex = 101:110;
+    RightCortex = 111:210;
+    RightSubcortex = 211:220;
 elseif strcmp(parcellation, 'cust250')
     NumNodes = 530;
-    LeftCortex = 250;
-    LeftSubcortex = 265;
-    RightCortex = 515;
-    RightSubcortex = NumNodes;
+    LeftCortex = 1:250;
+    LeftSubcortex = 251:265;
+    RightCortex = 266:515;
+    RightSubcortex = 516:530;
     
 end
 
@@ -60,31 +57,27 @@ for sub=subjects
         
         case 'Lcortex'
             
-            expSubj = expSingleSubj((expSingleSubj(:,2)<=LeftCortex),:);
-            coord = coordSingle((coordSingle(:,2)<=LeftCortex),3:5);
+            ind = find(ismember(expSingleSubj(:,2), LeftCortex));
             
         case 'LcortexSubcortex'
             
-            expSubj = expSingleSubj((expSingleSubj(:,2)<=LeftSubcortex),:);
-            coord = coordSingle((coordSingle(:,2)<=LeftSubcortex),3:5);
+            LcortexSubcortex = horzcat(LeftCortex,LeftSubcortex);
+            ind = find(ismember(expSingleSubj(:,2), LcortexSubcortex));
             
         case 'wholeBrain'
             
-            expSubj = expSingleSubj;
-            coord = coordSingle(:,3:5);
+            WholeBrain = horzcat(LeftCortex,LeftSubcortex,RightCortex, RightSubcortex);
+            ind = find(ismember(expSingleSubj(:,2), WholeBrain));
             
         case 'LRcortex'
             
-            expSubjRight = expSingleSubj((expSingleSubj(:,2)>=LeftSubcortex & expSingleSubj(:,2)<=RightCortex),:);
-            coordRight = coordSingle((coordSingle(:,2)>=LeftSubcortex & coordSingle(:,2)<=RightCortex),3:5);
-            
-            expSubjLeft = expSingleSubj((expSingleSubj(:,2)<=LeftCortex),:);
-            coordLeft = coordSingle((coordSingle(:,2)<=LeftCortex),3:5);
-            
-            expSubj = cat(1, expSubjLeft, expSubjRight);
-            coord = cat(1, coordLeft, coordRight);
+            LcortexRcortex = horzcat(LeftCortex,RightCortex);
+            ind = find(ismember(expSingleSubj(:,2), LcortexRcortex));
             
     end
+    
+    expSubj = expSingleSubj(ind,:);
+    coord = coordSingle(ind,3:5);
     %sampleInd = linspace(1,size(expSubj,2)-2,size(expSubj,2)-2);
     if doRandom
         ix = randperm(size(expSubj,1));
@@ -93,6 +86,11 @@ for sub=subjects
     else
         data = expSubj(:,3:size(expSubj,2));
     end
+    
+    % transform from log2 scale to normal scale and then normalise using
+    % scaled robust sigmoid.
+    data = 2.^(data);
+    
     coordSample{sub} = coord;
     ROI = expSubj(:,2);
     % normalise sample x gene data for each subject separately
@@ -120,7 +118,7 @@ for sub=subjects
         noProbes = length(indROI);
         fprintf(1,'%u samples for %u ROI found \n', noProbes, ROIs(j))
         % take expression values for a selected entrezID
-        expressionRepInt = data(indROI,:);
+        expressionRepInt = dataNorm(indROI,:);
         coordinatesRepInt = coord(indROI,:);
         
         % calculate the mean for expression data for a selected entrezID
