@@ -7,11 +7,11 @@
 %------------------------------------------------------------------------------
 % Choose options
 %------------------------------------------------------------------------------
-useCUSTprobes = false; % choose if you want to use data with CUST probes
-probeSelection = 'PC';% (Variance', LessNoise', 'Mean', 'PC')
+useCUSTprobes = true; % choose if you want to use data with CUST probes
+probeSelection = 'Variance';% (Variance', LessNoise', 'Mean', 'PC')
 parcellation = 'aparcaseg';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
-normMethod = 'zscore';
+normMethod = 'scaledRobustSigmoid';
 normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex)
 numRandom = 1000; 
 % choose Lcortex if want to normalise samples assigned to left cortex separately;
@@ -64,12 +64,12 @@ for gene = 1:numGenes
     
 %[h,p,ci,stats] = ttest2(DSempirical(gene),DSall(:,gene));
 PvalsSingle(gene) = sum(logical(find(DSempirical(gene)<DSall(:,gene))))/numRandom;
-PvalsAll(gene) = sum(logical(find(DSempirical(gene)<allDS)))/(numRandom.*numGenes);
+%PvalsAll(gene) = sum(logical(find(DSempirical(gene)<allDS)))/(numRandom.*numGenes);
 %Tvals(gene) = stats.tstat; 
     
 end
 % 
-% 
+PvalsAllCorr =  mafdr(PvalsSingle,'BHFDR', true); 
 % for gene = 1:numGenes
 %     
 % [h,p,ci,stats] = ttest2(DSempirical(gene),DSall(:,gene));
@@ -81,4 +81,14 @@ end
 % Determine the threshold for selecting genes and select them
 %------------------------------------------------------------------------------
 pThreshold = 0.05/numGenes; 
-selectGenes = find(Pvals<pThreshold); 
+selectGenes = find(PvalsAllCorr<0.05); 
+    probes = probeInformation.ProbeName(selectGenes);
+    entrezID = probeInformation.EntrezID(selectGenes);
+    geneID = probeInformation.GeneID(selectGenes);
+    geneName = probeInformation.GeneName(selectGenes);
+    geneSymbol = probeInformation.GeneSymbol(selectGenes);
+    geneInd = selectGenes';
+    geneDS = probeInformation.DS(selectGenes); 
+    DSTable = table(geneDS, geneInd, entrezID, geneID, geneName, geneSymbol);
+    
+    
