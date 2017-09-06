@@ -19,7 +19,7 @@
 useCUSTprobes = true;
 % choose what type of probe selection to use, hemisphere, subject list, parcellations, threshols.
 probeSelection = 'Variance';% (Variance', LessNoise', 'Mean')
-parcellations = {'cust250'};%, 'cust100', 'cust250'};
+parcellations = {'cust100'};%, 'cust100', 'cust250'};HCP
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 subjects = 1:6;
 
@@ -34,7 +34,12 @@ DataCoordinatesMNI = cell(length(subjects),1);
 % Select variables according to side/brain part selections
 %------------------------------------------------------------------------------
 sides = {'left', 'right'};
-brainParts = {'Cortex', 'Subcortex'};
+if strcmp(parcellations, 'HCP')
+    brainParts = {'Cortex'}; %, 'Subcortex'};
+else
+    brainParts = {'Cortex','Subcortex'};
+end
+
 
 %------------------------------------------------------------------------------
 % Do assignment for all subjects
@@ -52,7 +57,6 @@ for subject = subjects
         %------------------------------------------------------------------------------
         if strcmp(parcellation, 'aparcaseg')
             parcName = 'default_NativeAnat';
-            cd (parcName);
             [~, data_parcel]=read('defaultparc_NativeAnat.nii');
             NumNodes = 82;
             LeftCortex = 1:34;
@@ -61,8 +65,8 @@ for subject = subjects
             RightSubcortex = 76:82;
         elseif strcmp(parcellation, 'cust100')
             parcName = 'custom100_NativeAnat';
-            cd (parcName);
-            [~, data_parcel]=read('customparc_NativeAnat.nii');
+            [~, data_parcel]=read('customparc100_NativeAnat.nii');
+            [~, data_parcelmask]=read('defaultparc_NativeAnat.nii');
             NumNodes = 220;
             LeftCortex = 1:100;
             LeftSubcortex = 101:110;
@@ -70,17 +74,28 @@ for subject = subjects
             RightSubcortex = 211:220;
         elseif strcmp(parcellation, 'cust250')
             parcName = 'custom250_NativeAnat';
-            cd (parcName);
-            [~, data_parcel]=read('customparc_NativeAnat.nii');
+            [~, data_parcel]=read('customparc250_NativeAnat.nii');
+            [~, data_parcelmask]=read('defaultparc_NativeAnat.nii');
             NumNodes = 530;
             LeftCortex = 1:250;
             LeftSubcortex = 251:265;
             RightCortex = 266:515;
             RightSubcortex = 516:530;
+        elseif strcmp(parcellation, 'HCP')
+            parcName = 'HCP';
+            [~, data_parcel]=read('HCPMMP1_acpc_uncorr.nii');
+            [~, data_parcelmask]=read('defaultparc_NativeAnat.nii');
+            NumNodes = 360;
+            LeftCortex = 1:180;
+            %LeftSubcortex = 35:41;
+            RightCortex = 181:360;
+            %RightSubcortex = 76:82;
             
         end
-        cd ../../../
-        
+        cd ../../
+        data_parcel = double(data_parcel);
+        data_parcelmask = double(data_parcelmask);
+        data_parcel = data_parcel.*double(logical(data_parcelmask));
         %------------------------------------------------------------------------------
         % Load microarray data
         %------------------------------------------------------------------------------
@@ -166,13 +181,14 @@ for subject = subjects
                 %remove zero elements
                 coords2assign( ~any(coords2assign,2), : ) = NaN;
                 coordsAssigned( ~any(coordsAssigned,2), : ) = NaN;
+                
                 coordsNONassigned( ~any(coordsNONassigned,2), : ) = [];
                 
                 %------------------------------------------------------------------------------
                 % Extract intensity values for assigned coordinates
                 %------------------------------------------------------------------------------
                 
-                if distanceThreshold == 30
+                if distanceThreshold >30
                     
                     coordsAssignedALL.(side{1}).(brainPart{1}) = coordsAssigned;
                     
@@ -189,12 +205,20 @@ for subject = subjects
                         intensity_all(i) = intensity;
                         
                     end
+                    indRemove = find(any(isnan(coordsAssigned),2));
+                    intensity_all(indRemove, :) = [];
+                    
+                    MNIcoordinates = sampleInformation.(side{1}).(brainPart{1}).MMCoordinates;
+                    
+                    MNIcoordinates(indRemove, :) = [];
+                    coordsAssigned(indRemove, :) = [];
                     
                     %------------------------------------------------------------------------------
                     % sort nonzero coordinates according to intensity value
                     %------------------------------------------------------------------------------
                     full_informationALL = [intensity_all coordsAssigned];
-                    MNIcoordinates = sampleInformation.(side{1}).(brainPart{1}).MMCoordinates;
+                    
+                    
                     full_informationALLmni = [intensity_all MNIcoordinates];
                     full_information = full_informationALL;
                     full_informationmni = full_informationALLmni;
@@ -210,7 +234,9 @@ for subject = subjects
                     
                     
                     sampleIntensity = full_informationALL(:,1);
-                    IntANDExpression = [sampleIntensity expression.(side{1}).(brainPart{1})];
+                    expr = expression.(side{1}).(brainPart{1});
+                    expr(indRemove,:)=[];
+                    IntANDExpression = [sampleIntensity expr];
                     % exclude nonassigned points
                     IntANDExpression(any(isnan(IntANDExpression),2),:) = NaN;
                     IntANDExpression(any(isnan(IntANDExpression),2),:) = [];
@@ -257,25 +283,32 @@ for subject = subjects
     % Save output
     %------------------------------------------------------------------------------
     if distanceThreshold <30
-        nSamples = size(data.left.Cortex.informationMRI,1)+size(data.left.Subcortex.informationMRI,1)+size(data.right.Cortex.informationMRI,1)+size(data.right.Subcortex.informationMRI,1);
+        if strcmp(parcellation, 'HCP')
+            nSamples = size(data.left.Cortex.informationMRI,1)+size(data.right.Cortex.informationMRI,1);
+            Expression = cat(1,data.left.Cortex.expression, data.right.Cortex.expression);
+            CoordinatesMRI = cat(1,data.left.Cortex.informationMRI, data.right.Cortex.informationMRI);
+            CoordinatesMNI = cat(1,data.left.Cortex.informationMNI, data.right.Cortex.informationMNI);
+        else
+            nSamples = size(data.left.Cortex.informationMRI,1)+size(data.left.Subcortex.informationMRI,1)+size(data.right.Cortex.informationMRI,1)+size(data.right.Subcortex.informationMRI,1);
+            Expression = cat(1,data.left.Cortex.expression,data.left.Subcortex.expression, data.right.Cortex.expression, data.right.Subcortex.expression);
+            CoordinatesMRI = cat(1,data.left.Cortex.informationMRI,data.left.Subcortex.informationMRI, data.right.Cortex.informationMRI, data.right.Subcortex.informationMRI);
+            CoordinatesMNI = cat(1,data.left.Cortex.informationMNI,data.left.Subcortex.informationMNI, data.right.Cortex.informationMNI, data.right.Subcortex.informationMNI);
+        end
         SUBJECT = zeros(nSamples,1);
         SUBJECT(:,1) = subject;
         
-        Expression = cat(1,data.left.Cortex.expression,data.left.Subcortex.expression, data.right.Cortex.expression, data.right.Subcortex.expression);
-        CoordinatesMRI = cat(1,data.left.Cortex.informationMRI,data.left.Subcortex.informationMRI, data.right.Cortex.informationMRI, data.right.Subcortex.informationMRI);
-        CoordinatesMNI = cat(1,data.left.Cortex.informationMNI,data.left.Subcortex.informationMNI, data.right.Cortex.informationMNI, data.right.Subcortex.informationMNI);
         DataExpression{subject} = [SUBJECT, Expression];
         DataCoordinatesMRI{subject} = [SUBJECT, CoordinatesMRI];
         DataCoordinatesMNI{subject} = [SUBJECT, CoordinatesMNI];
         
-        save(sprintf('%sd%s%DistThresh%d_CoordsAssigned_S0%d.mat', startFileName, probeSelection, NumNodes, distanceThreshold, subject), ...
+        save(sprintf('%s%s%dDistThresh%d_CoordsAssigned_S0%d.mat', startFileName, probeSelection, NumNodes, distanceThreshold, subject), ...
             'data');
         cd ../../..
-    elseif distanceThreshold == 30
+    elseif distanceThreshold > 30
         save(sprintf('CoordsAssignedAllS0%d.mat', subject), 'coordsAssignedALL');
         cd ../../..
     end
-
+    
 end
 %% save data for all subjects
 cd ('data/genes/processedData')
