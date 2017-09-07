@@ -65,8 +65,7 @@ for subject = subjects
             RightSubcortex = 76:82;
         elseif strcmp(parcellation, 'cust100')
             parcName = 'custom100_NativeAnat';
-            [~, data_parcel]=read('customparc100_NativeAnat.nii');
-            [~, data_parcelmask]=read('defaultparc_NativeAnat.nii');
+            [~, data_parcel]=read('customparc100_NativeAnatFixed.nii');
             NumNodes = 220;
             LeftCortex = 1:100;
             LeftSubcortex = 101:110;
@@ -74,8 +73,7 @@ for subject = subjects
             RightSubcortex = 211:220;
         elseif strcmp(parcellation, 'cust250')
             parcName = 'custom250_NativeAnat';
-            [~, data_parcel]=read('customparc250_NativeAnat.nii');
-            [~, data_parcelmask]=read('defaultparc_NativeAnat.nii');
+            [~, data_parcel]=read('customparc250_NativeAnatFixed.nii');
             NumNodes = 530;
             LeftCortex = 1:250;
             LeftSubcortex = 251:265;
@@ -84,7 +82,6 @@ for subject = subjects
         elseif strcmp(parcellation, 'HCP')
             parcName = 'HCP';
             [~, data_parcel]=read('HCPMMP1_acpc_uncorr.nii');
-            [~, data_parcelmask]=read('defaultparc_NativeAnat.nii');
             NumNodes = 360;
             LeftCortex = 1:180;
             %LeftSubcortex = 35:41;
@@ -93,9 +90,7 @@ for subject = subjects
             
         end
         cd ../../
-        data_parcel = double(data_parcel);
-        data_parcelmask = double(data_parcelmask);
-        data_parcel = data_parcel.*double(logical(data_parcelmask));
+
         %------------------------------------------------------------------------------
         % Load microarray data
         %------------------------------------------------------------------------------
@@ -120,7 +115,7 @@ for subject = subjects
                 
                 if distanceThreshold < 30
                     
-                    load(sprintf('CoordsAssignedAllS0%d.mat', subject));
+                    load(sprintf('CoordsAssignedAllS0%d%d.mat', subject, NumNodes));
                     
                 end
                 %------------------------------------------------------------------------------
@@ -305,7 +300,7 @@ for subject = subjects
             'data');
         cd ../../..
     elseif distanceThreshold > 30
-        save(sprintf('CoordsAssignedAllS0%d.mat', subject), 'coordsAssignedALL');
+        save(sprintf('CoordsAssignedAllS0%d%d.mat', subject, NumNodes), 'coordsAssignedALL');
         cd ../../..
     end
     
