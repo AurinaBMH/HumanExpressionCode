@@ -9,7 +9,7 @@
 %------------------------------------------------------------------------------
 useCUSTprobes = true; % choose if you want to use data with CUST probes
 probeSelection = 'Variance';% (Variance', LessNoise', 'Mean', 'PC')
-parcellation = 'cust250';%, 'cust100', 'cust250'};
+parcellation = 'HCP';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 percentDS = 5;
 multipleProbes = false; % it this is true, only genes that have multiple probes will be selected. 
@@ -27,42 +27,45 @@ normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex)
 % Define number of subjects and parcellation details based on choises
 %------------------------------------------------------------------------------
 if strcmp(parcellation, 'aparcaseg')
-    
     NumNodes = 82;
-    LeftCortex = 34;
-    LeftSubcortex = 41;
-    RightCortex = 75;
-    RightSubcortex = NumNodes;
-    
+    LeftCortex = 1:34;
+    LeftSubcortex = 35:41;
+    RightCortex = 42:75;
+    RightSubcortex = 76:82;
 elseif strcmp(parcellation, 'cust100')
     NumNodes = 220;
-    LeftCortex = 100;
-    LeftSubcortex = 110;
-    RightCortex = 210;
-    RightSubcortex = NumNodes;
-    
+    LeftCortex = 1:100;
+    LeftSubcortex = 101:110;
+    RightCortex = 111:210;
+    RightSubcortex = 211:220;
 elseif strcmp(parcellation, 'cust250')
     NumNodes = 530;
-    LeftCortex = 250;
-    LeftSubcortex = 265;
-    RightCortex = 515;
-    RightSubcortex = NumNodes;
+    LeftCortex = 1:250;
+    LeftSubcortex = 251:265;
+    RightCortex = 266:515;
+    RightSubcortex = 516:530;
     
+elseif strcmp(parcellation, 'HCP')
+    NumNodes = 360;
+    LeftCortex = 1:180;
+    %LeftSubcortex = 110;
+    RightCortex = 181:360;
+    %RightSubcortex = NumNodes;
 end
 
 switch normaliseWhat
     case 'Lcortex'
         subjects = 1:6;
-        nROIs = 1:LeftCortex;
+        nROIs = LeftCortex;
     case 'LcortexSubcortex'
         subjects = 1:6;
-        nROIs = 1:LeftSubcortex;
+        nROIs = [LeftCortex,LeftSubcortex];
     case 'wholeBrain'
         subjects = 1:2;
         nROIs = 1:NumNodes;
     case 'LRcortex'
         subjects = 1:2;
-        nROIs = [1:LeftCortex,LeftSubcortex+1:RightCortex];
+        nROIs = [LeftCortex,RightCortex];
 end
 
 if useCUSTprobes
@@ -101,32 +104,26 @@ for sub=subjects
         
         case 'Lcortex'
             
-            expSubj = expSingleSubj((expSingleSubj(:,2)<=LeftCortex),:);
-            coord = coordSingle((coordSingle(:,2)<=LeftCortex),3:5);
+            ind = find(ismember(expSingleSubj(:,2), LeftCortex));
             
         case 'LcortexSubcortex'
             
-            expSubj = expSingleSubj((expSingleSubj(:,2)<=LeftSubcortex),:);
-            coord = coordSingle((coordSingle(:,2)<=LeftSubcortex),3:5);
+            LcortexSubcortex = horzcat(LeftCortex,LeftSubcortex);
+            ind = find(ismember(expSingleSubj(:,2), LcortexSubcortex));
             
         case 'wholeBrain'
             
-            expSubj = expSingleSubj;
-            coord = coordSingle(:,3:5);
+            WholeBrain = horzcat(LeftCortex,LeftSubcortex,RightCortex, RightSubcortex);
+            ind = find(ismember(expSingleSubj(:,2), WholeBrain));
             
         case 'LRcortex'
             
-            expSubjRight = expSingleSubj((expSingleSubj(:,2)>=LeftSubcortex & expSingleSubj(:,2)<=RightCortex),:);
-            coordRight = coordSingle((coordSingle(:,2)>=LeftSubcortex & coordSingle(:,2)<=RightCortex),3:5);
-            
-            expSubjLeft = expSingleSubj((expSingleSubj(:,2)<=LeftCortex),:);
-            coordLeft = coordSingle((coordSingle(:,2)<=LeftCortex),3:5);
-            
-            expSubj = cat(1, expSubjLeft, expSubjRight);
-            coord = cat(1, coordLeft, coordRight);
+            LcortexRcortex = horzcat(LeftCortex,RightCortex);
+            ind = find(ismember(expSingleSubj(:,2), LcortexRcortex));
             
     end
-    
+    expSubj = expSingleSubj(ind,:);
+    coord = coordSingle(ind,3:5);
     data = expSubj(:,3:size(expSubj,2));
     data = 2.^(data); 
     if multipleProbes
@@ -255,16 +252,16 @@ DS = mean(c,1);
 %----------------------------------------------------------------------------------
 % Take top % of DS genes
 %----------------------------------------------------------------------------------
-fprintf('Selecting genes with highest differential stability \n')
-nrGenes = round(length(DS)*percentDS/100);
-
-[ b, ix ] = sort( DS(:), 'descend' );
-
-% DSvalues = zeros(nrGenes, 2);
-% for ii=1:nrGenes
-%     DSvalues(ii,2) = b(ii);
-%     DSvalues(ii,1) = ix(ii);
-% end
+% fprintf('Selecting genes with highest differential stability \n')
+% nrGenes = round(length(DS)*percentDS/100);
+% 
+% [ b, ix ] = sort( DS(:), 'descend' );
+% 
+%  DSvalues = zeros(nrGenes, 2);
+%  for ii=1:nrGenes
+%      DSvalues(ii,2) = b(ii);
+%      DSvalues(ii,1) = ix(ii);
+%  end
 
 %----------------------------------------------------------------------------------
 % Get probeIDs for selected DS genes
