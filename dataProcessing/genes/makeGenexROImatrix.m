@@ -2,7 +2,7 @@
 useCUSTprobes = true;
 % choose what type of probe selection to use, hemisphere, subject list, parcellations, threshols.
 probeSelection = 'Variance';% (Variance', LessNoise', 'Mean')
-parcellation = {'aparcaseg'};%, aparcaseg, 'cust100', 'cust250'};
+parcellation = {'HCP'};%, aparcaseg, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 subjects = 1:6;
 normaliseWhat = 'Lcortex'; % 'Lcortex'; % 'LcortexSubcortex'
@@ -36,8 +36,14 @@ elseif strcmp(parcellation, 'cust250')
     LeftSubcortex = 251:265;
     RightCortex = 266:515;
     RightSubcortex = 516:530;
-    
+elseif strcmp(parcellation, 'HCP')
+    NumNodes = 360;
+    LeftCortex = 1:180;
+    %LeftSubcortex = 110;
+    RightCortex = 181:360;
+    %RightSubcortex = NumNodes;
 end
+
 
 cd ('data/genes/processedData')
 load(sprintf('%s%s%dDistThresh%d_CoordsAssigned.mat', startFileName, probeSelection, NumNodes, distanceThreshold));

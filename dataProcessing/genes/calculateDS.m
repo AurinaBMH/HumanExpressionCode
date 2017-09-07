@@ -29,6 +29,12 @@ elseif strcmp(parcellation, 'cust250')
     LeftSubcortex = 251:265;
     RightCortex = 266:515;
     RightSubcortex = 516:530;
+    elseif strcmp(parcellation, 'HCP')
+    NumNodes = 360;
+    LeftCortex = 1:180;
+    %LeftSubcortex = 251:265;
+    RightCortex = 181:360;
+    %RightSubcortex = 516:530;
     
 end
 
