@@ -129,7 +129,7 @@ for sub=subjects
     if multipleProbes
     data = data(:,keep); 
     end
-    coordSample{sub} = coord;
+    %coordSample{sub} = coord;
     ROI = expSubj(:,2);
     % normalise sample x gene data for each subject separately
     %% commented - not normalise
@@ -143,6 +143,7 @@ for sub=subjects
     end
     
     expSampNorm{sub} = [ROI, dataNorm];
+    coordSample{sub} = [ROI, coord];
     expSample{sub} = [ROI, data];
     ROIs = unique(expSubj(:,2));
     
@@ -252,16 +253,16 @@ DS = mean(c,1);
 %----------------------------------------------------------------------------------
 % Take top % of DS genes
 %----------------------------------------------------------------------------------
-% fprintf('Selecting genes with highest differential stability \n')
-% nrGenes = round(length(DS)*percentDS/100);
-% 
-% [ b, ix ] = sort( DS(:), 'descend' );
-% 
-%  DSvalues = zeros(nrGenes, 2);
-%  for ii=1:nrGenes
-%      DSvalues(ii,2) = b(ii);
-%      DSvalues(ii,1) = ix(ii);
-%  end
+fprintf('Selecting genes with highest differential stability \n')
+nrGenes = round(length(DS)*percentDS/100);
+
+[ b, ix ] = sort( DS(:), 'descend' );
+
+ DSvalues = zeros(nrGenes, 2);
+ for ii=1:nrGenes
+     DSvalues(ii,2) = b(ii);
+     DSvalues(ii,1) = ix(ii);
+ end
 
 %----------------------------------------------------------------------------------
 % Get probeIDs for selected DS genes
@@ -281,7 +282,7 @@ switch coexpressionFor
         switch distanceCorrection
             case 'Euclidean'
                 % calculate euclidean distance on MNI coordinates
-                sampleDistances = pdist2(combinedCoord, combinedCoord);%
+                sampleDistances = pdist2(combinedCoord(:,2:end), combinedCoord(:,2:end));%
             case 'GMvolume'
                 % load pre-calculated distances within GM volume
                 load('DistancesGM_MNI.mat');
@@ -307,7 +308,7 @@ switch coexpressionFor
             
             selectedGenes = expSampNorm{sub}(:,2:end);
             indSub = size(expSampNorm{sub},1);
-            sampleDistances = pdist2(coordSample{sub}, coordSample{sub}); %distancesMNI(indSub1:indSub, indSub1:indSub); %
+            sampleDistances = pdist2(coordSample{sub}(:,2:end), coordSample{sub}(:,2:end)); %distancesMNI(indSub1:indSub, indSub1:indSub); %
             indSub1 = indSub+1;
             W = unique(expSampNorm{sub}(:,1));
             ROIs = expSampNorm{sub}(:,1);
@@ -322,6 +323,7 @@ switch coexpressionFor
 end
 
 averageCoexpression = nanmean(expPlot,3);
+probeInformation.DS = DS'; 
 %figure; imagesc(expPlotMNI); caxis([-1 1]); colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]); title('Average coexpression')
 
 % A = [averageCoexpressionSeparateMasMin(:),averageCoexpressionSeparateZscore(:)];

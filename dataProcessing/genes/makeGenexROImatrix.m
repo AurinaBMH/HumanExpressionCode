@@ -162,7 +162,7 @@ coordinatesROI = [ROIs, coordinatesROI];
     DSTable = table(geneDS, geneInd, entrezID, geneID, geneName, geneSymbol);
     probeInformation.DS = DS;
 %end
-cd 'forAlex'
+cd 'forBen'
 save(sprintf('%dparcellation%s.mat', NumNodes, normaliseWhat), 'geneROI',  'coordinatesROI');
 %if strcmp(parcellation, 'aparcaseg')
 save(sprintf('%dDSgenes%s.mat', NumNodes, normaliseWhat), 'DSTable', 'probeInformation');

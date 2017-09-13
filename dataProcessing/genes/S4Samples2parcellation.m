@@ -19,7 +19,7 @@
 useCUSTprobes = true;
 % choose what type of probe selection to use, hemisphere, subject list, parcellations, threshols.
 probeSelection = 'Variance';% (Variance', LessNoise', 'Mean')
-parcellations = {'cust100'};%, 'cust100', 'cust250'};HCP
+parcellations = {'cust250'};%, 'cust100', 'cust250'};HCP
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 subjects = 1:6;
 
@@ -113,7 +113,7 @@ for subject = subjects
                 
                 coords2assign = sampleInformation.(side{1}).(brainPart{1}).MRIvoxCoordinates;
                 
-                if distanceThreshold < 30
+                if distanceThreshold < 35
                     
                     load(sprintf('CoordsAssignedAllS0%d%d.mat', subject, NumNodes));
                     
@@ -183,11 +183,11 @@ for subject = subjects
                 % Extract intensity values for assigned coordinates
                 %------------------------------------------------------------------------------
                 
-                if distanceThreshold >30
+                if distanceThreshold >35
                     
                     coordsAssignedALL.(side{1}).(brainPart{1}) = coordsAssigned;
                     
-                elseif distanceThreshold <30
+                elseif distanceThreshold <35
                     
                     Int=nonzeros(data_parcel);
                     int = unique(Int);
@@ -277,7 +277,7 @@ for subject = subjects
     %------------------------------------------------------------------------------
     % Save output
     %------------------------------------------------------------------------------
-    if distanceThreshold <30
+    if distanceThreshold <35
         if strcmp(parcellation, 'HCP')
             nSamples = size(data.left.Cortex.informationMRI,1)+size(data.right.Cortex.informationMRI,1);
             Expression = cat(1,data.left.Cortex.expression, data.right.Cortex.expression);
@@ -296,10 +296,10 @@ for subject = subjects
         DataCoordinatesMRI{subject} = [SUBJECT, CoordinatesMRI];
         DataCoordinatesMNI{subject} = [SUBJECT, CoordinatesMNI];
         
-        save(sprintf('%s%s%dDistThresh%d_CoordsAssigned_S0%d.mat', startFileName, probeSelection, NumNodes, distanceThreshold, subject), ...
-            'data');
+        %save(sprintf('%s%s%dDistThresh%d_CoordsAssigned_S0%d.mat', startFileName, probeSelection, NumNodes, distanceThreshold, subject), ...
+            %'data');
         cd ../../..
-    elseif distanceThreshold > 30
+    elseif distanceThreshold > 35
         save(sprintf('CoordsAssignedAllS0%d%d.mat', subject, NumNodes), 'coordsAssignedALL');
         cd ../../..
     end

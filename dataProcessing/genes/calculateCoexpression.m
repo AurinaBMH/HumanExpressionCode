@@ -101,6 +101,8 @@ for sub=1:length(W)
         A = sROIs == W(sub);
         B = sROIs == W(j);
         %for corrected
+        %P = coexpressionSorted(A, B);
+        
         P = correctedCoexpressionSorted(A, B);
         %for uncorrected
         %P = CoexpressionSorted(A, B);
