@@ -1,4 +1,4 @@
-function [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect] = calculateCoexpression(MRIvoxCoordinates, selectedGenes, DSvalues, W, ROIs,nROIs, Fit)
+function [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect] = calculateCoexpression(MRIvoxCoordinates, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance)
 
 
 distExpVect(:,1) = MRIvoxCoordinates(:); % make a vector for distances
@@ -101,11 +101,15 @@ for sub=1:length(W)
         A = sROIs == W(sub);
         B = sROIs == W(j);
         %for corrected
+        if correctDistance == true
         %P = coexpressionSorted(A, B);
         
         P = correctedCoexpressionSorted(A, B);
+        else
+            
         %for uncorrected
-        %P = CoexpressionSorted(A, B);
+        P = coexpressionSorted(A, B);
+        end
         parcelCoexpression(sub,j) = mean(mean(P));
         
     end

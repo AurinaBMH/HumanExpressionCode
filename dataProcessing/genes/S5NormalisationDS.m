@@ -11,8 +11,9 @@ useCUSTprobes = true; % choose if you want to use data with CUST probes
 probeSelection = 'Variance';% (Variance', LessNoise', 'Mean', 'PC')
 parcellation = 'HCP';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
-percentDS = 5;
+percentDS = 100;
 multipleProbes = false; % it this is true, only genes that have multiple probes will be selected. 
+correctDistance = true; 
 distanceCorrection = 'Euclidean';
 coexpressionFor = 'all';
 Fit = {'removeMean'};
@@ -295,7 +296,7 @@ switch coexpressionFor
         fprintf(sprintf('%s distance correction is chosen\n', distanceCorrection))
         W = unique(expSampNormalisedAll(:,1));
         ROIs = expSampNormalisedAll(:,1);
-        [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit);
+        [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance);
     case 'separate'
         
         expPlotALL = zeros(max(nROIs),max(nROIs),max(subjects));
@@ -313,7 +314,7 @@ switch coexpressionFor
             W = unique(expSampNorm{sub}(:,1));
             ROIs = expSampNorm{sub}(:,1);
             
-            [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit);
+            [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance);
             expPlotALL(:,:,sub) = expPlot;
             %expPlotALL2{sub} = expPlot;
             correctedCoexpressionALL{sub} = correctedCoexpression;
