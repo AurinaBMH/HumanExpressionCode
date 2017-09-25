@@ -26,7 +26,7 @@ end
 %[param,stat] = sigm_fit(distExpVect(:,1),distExpVect(:,2));
 
 % plot original coexpression-distance .
-[xThresholds,yMeans] = BF_PlotQuantiles(distExpVect(:,1),distExpVect(:,2),50,0,1); title('Coexpresion vs distance'); ylim([-0.8 1]);
+[xThresholds,yMeans] = BF_PlotQuantiles(distExpVect(:,1),distExpVect(:,2),25,0,1); xlabel('Euclidean distance (mm)'); ylabel('Correlated gene expression');ylim([-0.8 0.8]); set(gca,'fontsize',15)
 switch Fit{1}
     
     case 'linear'

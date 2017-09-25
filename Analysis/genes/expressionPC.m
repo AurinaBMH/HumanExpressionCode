@@ -1,7 +1,7 @@
 % Select only cortical samples
 cd ('data/genes/processedData'); 
 load('MicroarrayDataWITHcustVariance360DistThresh2_CoordsAssigned.mat')
-doNormalise = true;
+doNormalise = false;
 doNormalScale = false; 
 Lcortex = 1:180;
 D = cell(6,1);
@@ -38,11 +38,13 @@ figure; h = scatter(x,y,S,C); %'filled','MarkerEdgeColor',[0 .7 .7]);
 set(gcf,'color','w');
 xlabel(sprintf('PC1, explains %d%% variance', round(explained(1))));
 ylabel(sprintf('PC2, explains %d%% variance', round(explained(2))));
+set(gca,'fontsize',15)
 
 figure; h = scatter3(x,y,z,S,C);
 xlabel(sprintf('PC1, explains %d%% variance', round(explained(1))));
 ylabel(sprintf('PC2, explains %d%% variance', round(explained(2))));
 zlabel(sprintf('PC3, explains %d%% variance', round(explained(3))));
+set(gca,'fontsize',15)
 % on normal scaled data
 % [W,score,~,~,explained] = pca(expression2); %score=score'; W=W';
 % x = score(:,1); y = score(:,2); z = score(:,3); 
