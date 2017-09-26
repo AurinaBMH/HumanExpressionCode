@@ -1,4 +1,4 @@
-function W_thr = threshold_consistency(Ws, p)
+function [W_thr,Wcv] = threshold_consistency(Ws, p)
 %THRESHOLD_CONSISTENCY    Threshold edges ranked by consistency
 %
 %   W_thr = threshold_consistency(Ws, p);

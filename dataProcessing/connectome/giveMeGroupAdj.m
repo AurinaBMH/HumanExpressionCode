@@ -1,5 +1,5 @@
-function groupAdj = giveMeGroupAdj(connectomes)
-
+function [groupAdj, consist] = giveMeGroupAdj(connectomes, dens)
+ 
 M = zeros(size(connectomes{1},1),size(connectomes{1},2),size(connectomes,2)); 
 nSubs = size(connectomes,2); 
 d = zeros(nSubs,1); 
@@ -8,6 +8,10 @@ for i=1:nSubs
     d(i) = density_und(connectomes{i}); 
 end
 dMean = mean(d); 
-groupAdj = threshold_consistency(M, dMean); 
+% if density is specified, use that value
+if nargin >1
+    dMean = dens;
+end
+    [groupAdj, consist] = threshold_consistency(M, dMean); 
 
 end
