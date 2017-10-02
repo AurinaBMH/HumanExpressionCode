@@ -1,6 +1,8 @@
 % check if consistency relates to volumes
 % give grpup connectome and variation matrix
-study = 'GenCog'; % (HCP)
+study = 'HCP'; % (HCP)
+dens = 1; %0.5; 
+
 switch study
     case 'HCP'
         
@@ -15,12 +17,16 @@ end
 
 load('HCPMMP1ANDfslatlas20_MNILinear_COGflippedX.mat')
 
-[groupAdj, consist] = giveMeGroupAdj(SIFT2, 0.1); 
+type = standard;
+
+[groupAdj, consist] = giveMeGroupAdj(type, dens); 
 
 if strcmp(study, 'HCP')
 groupAdj = groupAdj([1:180,191:370],[1:180,191:370]);
 consist = consist([1:180,191:370],[1:180,191:370]);
 end
+
+
 
 weightVariation = consist.*logical(groupAdj);
 volumes = vol.*logical(groupAdj);
@@ -30,12 +36,13 @@ data(:,1) = weightVariation(:); data(:,2)=volumes(:);
 data( ~any(data,2), : ) = []; 
 figure; scatter(data(:,1), data(:,2));
 xlabel('variation in weights'); ylabel('combined volume of 2 regions'); 
+title(sprintf('%s', study)); 
 
 
 % get distnces between rois
 % give grpup connectome and variation matrix
 %[groupLength, consistLength] = giveMeGroupAdj(SIFT2_length, 0.1);
-[groupAdj, consist] = giveMeGroupAdj(standard); 
+[groupAdj, consist] = giveMeGroupAdj(type, dens); 
 weightVariation = consist.*logical(groupAdj);
 
 length = pdist2(coordinates, coordinates); %groupLength.*logical(groupAdj); 
@@ -46,3 +53,4 @@ dataLength = dataLength(all(dataLength,2),:);
 dataLength( ~any(dataLength,2), : ) = []; 
 figure; scatter(dataLength(:,1), dataLength(:,2));
 xlabel('variation in weights'); ylabel('distance between regions'); 
+title(sprintf('%s', study)); 
