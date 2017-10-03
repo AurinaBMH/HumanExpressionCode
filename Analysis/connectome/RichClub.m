@@ -12,8 +12,8 @@ end
 
 numIter = 5;
 numRepeats = 10;
-WhatTypeNetwork = 'wuStrengthBins'; 
-whatNullModel = 'strength'; %'randmio_und'; %'strength'; %
+WhatTypeNetwork = 'bu'; 
+whatNullModel = 'randmio_und'; %'randmio_und'; %'strength'; %
 
 if strcmp(WhatTypeNetwork, 'bu')
     Adj = logical(Adj); 
