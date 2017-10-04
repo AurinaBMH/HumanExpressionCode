@@ -1,4 +1,4 @@
-function [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect] = calculateCoexpression(MRIvoxCoordinates, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance)
+function [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect, distPlot] = calculateCoexpression(MRIvoxCoordinates, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance)
 
 
 distExpVect(:,1) = MRIvoxCoordinates(:); % make a vector for distances
@@ -86,9 +86,16 @@ colormap([flipud(BF_getcmap('blues',9));[1 1 1]; BF_getcmap('reds',9)]);
 %----------------------------------------------------------------------------------
 
 parcelCoexpression = zeros(length(W),length(W));
+parcelDistances = zeros(length(W),length(W));
 
 [sROIs, ind] = sort(ROIs);
 correctedCoexpressionSorted = correctedCoexpression(ind, ind);
+
+MRIvoxCoordinates(logical(eye(size(MRIvoxCoordinates)))) = NaN;
+distancesSorted = MRIvoxCoordinates(ind, ind); 
+
+
+sampleCoexpression(logical(eye(size(sampleCoexpression)))) = NaN;
 coexpressionSorted = sampleCoexpression(ind, ind);
 
 figure; subplot(1,25,[1 2]); imagesc(sROIs);
@@ -105,11 +112,14 @@ for sub=1:length(W)
         %P = coexpressionSorted(A, B);
         
         P = correctedCoexpressionSorted(A, B);
+         
         else
             
         %for uncorrected
         P = coexpressionSorted(A, B);
         end
+        D = distancesSorted(A,B);
+        parcelDistances(sub,j) = mean(mean(D)); 
         parcelCoexpression(sub,j) = mean(mean(P));
         
     end
@@ -119,10 +129,14 @@ end
 
 p = setdiff(nROIs, ROIs);
 expPlot = parcelCoexpression;
+distPlot = parcelDistances; 
 if ~isempty(p)
     
     expPlot = insertrows(expPlot,NaN,p); 
     expPlot = insertrows(expPlot.', NaN,p).' ; % insert columns
+    
+    distPlot = insertrows(distPlot,NaN,p); 
+    distPlot = insertrows(distPlot.', NaN,p).' ; % insert columns
 
 end
 figure; imagesc(expPlot); caxis([-1,1]); title('Parcellation coexpression ROIs');
