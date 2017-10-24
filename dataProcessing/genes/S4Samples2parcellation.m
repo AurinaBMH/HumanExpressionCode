@@ -19,7 +19,7 @@
 useCUSTprobes = true;
 % choose what type of probe selection to use, hemisphere, subject list, parcellations, threshols.
 probeSelection = 'Variance';% (Variance', LessNoise', 'Mean')
-parcellations = {'cust250'};%, 'cust100', 'cust250'};HCP
+parcellations = {'HCP'};%, 'cust100', 'cust250', 'aparcaseg', 'HCP'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 subjects = 1:6;
 

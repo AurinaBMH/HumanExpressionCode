@@ -13,12 +13,12 @@ parcellation = 'HCP';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 percentDS = 5;
 multipleProbes = false; % it this is true, only genes that have multiple probes will be selected. 
-correctDistance = true; 
+correctDistance = false; 
 distanceCorrection = 'Euclidean';
 coexpressionFor = 'all';
 Fit = {'removeMean'};
-normMethod = 'scaledRobustSigmoid';
-normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex)
+normMethod = 'scaledRobustSigmoid'; %'scaledRobustSigmoid';
+normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex, Lcortex)
 % choose Lcortex if want to normalise samples assigned to left cortex separately;
 % choose LcortexSubcortex if want to normalise LEFT cortex + left subcortex together
 % choose wholeBrain if you want to normalise the whole brain.
