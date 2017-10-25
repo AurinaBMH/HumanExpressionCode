@@ -82,13 +82,15 @@ for gene=1:length(genes)
     
     % save entrez ID for genes with multiple probes to be used to check the
     % influence of probe selection
-    if numberProbes(gene)>2
+    if numberProbes(gene)>1
         IDgene(m) = listGenes(indGene(1));
          m=m+1; 
     end
    
     
 end
+
+save('IDgenes2plus.mat', 'IDgene'); 
 
 uniqNrProbes = unique(numberProbes);
 HowManyProbes = zeros(length(uniqNrProbes),1);

@@ -11,7 +11,7 @@
 %------------------------------------------------------------------------------
 % separate according to sides
 useCUSTprobes = true;
-probeSelection = 'Variance';% (Variance', LessNoise', 'Mean')
+probeSelection = 'PC';% (Variance', LessNoise', 'Mean')
 sides = {'right', 'left'};
 % separate according to brain part: cortex/subcortex
 brainParts = {'Cortex', 'Subcortex'};
