@@ -8,13 +8,13 @@
 % Choose options
 %------------------------------------------------------------------------------
 useCUSTprobes = true; % choose if you want to use data with CUST probes
-probeSelection = 'PC';% (Variance', LessNoise', 'Mean', 'PC')
+probeSelection = 'Mean';% (Variance', LessNoise', 'Mean', 'PC')
 parcellation = 'HCP';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 multipleProbes = false; % it this is true, only genes that have multiple probes will be selected.
 correctDistance = false;
-calculateDS = false;
-percentDS = 5;
+calculateDS = true;
+percentDS = 100;
 distanceCorrection = 'Euclidean';
 coexpressionFor = 'all';
 Fit = {'removeMean'};
@@ -159,7 +159,7 @@ for sub=subjects
         noProbes = length(indROI);
         fprintf(1,'%u samples for %u ROI found \n', noProbes, ROIs(j))
         % take expression values for a selected entrezID
-        expressionRepInt = dataNorm(indROI,:);
+        expressionRepInt = dataNorm(indROI,:); % try not normalised data for DS
         coordinatesRepInt = coord(indROI,:);
         
         % calculate the mean for expression data for a selected entrezID
