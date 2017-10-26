@@ -8,12 +8,13 @@
 % Choose options
 %------------------------------------------------------------------------------
 useCUSTprobes = true; % choose if you want to use data with CUST probes
-probeSelection = 'LessNoise';% (Variance', LessNoise', 'Mean', 'PC')
+probeSelection = 'PC';% (Variance', LessNoise', 'Mean', 'PC')
 parcellation = 'HCP';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
+multipleProbes = false; % it this is true, only genes that have multiple probes will be selected.
+correctDistance = false;
+calculateDS = false;
 percentDS = 5;
-multipleProbes = false; % it this is true, only genes that have multiple probes will be selected. 
-correctDistance = false; 
 distanceCorrection = 'Euclidean';
 coexpressionFor = 'all';
 Fit = {'removeMean'};
@@ -85,9 +86,9 @@ coordSample = cell(6,1);
 expSampNorm = cell(6,1);
 expSample = cell(6,1);
 
-entrezIDs = probeInformation.EntrezID; 
-load('IDgenes3plus.mat'); 
-[~, keep] = intersect(entrezIDs, IDgene); 
+entrezIDs = probeInformation.EntrezID;
+load('IDgenes3plus.mat');
+[~, keep] = intersect(entrezIDs, IDgene);
 %----------------------------------------------------------------------------------
 % Normalise data for each subject separately
 % Do differential stability calculation:
@@ -126,9 +127,9 @@ for sub=subjects
     expSubj = expSingleSubj(ind,:);
     coord = coordSingle(ind,3:5);
     data = expSubj(:,3:size(expSubj,2));
-    data = 2.^(data); 
+    data = 2.^(data);
     if multipleProbes
-    data = data(:,keep); 
+        data = data(:,keep);
     end
     %coordSample{sub} = coord;
     ROI = expSubj(:,2);
@@ -180,151 +181,153 @@ expSampNormalisedAll = vertcat(expSampNorm{1}, expSampNorm{2},expSampNorm{3},exp
 combinedCoord = cat(1,coordSample{1}, coordSample{2}, coordSample{3},...
     coordSample{4}, coordSample{5}, coordSample{6});
 
-%----------------------------------------------------------------------------------
-% Pre-define variables for DS calculation
-%----------------------------------------------------------------------------------
-
-numSubjects = max(subjects);
-inter = cell(numSubjects,numSubjects);
-indexj = cell(numSubjects,numSubjects);
-indexk = cell(numSubjects,numSubjects);
-indexjp = cell(numSubjects,numSubjects);
-corellations = cell(numSubjects,numSubjects);
-numGenes = size(expressionSubjROI{1,1},2)-2;
-
-%----------------------------------------------------------------------------------
-% Get ROIs that are in all subjects
-%----------------------------------------------------------------------------------
-fprintf('Selecting ROIs for DS calculation\n')
-R = cell(1,numSubjects);
-for o=1:numSubjects
-    R{:,o} = expressionSubjROI{o}(:,2);
-end
-intersectROIs = mintersect(R{1}, R{2}, R{3}, R{4}, R{5}, R{6});
-
-% use a set list of ROIS that are present in all subjects
-ROIsindex = zeros(length(intersectROIs),numSubjects);
-for j=1:numSubjects
+if calculateDS
+    %----------------------------------------------------------------------------------
+    % Pre-define variables for DS calculation
+    %----------------------------------------------------------------------------------
     
-    for w=1:length(intersectROIs)
-        ROIsindex(w,j) = find(R{j}==intersectROIs(w));
+    numSubjects = max(subjects);
+    inter = cell(numSubjects,numSubjects);
+    indexj = cell(numSubjects,numSubjects);
+    indexk = cell(numSubjects,numSubjects);
+    indexjp = cell(numSubjects,numSubjects);
+    corellations = cell(numSubjects,numSubjects);
+    numGenes = size(expressionSubjROI{1,1},2)-2;
+    
+    %----------------------------------------------------------------------------------
+    % Get ROIs that are in all subjects
+    %----------------------------------------------------------------------------------
+    fprintf('Selecting ROIs for DS calculation\n')
+    R = cell(1,numSubjects);
+    for o=1:numSubjects
+        R{:,o} = expressionSubjROI{o}(:,2);
     end
+    intersectROIs = mintersect(R{1}, R{2}, R{3}, R{4}, R{5}, R{6});
     
-end
-
-%----------------------------------------------------------------------------------
-% For each pair of cubjects, calculate correlation (Spearman) of regional expression
-% for each gene to select genes that have consistent expression patterns
-% through regions between pairs of subjects.
-%----------------------------------------------------------------------------------
-fprintf('Calculating differential stability\n')
-for j=1:numSubjects
-    for k=j+1:numSubjects
+    % use a set list of ROIS that are present in all subjects
+    ROIsindex = zeros(length(intersectROIs),numSubjects);
+    for j=1:numSubjects
         
-        expSubone = expressionSubjROI{j}(ROIsindex(:,j),3:numGenes+2);
-        expSubtwo = expressionSubjROI{k}(ROIsindex(:,k),3:numGenes+2);
-        genes = zeros(1,numGenes);
-        
-        for g=1:numGenes
-            genes(g) = corr(expSubone(:,g),expSubtwo(:,g),'type','Spearman');
+        for w=1:length(intersectROIs)
+            ROIsindex(w,j) = find(R{j}==intersectROIs(w));
         end
         
-        corellations{j,k} = genes;
     end
-end
-
-%----------------------------------------------------------------------------------
-% Combina data for all pairs of subjects
-%----------------------------------------------------------------------------------
-fprintf('Combining data for all subjects\n')
-if numSubjects == 2
-    c = vertcat(corellations{1,2});
-elseif numSubjects == 6
-    c = vertcat(corellations{1,2}, corellations{1,3}, corellations{1,4}, corellations{1,5}, corellations{1,6}, ...
-        corellations{2,3}, corellations{2,4}, corellations{2,5}, corellations{2,6}, corellations{3,4}, corellations{3,5}, ...
-        corellations{3,6}, corellations{4,5}, corellations{4,6}, corellations{5,6});
-end
-%----------------------------------------------------------------------------------
-% Take the mean for each gene - this is DS score for a gene
-% gene that have most consistent expression pattern through regions will
-% get highest scores
-%----------------------------------------------------------------------------------
-DS = mean(c,1);
-
-%----------------------------------------------------------------------------------
-% Take top % of DS genes
-%----------------------------------------------------------------------------------
-fprintf('Selecting genes with highest differential stability \n')
-nrGenes = round(length(DS)*percentDS/100);
-
-[ b, ix ] = sort( DS(:), 'descend' );
-
- DSvalues = zeros(nrGenes, 2);
- for ii=1:nrGenes
-     DSvalues(ii,2) = b(ii);
-     DSvalues(ii,1) = ix(ii);
- end
-
-%----------------------------------------------------------------------------------
-% Get probeIDs for selected DS genes
-%----------------------------------------------------------------------------------
-
-probes = probeInformation.ProbeName(DSvalues(:,1));
-DSProbeTable = table(probes, DSvalues(:,2));
-%----------------------------------------------------------------------------------
-% Take selected genes and calculate sample - sample coexpression
-%----------------------------------------------------------------------------------
-fprintf('Calculating coexpression between samples, performing coexpression-distance correctio and averaging coexpression to ROIs\n')
-load('DistancesONsurface.mat');
-switch coexpressionFor
-    case 'all'
-        
-        selectedGenes = expSampNormalisedAll(:,2:end);
-        switch distanceCorrection
-            case 'Euclidean'
-                % calculate euclidean distance on MNI coordinates
-                sampleDistances = pdist2(combinedCoord(:,2:end), combinedCoord(:,2:end));%
-            case 'GMvolume'
-                % load pre-calculated distances within GM volume
-                load('DistancesGM_MNI.mat');
-                sampleDistances = distSamples;
-            case 'Surface'
-                % load pre-calculated distances on surface
-                load('DistancesONsurface.mat');
-                sampleDistances = distSamples;
+    
+    %----------------------------------------------------------------------------------
+    % For each pair of cubjects, calculate correlation (Spearman) of regional expression
+    % for each gene to select genes that have consistent expression patterns
+    % through regions between pairs of subjects.
+    %----------------------------------------------------------------------------------
+    fprintf('Calculating differential stability\n')
+    for j=1:numSubjects
+        for k=j+1:numSubjects
+            
+            expSubone = expressionSubjROI{j}(ROIsindex(:,j),3:numGenes+2);
+            expSubtwo = expressionSubjROI{k}(ROIsindex(:,k),3:numGenes+2);
+            genes = zeros(1,numGenes);
+            
+            for g=1:numGenes
+                genes(g) = corr(expSubone(:,g),expSubtwo(:,g),'type','Spearman');
+            end
+            
+            corellations{j,k} = genes;
         end
-        fprintf(sprintf('%s distance correction is chosen\n', distanceCorrection))
-        W = unique(expSampNormalisedAll(:,1));
-        ROIs = expSampNormalisedAll(:,1);
-        [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect, distPlot] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance);
-    case 'separate'
-        
-        expPlotALL = zeros(max(nROIs),max(nROIs),max(subjects));
-        %expPlotALL2 = cell(6,1);
-        correctedCoexpressionALL = cell(max(subjects),1);
-        parcelCoexpressionALL = cell(max(subjects),1);
-        indSub1 = 1;
-        for sub=subjects
+    end
+    
+    %----------------------------------------------------------------------------------
+    % Combina data for all pairs of subjects
+    %----------------------------------------------------------------------------------
+    fprintf('Combining data for all subjects\n')
+    if numSubjects == 2
+        c = vertcat(corellations{1,2});
+    elseif numSubjects == 6
+        c = vertcat(corellations{1,2}, corellations{1,3}, corellations{1,4}, corellations{1,5}, corellations{1,6}, ...
+            corellations{2,3}, corellations{2,4}, corellations{2,5}, corellations{2,6}, corellations{3,4}, corellations{3,5}, ...
+            corellations{3,6}, corellations{4,5}, corellations{4,6}, corellations{5,6});
+    end
+    %----------------------------------------------------------------------------------
+    % Take the mean for each gene - this is DS score for a gene
+    % gene that have most consistent expression pattern through regions will
+    % get highest scores
+    %----------------------------------------------------------------------------------
+    DS = mean(c,1);
+    
+    %----------------------------------------------------------------------------------
+    % Take top % of DS genes
+    %----------------------------------------------------------------------------------
+    fprintf('Selecting genes with highest differential stability \n')
+    nrGenes = round(length(DS)*percentDS/100);
+    
+    [ b, ix ] = sort( DS(:), 'descend' );
+    
+    DSvalues = zeros(nrGenes, 2);
+    for ii=1:nrGenes
+        DSvalues(ii,2) = b(ii);
+        DSvalues(ii,1) = ix(ii);
+    end
+    
+    %----------------------------------------------------------------------------------
+    % Get probeIDs for selected DS genes
+    %----------------------------------------------------------------------------------
+    
+    probes = probeInformation.ProbeName(DSvalues(:,1));
+    DSProbeTable = table(probes, DSvalues(:,2));
+    %----------------------------------------------------------------------------------
+    % Take selected genes and calculate sample - sample coexpression
+    %----------------------------------------------------------------------------------
+    fprintf('Calculating coexpression between samples, performing coexpression-distance correctio and averaging coexpression to ROIs\n')
+    load('DistancesONsurface.mat');
+    switch coexpressionFor
+        case 'all'
             
-            
-            selectedGenes = expSampNorm{sub}(:,2:end);
-            indSub = size(expSampNorm{sub},1);
-            sampleDistances = pdist2(coordSample{sub}(:,2:end), coordSample{sub}(:,2:end)); %distancesMNI(indSub1:indSub, indSub1:indSub); %
-            indSub1 = indSub+1;
-            W = unique(expSampNorm{sub}(:,1));
-            ROIs = expSampNorm{sub}(:,1);
-            
+            selectedGenes = expSampNormalisedAll(:,2:end);
+            switch distanceCorrection
+                case 'Euclidean'
+                    % calculate euclidean distance on MNI coordinates
+                    sampleDistances = pdist2(combinedCoord(:,2:end), combinedCoord(:,2:end));%
+                case 'GMvolume'
+                    % load pre-calculated distances within GM volume
+                    load('DistancesGM_MNI.mat');
+                    sampleDistances = distSamples;
+                case 'Surface'
+                    % load pre-calculated distances on surface
+                    load('DistancesONsurface.mat');
+                    sampleDistances = distSamples;
+            end
+            fprintf(sprintf('%s distance correction is chosen\n', distanceCorrection))
+            W = unique(expSampNormalisedAll(:,1));
+            ROIs = expSampNormalisedAll(:,1);
             [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect, distPlot] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance);
-            expPlotALL(:,:,sub) = expPlot;
-            %expPlotALL2{sub} = expPlot;
-            correctedCoexpressionALL{sub} = correctedCoexpression;
-            parcelCoexpressionALL{sub} = parcelCoexpression;
+        case 'separate'
             
-        end
+            expPlotALL = zeros(max(nROIs),max(nROIs),max(subjects));
+            %expPlotALL2 = cell(6,1);
+            correctedCoexpressionALL = cell(max(subjects),1);
+            parcelCoexpressionALL = cell(max(subjects),1);
+            indSub1 = 1;
+            for sub=subjects
+                
+                
+                selectedGenes = expSampNorm{sub}(:,2:end);
+                indSub = size(expSampNorm{sub},1);
+                sampleDistances = pdist2(coordSample{sub}(:,2:end), coordSample{sub}(:,2:end)); %distancesMNI(indSub1:indSub, indSub1:indSub); %
+                indSub1 = indSub+1;
+                W = unique(expSampNorm{sub}(:,1));
+                ROIs = expSampNorm{sub}(:,1);
+                
+                [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect, distPlot] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance);
+                expPlotALL(:,:,sub) = expPlot;
+                %expPlotALL2{sub} = expPlot;
+                correctedCoexpressionALL{sub} = correctedCoexpression;
+                parcelCoexpressionALL{sub} = parcelCoexpression;
+                
+            end
+    end
+    
+    averageCoexpression = nanmean(expPlot,3);
+    probeInformation.DS = DS';
 end
-
-averageCoexpression = nanmean(expPlot,3);
-probeInformation.DS = DS'; 
 %figure; imagesc(expPlotMNI); caxis([-1 1]); colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]); title('Average coexpression')
 
 % A = [averageCoexpressionSeparateMasMin(:),averageCoexpressionSeparateZscore(:)];
