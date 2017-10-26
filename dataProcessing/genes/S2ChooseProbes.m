@@ -18,7 +18,7 @@
 % without cust probes.
 
 useCUSTprobes = true;
-probeSelection = 'LessNoise';% (Variance', LessNoise', 'Mean', 'PC')
+probeSelection = 'PC';% (Variance', LessNoise', 'Mean', 'PC')
 signalThreshold = 0.5; % percentage of samples that a selected probe has expression levels that are higher than background
 %------------------------------------------------------------------------------
 % Load the data
@@ -56,7 +56,7 @@ cd ('rawData');
 % % ------------------------------------------------------------------------------
 expressionSelected = cell(6,1);
 noiseSUBJ = cell(6,1);
-fileNoise = 'PACall.csv';
+%fileNoise = 'PACall.csv';
 
 ProbeID = DataTableProbe.ProbeID{1,1};
 % % ------------------------------------------------------------------------------
@@ -64,20 +64,20 @@ ProbeID = DataTableProbe.ProbeID{1,1};
 % % Threshold for removing those proges is defined as the percentage of
 % % samples a probe has expression higher that background
 % % ------------------------------------------------------------------------------
-for subject = 1:6
-    folder = sprintf('normalized_microarray_donor0%d', subject);
-    cd (folder);
-    noise2filter = csvread(fileNoise);
-    [~,probeList] = intersect(noise2filter(:,1),ProbeID, 'stable');
-    noise2filter = (noise2filter(probeList,2:end))';
-    noiseSUBJ{subject} = noise2filter;
-    cd ..
-end
-% combine noise data for all subjects
-noiseALL = vertcat(noiseSUBJ{1}, noiseSUBJ{2}, noiseSUBJ{3}, noiseSUBJ{4}, noiseSUBJ{5}, noiseSUBJ{6});
+% for subject = 1:6
+%     folder = sprintf('normalized_microarray_donor0%d', subject);
+%     cd (folder);
+%     noise2filter = csvread(fileNoise);
+%     [~,probeList] = intersect(noise2filter(:,1),ProbeID, 'stable');
+%     noise2filter = (noise2filter(probeList,2:end))';
+%     noiseSUBJ{subject} = noise2filter;
+%     cd ..
+% end
+% % combine noise data for all subjects
+% noiseALL = vertcat(noiseSUBJ{1}, noiseSUBJ{2}, noiseSUBJ{3}, noiseSUBJ{4}, noiseSUBJ{5}, noiseSUBJ{6});
 % calculate the percentage of samples that each probe has expression value
 % higher than a selected number
-signalLevel = sum(noiseALL,1)./size(noiseALL,1);
+signalLevel = sum(noiseall,2)./size(noiseall,2);
 indKeepProbes = find(signalLevel>signalThreshold);
 
 % remove selected probes from data and perform other calculations only on
@@ -96,17 +96,8 @@ indMsubj = zeros(length(Uniq),6);
 
 for subj = 1:6
     expression = (DataTable.Expression{subj}(indKeepProbes,:))';
-    %if strcmp (probeSelection, 'LessNoise')
-    %folder = sprintf('normalized_microarray_donor0%d', subj);
-    %cd (folder);
-    noise = noiseSUBJ{subj}; %csvread(fileNoise);
-    %[~,probeList] = intersect(noise(:,1),ProbeID, 'stable');
-    noise = (noise(:,indKeepProbes));
-    %noiseALL{subj} = noise;
-    %cd ..
-    %end
-    % load noise level matrix for each subject here
-    
+    noise = DataTable.Noise{subj}(indKeepProbes,:)';
+
     for k=1:length(Uniq)
         fprintf(1,'Processing entrez ID %u\n',Uniq(k))
         % find indexes for repeating entrexIDs
