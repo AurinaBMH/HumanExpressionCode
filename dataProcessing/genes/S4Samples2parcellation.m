@@ -18,8 +18,8 @@
 % choose if you want to use data with CUST probes
 useCUSTprobes = true;
 % choose what type of probe selection to use, hemisphere, subject list, parcellations, threshols.
-probeSelection = 'PC';% (Variance', LessNoise', 'Mean')
-parcellations = {'HCP'};%, 'cust100', 'cust250', 'aparcaseg', 'HCP'};
+probeSelection = 'Mean';% (Variance', LessNoise', 'Mean', PC)
+parcellations = {'HCP','cust100', 'cust250', 'aparcaseg'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 subjects = 1:6;
 
@@ -34,22 +34,22 @@ DataCoordinatesMNI = cell(length(subjects),1);
 % Select variables according to side/brain part selections
 %------------------------------------------------------------------------------
 sides = {'left', 'right'};
-if strcmp(parcellations, 'HCP')
-    brainParts = {'Cortex'}; %, 'Subcortex'};
-else
-    brainParts = {'Cortex','Subcortex'};
-end
-
 
 %------------------------------------------------------------------------------
 % Do assignment for all subjects
 %------------------------------------------------------------------------------
-for subject = subjects
-    cd ('data/genes/parcellations')
-    subjectDir = sprintf('S0%d_H0351', subject);
-    cd (subjectDir)
-    for parcellation = parcellations
+for parcellation = parcellations
+    
+    for subject = subjects
+        cd ('data/genes/parcellations')
+        subjectDir = sprintf('S0%d_H0351', subject);
+        cd (subjectDir)
         
+        if strcmp(parcellation, 'HCP')
+            brainParts = {'Cortex'}; %, 'Subcortex'};
+        else
+            brainParts = {'Cortex','Subcortex'};
+        end
         fprintf('Subject %u parcellation %s assignment distance threshold %u\n; ', subject, parcellation{1}, distanceThreshold )
         
         %------------------------------------------------------------------------------
@@ -90,7 +90,7 @@ for subject = subjects
             
         end
         cd ../../
-
+        
         %------------------------------------------------------------------------------
         % Load microarray data
         %------------------------------------------------------------------------------
@@ -273,39 +273,46 @@ for subject = subjects
             
         end
         
-    end
-    %------------------------------------------------------------------------------
-    % Save output
-    %------------------------------------------------------------------------------
-    if distanceThreshold <35
-        if strcmp(parcellation, 'HCP')
-            nSamples = size(data.left.Cortex.informationMRI,1)+size(data.right.Cortex.informationMRI,1);
-            Expression = cat(1,data.left.Cortex.expression, data.right.Cortex.expression);
-            CoordinatesMRI = cat(1,data.left.Cortex.informationMRI, data.right.Cortex.informationMRI);
-            CoordinatesMNI = cat(1,data.left.Cortex.informationMNI, data.right.Cortex.informationMNI);
-        else
-            nSamples = size(data.left.Cortex.informationMRI,1)+size(data.left.Subcortex.informationMRI,1)+size(data.right.Cortex.informationMRI,1)+size(data.right.Subcortex.informationMRI,1);
-            Expression = cat(1,data.left.Cortex.expression,data.left.Subcortex.expression, data.right.Cortex.expression, data.right.Subcortex.expression);
-            CoordinatesMRI = cat(1,data.left.Cortex.informationMRI,data.left.Subcortex.informationMRI, data.right.Cortex.informationMRI, data.right.Subcortex.informationMRI);
-            CoordinatesMNI = cat(1,data.left.Cortex.informationMNI,data.left.Subcortex.informationMNI, data.right.Cortex.informationMNI, data.right.Subcortex.informationMNI);
-        end
-        SUBJECT = zeros(nSamples,1);
-        SUBJECT(:,1) = subject;
         
-        DataExpression{subject} = [SUBJECT, Expression];
-        DataCoordinatesMRI{subject} = [SUBJECT, CoordinatesMRI];
-        DataCoordinatesMNI{subject} = [SUBJECT, CoordinatesMNI];
-        
-        %save(sprintf('%s%s%dDistThresh%d_CoordsAssigned_S0%d.mat', startFileName, probeSelection, NumNodes, distanceThreshold, subject), ...
+        %------------------------------------------------------------------------------
+        % Save output
+        %------------------------------------------------------------------------------
+        if distanceThreshold <35
+            if strcmp(parcellation, 'HCP')
+                nSamples = size(data.left.Cortex.informationMRI,1)+size(data.right.Cortex.informationMRI,1);
+                Expression = cat(1,data.left.Cortex.expression, data.right.Cortex.expression);
+                CoordinatesMRI = cat(1,data.left.Cortex.informationMRI, data.right.Cortex.informationMRI);
+                CoordinatesMNI = cat(1,data.left.Cortex.informationMNI, data.right.Cortex.informationMNI);
+            else
+                nSamples = size(data.left.Cortex.informationMRI,1)+size(data.left.Subcortex.informationMRI,1)+size(data.right.Cortex.informationMRI,1)+size(data.right.Subcortex.informationMRI,1);
+                Expression = cat(1,data.left.Cortex.expression,data.left.Subcortex.expression, data.right.Cortex.expression, data.right.Subcortex.expression);
+                CoordinatesMRI = cat(1,data.left.Cortex.informationMRI,data.left.Subcortex.informationMRI, data.right.Cortex.informationMRI, data.right.Subcortex.informationMRI);
+                CoordinatesMNI = cat(1,data.left.Cortex.informationMNI,data.left.Subcortex.informationMNI, data.right.Cortex.informationMNI, data.right.Subcortex.informationMNI);
+            end
+            SUBJECT = zeros(nSamples,1);
+            SUBJECT(:,1) = subject;
+            
+            DataExpression{subject} = [SUBJECT, Expression];
+            DataCoordinatesMRI{subject} = [SUBJECT, CoordinatesMRI];
+            DataCoordinatesMNI{subject} = [SUBJECT, CoordinatesMNI];
+            
+            %save(sprintf('%s%s%dDistThresh%d_CoordsAssigned_S0%d.mat', startFileName, probeSelection, NumNodes, distanceThreshold, subject), ...
             %'data');
-        cd ../../..
-    elseif distanceThreshold > 35
-        save(sprintf('CoordsAssignedAllS0%d%d.mat', subject, NumNodes), 'coordsAssignedALL');
+            
+        elseif distanceThreshold > 35
+            
+            save(sprintf('CoordsAssignedAllS0%d%d.mat', subject, NumNodes), 'coordsAssignedALL');
+            
+        end
         cd ../../..
     end
-    
-end
-%% save data for all subjects
-cd ('data/genes/processedData')
-save(sprintf('%s%s%dDistThresh%d_CoordsAssigned.mat', startFileName, probeSelection, NumNodes, distanceThreshold), 'DataExpression', 'DataCoordinatesMRI', 'DataCoordinatesMNI', 'probeInformation');
+
+
+    %% save data for all subjects
+    cd ('data/genes/processedData')
+     if distanceThreshold < 35
+    save(sprintf('%s%s%dDistThresh%d_CoordsAssigned.mat', startFileName, probeSelection, NumNodes, distanceThreshold), 'DataExpression', 'DataCoordinatesMRI', 'DataCoordinatesMNI', 'probeInformation');
+     end
 cd ../../..
+end
+
