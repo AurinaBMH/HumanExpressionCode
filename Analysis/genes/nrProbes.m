@@ -3,9 +3,9 @@
 % Choose options
 %------------------------------------------------------------------------------
 
-useCUSTprobes = true;
-signalThreshold = 0.5; % percentage of samples that a selected probe has expression levels that are higher than background
-doOriginal = false;
+useCUSTprobes = false;
+signalThreshold = 0; % percentage of samples that a selected probe has expression levels that are higher than background
+doOriginal = true;
 %------------------------------------------------------------------------------
 % Load the data
 %------------------------------------------------------------------------------
@@ -90,7 +90,7 @@ for gene=1:length(genes)
     
 end
 
-save('IDgenes2plus.mat', 'IDgene'); 
+%save('IDgenes2plus.mat', 'IDgene'); 
 
 uniqNrProbes = unique(numberProbes);
 HowManyProbes = zeros(length(uniqNrProbes),1);
@@ -103,7 +103,11 @@ for i=1:length(uniqNrProbes)
     
 end
 probeSummary = table(HowManyGenes,HowManyProbes);
-figure; hist(r1,100); figure; hist(r2,100);  figure; hist(r3,100);
+figure; scatter(probeSummary.HowManyProbes, probeSummary.HowManyGenes, 'filled'); ...
+    hold on; plot(probeSummary.HowManyProbes, probeSummary.HowManyGenes);
+xlabel('Number of probes'); ylabel('Number of genes'); 
+
+%figure; hist(r1,100); figure; hist(r2,100);  figure; hist(r3,100);
 cd ../../..
 % check the proportion of noise
 
