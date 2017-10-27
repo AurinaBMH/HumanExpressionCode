@@ -1,11 +1,11 @@
 numProbes = 2; 
-coexpressionOn = 'gene'; 
-DSthreshold = 0.7; 
+coexpressionOn = 'sample'; 
+DSthreshold = -1; 
 
 cd ('data/genes/processedData');
 % entrezIDs for genes that have more than X probes. 
 load(sprintf('IDgenes%dplus.mat', numProbes)); 
-load('compareProbesNew.mat')% - calculated using only cortex+subcortex to vilter noise (not 3702 samples) 
+load('compareProbesNormalised.mat')% - calculated using only cortex+subcortex to vilter noise (not 3702 samples) 
 load('DSvariance.mat'); % - DS values and probe information calculated on probes selected according to highest variance
 %load('MicroarrayDataWITHcustMean360DistThresh2_CoordsAssigned.mat')
 % compare probes contains normalised expression data in left cortex when
@@ -23,16 +23,19 @@ entrezIDs = probeInformation.EntrezID;
 % select those genes that have more than X probes (and maybe also high DS)
 [~, keep] = intersect(entrezIDs(DSscores==1), IDgene); 
 
-% allData{1} = variance(:,2:end); 
-% allData{2} = noise(:,2:end);
-% allData{3} = mean(:,2:end);
-% allData{4} = PC(:,2:end);
+%  allData{1} = variance(:,2:end); 
+%  allData{2} = noise(:,2:end);
+%  allData{3} = mean(:,2:end);
+%  allData{4} = pc(:,2:end);
+%  allData{5} = random(:,2:end);
 
-allDatafinal = cell(4,1);
-coexpValues = cell(4,1);
-for k=1:4
-    
-allDatafinal{k} = allData{k}(:,keep); 
+allDatafinal = cell(5,1);
+coexpValues = cell(5,1);
+for k=1:5
+
+% try to normaise data in columns before calculating coexpression
+selectedData = allData{k}(:,keep); 
+allDatafinal{k} = selectedData; %BF_NormalizeMatrix(selectedData, 'zscore'); 
 switch coexpressionOn
     case 'sample'
 %mat = corr(allDatafinal{k}, 'type', 'Spearman');
@@ -46,11 +49,11 @@ coexpValues{k} = mat(:);
 end
 
 numGenes = size(allDatafinal{1},2); 
-avCorr = zeros(4,4); 
-coexpCorr = zeros(4,4); 
+avCorr = zeros(5,5); 
+coexpCorr = zeros(5,5); 
 % calculate correlation between each way of choosing a probe
-for i=1:4
-    for j=i+1:4
+for i=1:5
+    for j=i+1:5
         
        correlation = zeros(numGenes,1); 
         for g=1:numGenes
@@ -64,13 +67,13 @@ for i=1:4
 end
 
 figure; imagesc(avCorr); colormap([[1 1 1];BF_getcmap('reds',9)]); caxis([0 1]); colorbar; 
-xticks([1 2 3 4]); yticks([1 2 3 4]); 
+xticks([1 2 3 4 5]); yticks([1 2 3 4 5]); 
 title(sprintf('Correlation between genes with %d and more probes (%d genes)', numProbes, numGenes)); 
-xticklabels({'Variance','Less noise','Mean','maxPC'}); 
-yticklabels({'Variance','Less noise','Mean','maxPC'}); 
+xticklabels({'Variance','Less noise','Mean','maxPC', 'random'}); 
+yticklabels({'Variance','Less noise','Mean','maxPC', 'random'}); 
 
 figure; imagesc(coexpCorr); colormap([[1 1 1];BF_getcmap('reds',9)]); colorbar; 
-xticks([1 2 3 4]); yticks([1 2 3 4]); 
+xticks([1 2 3 4 5]); yticks([1 2 3 4 5]); 
 title(sprintf('Correlation between %s-%s coexpression matrices for genes with %d and more probes (%d genes)', coexpressionOn,coexpressionOn,numProbes, numGenes)); 
-xticklabels({'Variance','Less noise','Mean','maxPC'}); 
-yticklabels({'Variance','Less noise','Mean','maxPC'}); 
+xticklabels({'Variance','Less noise','Mean','maxPC', 'random'}); 
+yticklabels({'Variance','Less noise','Mean','maxPC', 'random'}); 
