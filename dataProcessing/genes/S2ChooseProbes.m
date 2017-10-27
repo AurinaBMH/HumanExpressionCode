@@ -18,7 +18,7 @@
 % without cust probes.
 
 useCUSTprobes = true;
-probeSelection = 'PC';% (Variance', LessNoise', 'Mean', 'PC')
+probeSelection = 'Mean';% (Variance', LessNoise', 'Mean', 'PC', 'random')
 signalThreshold = 0.5; % percentage of samples that a selected probe has expression levels that are higher than background
 %------------------------------------------------------------------------------
 % Load the data
@@ -89,8 +89,8 @@ GeneID = DataTableProbe.GeneID{1,1}(indKeepProbes);
 GeneSymbol = DataTableProbe.GeneSymbol{1,1}(indKeepProbes);
 GeneName = DataTableProbe.GeneName{1,1}(indKeepProbes);
 
-Uniq = unique(EntrezID(:,1));
-N = histc(EntrezID, Uniq);
+Uniq = unique(EntrezID, 'stable');
+%N = histc(EntrezID, Uniq);
 ProbeList = zeros(length(Uniq),2);
 indMsubj = zeros(length(Uniq),6);
 
@@ -104,7 +104,7 @@ for subj = 1:6
         indRepEntrezIDs = find(EntrezID==(Uniq(k)));
         expRepEntrezIDs = expression(:,indRepEntrezIDs);
         if length(indRepEntrezIDs) >=2
-            fprintf(1,'%d duplicates found\n', length(length(indRepEntrezIDs)));
+            fprintf(1,'%d duplicates found\n', length(indRepEntrezIDs));
             
             % take expression values for a selected entrezID
             
@@ -134,6 +134,12 @@ for subj = 1:6
                 case 'Mean'
                     expressionSelected{subj}(:,k) = mean(expRepEntrezIDs,2);
                     
+                case 'random'
+                    fprintf(1,'Performing probe selection using random selection\n');
+            
+                    % determine max var value
+                    [indMaxV] = randsample(1:size(expRepEntrezIDs,2),1); 
+                    
             end
         else
             switch probeSelection
@@ -142,35 +148,38 @@ for subj = 1:6
             end
         end
         
-        if strcmp(probeSelection, 'Variance') || strcmp(probeSelection, 'PC') || strcmp(probeSelection, 'LessNoise')
+        if strcmp(probeSelection, 'Variance') || strcmp(probeSelection, 'PC') || strcmp(probeSelection, 'LessNoise') || strcmp(probeSelection, 'random')
             if length(indRepEntrezIDs) >=2
                 indMsubj(k,subj) = indRepEntrezIDs(indMaxV);
-                
                 
             else
                 indMsubj(k,subj) = indRepEntrezIDs;
             end
+ 
         end
     end
 end
 
-if strcmp(probeSelection, 'Variance') || strcmp(probeSelection, 'PC') || strcmp(probeSelection, 'LessNoise')
-    indProbe = zeros(length(Uniq),1);
+if strcmp(probeSelection, 'Variance') || strcmp(probeSelection, 'PC') || strcmp(probeSelection, 'LessNoise') || strcmp(probeSelection, 'random')
+    %indProbe = zeros(length(Uniq),1);
     for j=1:length(Uniq)
-        [hcount,index] = hist(indMsubj(j,:),unique(indMsubj(j,:)));
-        [~, ind] = max(hcount);
-        indINlist = index(ind);
+        %[hcount,index] = hist(,unique(indMsubj(j,:)));
+        %[a, ind] = max(hcount);
+        indINlist = mode(indMsubj(j,:),2); %index(ind);
         ProbeList(j,1) = ProbeID(indINlist);
         ProbeList(j,2) = EntrezID(indINlist);
     end
     %% check to exclude probes with not maximum variance or max PC and repeating entrezIDs (assign NaN value to
     % them)
-    for q=1:length(ProbeID)
-        if ProbeID(q)~=(ProbeList(:,1))
-            ProbeID(q) = NaN;
-            EntrezID(q) = NaN;
-        end
-    end
+    [a,ind2rem] = setdiff(ProbeID, ProbeList(:,1)); 
+    ProbeID(ind2rem) = NaN;
+    EntrezID(ind2rem) = NaN;
+%     for q=1:length(ProbeID)
+%         if ProbeID(q)~=(ProbeList(:,1))
+%             ProbeID(q) = NaN;
+%             EntrezID(q) = NaN;
+%         end
+%     end
     
     EntrezID(isnan(EntrezID)) = [];
     ProbeInformation.EntrezID = EntrezID;
@@ -214,6 +223,7 @@ if strcmp(probeSelection, 'Variance') || strcmp(probeSelection, 'PC') || strcmp(
     end
     
 else
+
     
     for subject=1:6
         
@@ -229,9 +239,9 @@ else
         
         ProbeInformation.EntrezID = unique(EntrezID, 'stable');
         ProbeInformation.GeneID = unique(GeneID, 'stable');
-        ProbeInformation.GeneSymbol = unique(GeneSymbol, 'stable');
-        ProbeInformation.GeneName = unique(GeneName, 'stable');
-        ProbeInformation.ProbeName = unique(ProbeName, 'stable');
+        %ProbeInformation.GeneSymbol = unique(GeneSymbol, 'stable');
+        %ProbeInformation.GeneName = unique(GeneName, 'stable');
+        %ProbeInformation.ProbeName = unique(ProbeName, 'stable');
         cd ..
         cd ('processedData');
         save(sprintf('%s%sS0%d.mat', startFileName, probeSelection, subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
