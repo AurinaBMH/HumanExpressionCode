@@ -1,3 +1,4 @@
+clear all; 
 load('DSnewVariance.mat') % - generated using S5 script (probes chosen based on variance)
 [a1,order] = sort(probeInformation.EntrezID); 
 DSscores{1} = DS(order); probeSelection{1} = 'variance'; 
