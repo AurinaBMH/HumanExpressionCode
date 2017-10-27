@@ -1,34 +1,41 @@
+clear all; 
+
+numProbes = 3; 
+coexpressionOn = 'sample'; 
+DSthreshold = -1; 
+
+
 load('DSnewVariance.mat') % - generated using S5 script (probes chosen based on variance)
 [a1,order] = sort(probeInformation.EntrezID); 
 DSscores{1} = DS; probeSelection{1} = 'variance'; 
-allData{1} = expSampNormalisedAll(:,order); 
+allData{1} = expSampNormalisedAll(:,2:end); 
+allData{1} = allData{1}(:, order); 
 
 load('DSnewPC.mat') % - generated using S5 script (probes chosen based on PC)
 [a2,order] = sort(probeInformation.EntrezID); 
 DSscores{2} = DS; probeSelection{2} = 'PC'; 
-allData{2} = expSampNormalisedAll(:,order); 
+allData{2} = expSampNormalisedAll(:,2:end); 
+allData{2} = allData{2}(:, order); 
 
 
 load('DSnewLessNoise.mat')
 [a3,order] = sort(probeInformation.EntrezID); 
 DSscores{3} = DS; probeSelection{3} = 'noise'; 
-allData{3} = expSampNormalisedAll(:,order); 
+allData{3} = expSampNormalisedAll(:,2:end); 
+allData{3} = allData{3}(:, order); 
 
 
 load('DSnewMean.mat');
 [a4,order] = sort(probeInformation.EntrezID); 
 DSscores{4} = DS; probeSelection{1} = 'Mean'; 
-allData{4} = expSampNormalisedAll(:,order); 
+allData{4} = expSampNormalisedAll(:,2:end); 
+allData{4} = allData{4}(:, order); 
 
 load('DSnewrandom.mat');
 [a5,order] = sort(probeInformation.EntrezID); 
 DSscores{5} = DS; probeSelection{1} = 'random'; 
-allData{5} = expSampNormalisedAll(:,order); 
-
-
-numProbes = 2; 
-coexpressionOn = 'sample'; 
-DSthreshold = -1; 
+allData{5} = expSampNormalisedAll(:,2:end); 
+allData{5} = allData{5}(:, order); 
 
 %cd ('data/genes/processedData');
 % entrezIDs for genes that have more than X probes. 

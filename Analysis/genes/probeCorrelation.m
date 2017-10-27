@@ -1,5 +1,5 @@
 useCUSTprobes = true;
-probeSelection = {'Variance','LessNoise','Mean', 'PC', 'random'};
+probeSelection = {'Variance','PC','noise', 'mean', 'random'};
 numProbes = 3;
 %------------------------------------------------------------------------------
 % Load the data
