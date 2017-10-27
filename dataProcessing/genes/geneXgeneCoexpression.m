@@ -11,15 +11,15 @@
 %------------------------------------------------------------------------------
 useCUSTprobes = true; % choose if you want to use data with CUST probes
 probeSelection = 'Variance';% (Variance', LessNoise', 'Mean', 'PC')
-parcellation = 'HCP';%, 'cust100', 'cust250'};
-distanceThreshold = 30; % first run 30, then with the final threshold 2
+parcellation = 'aparcaseg';%, 'cust100', 'cust250'};
+distanceThreshold = 2; % first run 30, then with the final threshold 2
 percentDS = 100;
 multipleProbes = false; % it this is true, only genes that have multiple probes will be selected. 
 correctDistance = false; 
 distanceCorrection = 'Euclidean';
 coexpressionFor = 'all';
 Fit = {'removeMean'};
-normMethod = 'scaledRobustSigmoid'; %'scaledRobustSigmoid', 'zscore';
+normMethod = 'zscore'; %'scaledRobustSigmoid', 'zscore';
 normaliseWhat = 'LcortexSubcortex'; %(LcortexSubcortex, wholeBrain, LRcortex)
 % choose Lcortex if want to normalise samples assigned to left cortex separately;
 % choose LcortexSubcortex if want to normalise LEFT cortex + left subcortex together
@@ -128,7 +128,7 @@ for sub=subjects
     expSubj = expSingleSubj(ind,:);
     coord = coordSingle(ind,3:5);
     data = expSubj(:,3:size(expSubj,2));
-    data = 2.^(data); 
+    %data = 2.^(data); 
     if multipleProbes
     data = data(:,keep); 
     end

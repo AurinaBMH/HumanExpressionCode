@@ -1,5 +1,5 @@
 %% Author: Aurina
-
+clear all; 
 %Last modiffied: 2017-07-31
 %Last modiffied: 2017-08-01
 %close all;
@@ -8,13 +8,13 @@
 % Choose options
 %------------------------------------------------------------------------------
 useCUSTprobes = true; % choose if you want to use data with CUST probes
-probeSelection = 'Mean';% (Variance', LessNoise', 'Mean', 'PC')
+probeSelection = {'Mean'}; %Variance', 'LessNoise',, 'PC','random'};
 parcellation = 'HCP';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 multipleProbes = false; % it this is true, only genes that have multiple probes will be selected.
 correctDistance = false;
 calculateDS = true;
-percentDS = 100;
+percentDS = 5;
 distanceCorrection = 'Euclidean';
 coexpressionFor = 'all';
 Fit = {'removeMean'};
@@ -24,7 +24,7 @@ normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex, Lcortex)
 % choose LcortexSubcortex if want to normalise LEFT cortex + left subcortex together
 % choose wholeBrain if you want to normalise the whole brain.
 % choose LRcortex if you want to normalise left cortex + right cortex.
-
+for p=probeSelection
 %------------------------------------------------------------------------------
 % Define number of subjects and parcellation details based on choises
 %------------------------------------------------------------------------------
@@ -77,7 +77,7 @@ else
 end
 
 cd ('data/genes/processedData');
-load(sprintf('%s%s%dDistThresh%d_CoordsAssigned.mat', startFileName, probeSelection, NumNodes, distanceThreshold));
+load(sprintf('%s%s%dDistThresh%d_CoordsAssigned.mat', startFileName, p{1}, NumNodes, distanceThreshold));
 
 
 expressionSubjROI = cell(6,1);
@@ -127,7 +127,7 @@ for sub=subjects
     expSubj = expSingleSubj(ind,:);
     coord = coordSingle(ind,3:5);
     data = expSubj(:,3:size(expSubj,2));
-    data = 2.^(data);
+    %data = 2.^(data);
     if multipleProbes
         data = data(:,keep);
     end
@@ -141,10 +141,11 @@ for sub=subjects
             fprintf('Normalising gene expression data\n')
         otherwise
             dataNorm = BF_NormalizeMatrix(data, normMethod);
+            %dataNorm2 = BF_NormalizeMatrix(dataNorm, normMethod);
             fprintf('Normalising gene expression data\n')
     end
     
-    expSampNorm{sub} = [ROI, dataNorm];
+    expSampNorm{sub} = [ROI, dataNorm]; % SAVE NON-NORMALISED DATA FOR TEST
     coordSample{sub} = [ROI, coord];
     expSample{sub} = [ROI, data];
     ROIs = unique(expSubj(:,2));
@@ -271,8 +272,8 @@ if calculateDS
     % Get probeIDs for selected DS genes
     %----------------------------------------------------------------------------------
     
-    probes = probeInformation.ProbeName(DSvalues(:,1));
-    DSProbeTable = table(probes, DSvalues(:,2));
+%    probes = probeInformation.ProbeName(DSvalues(:,1));
+   % DSProbeTable = table(probes, DSvalues(:,2));
     %----------------------------------------------------------------------------------
     % Take selected genes and calculate sample - sample coexpression
     %----------------------------------------------------------------------------------
@@ -327,6 +328,10 @@ if calculateDS
     
     averageCoexpression = nanmean(expPlot,3);
     probeInformation.DS = DS';
+end
+%save(sprintf('DSnew%s', p{1}), 'DS', 'averageCoexpression', 'DSProbeTable', 'expSampNormalisedAll', 'probeInformation'); 
+save(sprintf('DSnew%s', p{1}), 'DS', 'averageCoexpression', 'expSampNormalisedAll', 'probeInformation'); 
+cd ../../..
 end
 %figure; imagesc(expPlotMNI); caxis([-1 1]); colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]); title('Average coexpression')
 

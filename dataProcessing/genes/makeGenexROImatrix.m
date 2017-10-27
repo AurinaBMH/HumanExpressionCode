@@ -2,10 +2,10 @@
 useCUSTprobes = true;
 % choose what type of probe selection to use, hemisphere, subject list, parcellations, threshols.
 probeSelection = 'Variance';% (Variance', LessNoise', 'Mean')
-parcellation = {'HCP'};%, aparcaseg, 'cust100', 'cust250'};
+parcellation = {'aparcaseg'};%, aparcaseg, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 subjects = 1:6;
-normaliseWhat = 'Lcortex'; % 'Lcortex'; % 'LcortexSubcortex'
+normaliseWhat = 'LcortexSubcortex'; % 'Lcortex'; % 'LcortexSubcortex'
 normMethod = 'scaledRobustSigmoid';
 percentDS = 5;
 
@@ -82,7 +82,7 @@ for sub=subjects
     data = expSubj(:,3:size(expSubj,2));
     % transform from log2 scale to normal scale and then normalise using
     % scaled robust sigmoid.
-    data = 2.^(data);
+    %data = 2.^(data);
     
     coordSample{sub} = coord;
     ROI = expSubj(:,2);
