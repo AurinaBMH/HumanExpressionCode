@@ -8,7 +8,7 @@ clear all;
 % Choose options
 %------------------------------------------------------------------------------
 useCUSTprobes = true; % choose if you want to use data with CUST probes
-probeSelection = {'Mean'}; %Variance', 'LessNoise',, 'PC','random'};
+probeSelection = {'Mean', 'Variance', 'LessNoise', 'PC','random'};
 parcellation = 'HCP';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 multipleProbes = false; % it this is true, only genes that have multiple probes will be selected.
@@ -18,7 +18,7 @@ percentDS = 5;
 distanceCorrection = 'Euclidean';
 coexpressionFor = 'all';
 Fit = {'removeMean'};
-normMethod = 'scaledRobustSigmoid'; %'scaledRobustSigmoid';
+normMethod = 'zscore'; %'scaledRobustSigmoid';
 normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex, Lcortex)
 % choose Lcortex if want to normalise samples assigned to left cortex separately;
 % choose LcortexSubcortex if want to normalise LEFT cortex + left subcortex together
@@ -330,7 +330,7 @@ if calculateDS
     probeInformation.DS = DS';
 end
 %save(sprintf('DSnew%s', p{1}), 'DS', 'averageCoexpression', 'DSProbeTable', 'expSampNormalisedAll', 'probeInformation'); 
-save(sprintf('DSnew%s', p{1}), 'DS', 'averageCoexpression', 'expSampNormalisedAll', 'probeInformation'); 
+save(sprintf('DSnew%s%s', normMethod, p{1}), 'DS', 'averageCoexpression', 'expSampNormalisedAll', 'probeInformation'); 
 cd ../../..
 end
 %figure; imagesc(expPlotMNI); caxis([-1 1]); colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]); title('Average coexpression')
