@@ -1,42 +1,47 @@
 clear all; 
-load('DSnewVariance.mat') % - generated using S5 script (probes chosen based on variance)
-[a1,order] = sort(probeInformation.EntrezID); 
-DSscores{1} = DS(order); probeSelection{1} = 'variance'; 
-allData{1} = expSampNormalisedAll(:,order); 
 
-load('DSnewPC.mat') % - generated using S5 script (probes chosen based on PC)
-[a2,order] = sort(probeInformation.EntrezID); 
-DSscores{2} = DS(order); probeSelection{2} = 'PC'; 
-allData{2} = expSampNormalisedAll(:,order); 
+cd ('data/genes/processedData');
 
+normMethod = ''; % '' for sigmoid; zscore for zscore;
+probeSelection = {'Variance', 'PC', 'LessNoise', 'Mean', 'random'};
+onlyMultipleProbes = true; 
+numProbes = 3; %(2 or 3)
 
-load('DSnewLessNoise.mat')
-[a3,order] = sort(probeInformation.EntrezID); 
-DSscores{3} = DS(order); probeSelection{3} = 'noise'; 
-allData{3} = expSampNormalisedAll(:,order); 
+load(sprintf('IDgenes%dplus.mat', numProbes));
+DSscoresAll = cell(length(probeSelection),1);
 
 
-load('DSnewMean.mat');
-[a4,order] = sort(probeInformation.EntrezID); 
-DSscores{4} = DS(order); probeSelection{4} = 'Mean'; 
-allData{4} = expSampNormalisedAll(:,order); 
+for op=1:length(probeSelection)
+    load(sprintf('DSnew%s%s.mat', normMethod, probeSelection{op})) % - generated using S5 script (probes chosen based on variance)
+    % reorder entrez IDs for each probe selection
+    [entrezIDs,order] = sort(probeInformation.EntrezID);
+    DSone = DS(order); 
+    
+    if onlyMultipleProbes
+        % find genes with multiple probes in the reordered
+        % version and sub-select them. 
+    [~, keep] = intersect(entrezIDs, IDgene);
+    DSscoresAll{op} = DSone(keep); 
+    
+    else
+        % id include all genes
+    DSscoresAll{op} = DSone; 
+    
+    end
 
-load('DSnewrandom.mat');
-[a5,order] = sort(probeInformation.EntrezID); 
-DSscores{5} = DS(order); probeSelection{5} = 'random'; 
-allData{5} = expSampNormalisedAll(:,order); 
+end
 
-
+% make a plot
 sz=10; 
 figure; title ('Correlation between DS scores'); 
-r = zeros(5,5); 
-p = zeros(5,5); 
+r = zeros(length(probeSelection),length(probeSelection)); 
+p = zeros(length(probeSelection),length(probeSelection)); 
 f=1; 
-for i=1:5
-    for j=i+1:5
+for i=1:length(probeSelection)
+    for j=i+1:length(probeSelection)
 
-        subplot(2,5,f); scatter(DSscores{i}, DSscores{j}, sz, 'filled');
-        [r(i,j),p(i,j)] = corr(DSscores{i}', DSscores{j}', 'type', 'Spearman'); 
+        subplot(2,length(probeSelection),f); scatter(DSscoresAll{i}, DSscoresAll{j}, sz, 'filled');
+        [r(i,j),p(i,j)] = corr(DSscoresAll{i}', DSscoresAll{j}', 'type', 'Spearman'); 
         xlabel(sprintf('DS for probes selected based on %s', probeSelection{i})); 
         ylabel(sprintf('DS for probes selected based on %s', probeSelection{j}));
         f=f+1; 
