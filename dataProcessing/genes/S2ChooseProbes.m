@@ -10,9 +10,6 @@
 %   5. Removes exluded probes from expression data and all other fields.
 %   6. Saves MicroarrayDataMaxVAR.mat'or MicroarrayDataPCA.mat with Expressionall, Probe information, Sample information.
 %%
-%choose one of those
-% To use probes with max variance choose UseMaxVarProbes = 1; keeping the other option = 0;
-% To use probes with highest PC choose UseHighestPCProbes = 1; keeping the other option = 0;
 % choose if you want to use data with CUST probes or without them:
 % UseDataWithCUSTprobes = 1; if UseDataWithCUSTprobes=0, it will load data
 % without cust probes.
@@ -33,7 +30,6 @@ else
     startFileName = 'MicroarrayData';
 end
 
-
 load(sprintf('%s.mat', startFileName));
 
 cd ..
@@ -45,18 +41,13 @@ cd ('rawData');
 % normalised data)
 % Choose probe with max probe selection criteria on average
 %------------------------------------------------------------------------------
-% sigmoid normalise data for MaxVariance calculation
-% ExpressionallNorm = BF_NormalizeMatrix(Expressionall');
-% ExpressionallNorm = ExpressionallNorm';
 
 %% find repeating entrezIDs and calculate variances for them, then take a probe of max variance.
-%
 % % ------------------------------------------------------------------------------
 % % Find best representative in a set of duplicates using maxVar and remove all others:
 % % ------------------------------------------------------------------------------
 expressionSelected = cell(6,1);
 noiseSUBJ = cell(6,1);
-%fileNoise = 'PACall.csv';
 
 ProbeID = DataTableProbe.ProbeID{1,1};
 % % ------------------------------------------------------------------------------
@@ -64,19 +55,7 @@ ProbeID = DataTableProbe.ProbeID{1,1};
 % % Threshold for removing those proges is defined as the percentage of
 % % samples a probe has expression higher that background
 % % ------------------------------------------------------------------------------
-% for subject = 1:6
-%     folder = sprintf('normalized_microarray_donor0%d', subject);
-%     cd (folder);
-%     noise2filter = csvread(fileNoise);
-%     [~,probeList] = intersect(noise2filter(:,1),ProbeID, 'stable');
-%     noise2filter = (noise2filter(probeList,2:end))';
-%     noiseSUBJ{subject} = noise2filter;
-%     cd ..
-% end
-% % combine noise data for all subjects
-% noiseALL = vertcat(noiseSUBJ{1}, noiseSUBJ{2}, noiseSUBJ{3}, noiseSUBJ{4}, noiseSUBJ{5}, noiseSUBJ{6});
-% calculate the percentage of samples that each probe has expression value
-% higher than a selected number
+
 signalLevel = sum(noiseall,2)./size(noiseall,2);
 indKeepProbes = find(signalLevel>signalThreshold);
 
@@ -90,14 +69,13 @@ GeneSymbol = DataTableProbe.GeneSymbol{1,1}(indKeepProbes);
 GeneName = DataTableProbe.GeneName{1,1}(indKeepProbes);
 
 Uniq = unique(EntrezID, 'stable');
-%N = histc(EntrezID, Uniq);
 ProbeList = zeros(length(Uniq),2);
 indMsubj = zeros(length(Uniq),6);
 
 for subj = 1:6
     expression = (DataTable.Expression{subj}(indKeepProbes,:))';
     noise = DataTable.Noise{subj}(indKeepProbes,:)';
-
+    
     for k=1:length(Uniq)
         fprintf(1,'Processing entrez ID %u\n',Uniq(k))
         % find indexes for repeating entrexIDs
@@ -107,7 +85,6 @@ for subj = 1:6
             fprintf(1,'%d duplicates found\n', length(indRepEntrezIDs));
             
             % take expression values for a selected entrezID
-            
             % calculate variances for expression data for a selected entrezID
             switch probeSelection
                 
@@ -133,124 +110,122 @@ for subj = 1:6
                     
                 case 'Mean'
                     expressionSelected{subj}(:,k) = mean(expRepEntrezIDs,2);
+                    [indMaxV] = randsample(1:size(expRepEntrezIDs,2),1);
+                    % choose one of probes as a place holder (at random)
+                    % for probeInformation (expression values are mean of
+                    % al probes)
                     
                 case 'random'
                     fprintf(1,'Performing probe selection using random selection\n');
-            
+                    
                     % determine max var value
-                    [indMaxV] = randsample(1:size(expRepEntrezIDs,2),1); 
+                    [indMaxV] = randsample(1:size(expRepEntrezIDs,2),1);
                     
             end
+            indMsubj(k,subj) = indRepEntrezIDs(indMaxV);
         else
-            switch probeSelection
-                case 'Mean'
-                    expressionSelected{subj}(:,k) = expRepEntrezIDs;
-            end
+            
+            expressionSelected{subj}(:,k) = expRepEntrezIDs;
+            indMsubj(k,subj) = indRepEntrezIDs;
+            
         end
         
-        if strcmp(probeSelection, 'Variance') || strcmp(probeSelection, 'PC') || strcmp(probeSelection, 'LessNoise') || strcmp(probeSelection, 'random')
-            if length(indRepEntrezIDs) >=2
-                indMsubj(k,subj) = indRepEntrezIDs(indMaxV);
-                
-            else
-                indMsubj(k,subj) = indRepEntrezIDs;
-            end
- 
-        end
     end
 end
 
-if strcmp(probeSelection, 'Variance') || strcmp(probeSelection, 'PC') || strcmp(probeSelection, 'LessNoise') || strcmp(probeSelection, 'random')
-    %indProbe = zeros(length(Uniq),1);
-    for j=1:length(Uniq)
-        %[hcount,index] = hist(,unique(indMsubj(j,:)));
-        %[a, ind] = max(hcount);
-        indINlist = mode(indMsubj(j,:),2); %index(ind);
-        ProbeList(j,1) = ProbeID(indINlist);
-        ProbeList(j,2) = EntrezID(indINlist);
-    end
-    %% check to exclude probes with not maximum variance or max PC and repeating entrezIDs (assign NaN value to
-    % them)
-    [a,ind2rem] = setdiff(ProbeID, ProbeList(:,1)); 
-    ProbeID(ind2rem) = NaN;
-    EntrezID(ind2rem) = NaN;
-%     for q=1:length(ProbeID)
-%         if ProbeID(q)~=(ProbeList(:,1))
-%             ProbeID(q) = NaN;
-%             EntrezID(q) = NaN;
-%         end
-%     end
+for j=1:length(Uniq)
     
-    EntrezID(isnan(EntrezID)) = [];
-    ProbeInformation.EntrezID = EntrezID;
+    indINlist = mode(indMsubj(j,:),2); %index(ind);
+    ProbeList(j,1) = ProbeID(indINlist);
+    ProbeList(j,2) = EntrezID(indINlist);
     
-    GeneID(isnan(ProbeID)) = [];
-    ProbeInformation.GeneID = GeneID;
+end
+%% check to exclude probes with not maximum variance or max PC and repeating entrezIDs (assign NaN value to
+% them)
+[a,ind2rem] = setdiff(ProbeID, ProbeList(:,1));
+ProbeID(ind2rem) = NaN;
+EntrezID(ind2rem) = NaN;
+
+EntrezID(isnan(EntrezID)) = [];
+GeneID(isnan(ProbeID)) = [];
+GeneSymbol(isnan(ProbeID)) = [];
+GeneName(isnan(ProbeID)) = [];
+ProbeName(isnan(ProbeID)) = [];
+
+% % ------------------------------------------------------------------------------
+% % Check if all genes that are left have unique gene symbols
+% % ------------------------------------------------------------------------------
+
+[~, ind] = unique(GeneSymbol, 'stable');
+% find duplicate indices
+duplicate_ind = setdiff(1:size(GeneSymbol,1), ind);
+
+toExclude = cell(length(duplicate_ind),1);
+for gene = 1:length(duplicate_ind)
     
-    GeneSymbol(isnan(ProbeID)) = [];
-    ProbeInformation.GeneSymbol = GeneSymbol;
-    
-    GeneName(isnan(ProbeID)) = [];
-    ProbeInformation.GeneName = GeneName;
-    
-    ProbeName(isnan(ProbeID)) = [];
-    ProbeInformation.ProbeName = ProbeName;
-    
-    RemoveProbes = ProbeID;
-    
-    ProbeID(isnan(ProbeID)) = [];
-    ProbeInformation.ProbeID = ProbeID;
-    
-    for subject=1:6
+    % if gene names are not matching, exclude both of them
+    symbs = GeneSymbol(duplicate_ind(gene)); 
+    test_ind = find(strcmp(GeneSymbol, symbs{1})); 
+    % check if for all duplicated instances gene name is the same
+
+    names = GeneName(test_ind); 
+    doMatch = zeros(length(test_ind)); 
+    for j=1:length(test_ind)
+        for i=j+1:length(test_ind)
+            
+        doMatch(j,i) = strcmp(names{j}, names{i});
         
+        end
+    end
+ % if they're not matching, record indexes to exclude later
+    if sum(doMatch)==0
+        toExclude{gene,:} = test_ind; 
+    end
+    
+end
+excludeGenes = unique(cell2mat(toExclude));
+% make a vector if indexes for genes to keep
+keepGenes = setdiff(1:size(GeneSymbol,1), excludeGenes, 'stable');
+
+probeInformation.EntrezID = EntrezID(keepGenes);
+probeInformation.GeneID = GeneID(keepGenes);
+probeInformation.GeneSymbol = GeneSymbol(keepGenes);
+probeInformation.GeneName = GeneName(keepGenes);
+probeInformation.ProbeName = ProbeName(keepGenes);
+ProbeID2nd = ProbeID; % assign probe ID values to a variable (will be used to filter gene expression values)
+ProbeID(isnan(ProbeID)) = []; % remove redundant probes
+probeInformation.ProbeID = ProbeID(keepGenes);
+
+cd ..
+cd ('processedData')
+for subject=1:6
+    if strcmp(probeSelection, 'Variance') || strcmp(probeSelection, 'PC') || strcmp(probeSelection, 'LessNoise') || strcmp(probeSelection, 'random')
         
         % exclude NaN probes keeping 1 probe for 1 entrezID.
         fprintf(1,'Combining and saving the data for subject %u\n', subject)
-        Expression = DataTable.Expression{subject,1}(indKeepProbes,:);
-        Expression(isnan(RemoveProbes),:) = [];
+        Expression = DataTable.Expression{subject,1}(indKeepProbes,:); % filter noisy probes
+        Expression(isnan(ProbeID2nd),:) = []; % exclude probes that were not selected
+        Expression = Expression(keepGenes,:); % exclude genes that had duplicated and non-matching names
         Expression = Expression';
-        
-        
-        % combine sample information variables to a structure.
-        SampleInformation.StructureNames = DataTable.StructureName{subject,1};
-        SampleInformation.MMCoordinates = DataTable.MMcoordinates{subject,1};
-        SampleInformation.MRIvoxCoordinates = DataTable.MRIvoxCoordinates{subject,1};
-        cd ..
-        cd ('processedData');
-            save(sprintf('%s%sS0%d.mat', startFileName, probeSelection, subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
-
-        
-    end
-    
-else
-
-    
-    for subject=1:6
+    elseif strcmp(probeSelection, 'Mean')
         
         % exclude NaN probes keeping 1 probe for 1 entrezID.
         fprintf(1,'Combining and saving the data for subject %u\n', subject)
-        Expression = expressionSelected{subject};
-        
-        % combine sample information variables to a structure.
-        SampleInformation.StructureNames = DataTable.StructureName{subject,1};
-        SampleInformation.MMCoordinates = DataTable.MMcoordinates{subject,1};
-        SampleInformation.MRIvoxCoordinates = DataTable.MRIvoxCoordinates{subject,1};
-        
-        
-        ProbeInformation.EntrezID = unique(EntrezID, 'stable');
-        ProbeInformation.GeneID = unique(GeneID, 'stable');
-        %ProbeInformation.GeneSymbol = unique(GeneSymbol, 'stable');
-        %ProbeInformation.GeneName = unique(GeneName, 'stable');
-        %ProbeInformation.ProbeName = unique(ProbeName, 'stable');
-        cd ..
-        cd ('processedData');
-        save(sprintf('%s%sS0%d.mat', startFileName, probeSelection, subject), 'Expression', 'ProbeInformation' , 'SampleInformation');
-        
-        
+        Expression = expressionSelected{subject}(:,keepGenes); % exclude genes that had duplicated and non-matching names
     end
-    
+    % combine sample information variables to a structure.
+    SampleInformation.StructureNames = DataTable.StructureName{subject,1};
+    SampleInformation.MMCoordinates = DataTable.MMcoordinates{subject,1};
+    SampleInformation.MRIvoxCoordinates = DataTable.MRIvoxCoordinates{subject,1};
+
+    save(sprintf('%s%sS0%dTEST.mat', startFileName, probeSelection, subject), 'Expression', 'probeInformation' , 'SampleInformation');
+        
 end
 cd ../../..
+
+
+
+
 
 
 
