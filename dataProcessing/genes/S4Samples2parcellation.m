@@ -104,7 +104,7 @@ for parcellation = parcellations
         end
         
         
-        load(sprintf('ProbeInformation%s.mat', probeSelection));
+        %load(sprintf('ProbeInformation%s.mat', probeSelection));
         load(sprintf('%s%ssepS0%d.mat', startFileName, probeSelection, subject));
         
         

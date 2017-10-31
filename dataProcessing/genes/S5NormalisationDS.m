@@ -8,8 +8,8 @@ clear all;
 % Choose options
 %------------------------------------------------------------------------------
 useCUSTprobes = true; % choose if you want to use data with CUST probes
-probeSelection = {'Mean', 'Variance', 'LessNoise', 'PC','random'};
-parcellation = 'HCP';%, 'cust100', 'cust250'};
+probeSelection = {'Variance'}; %{'Mean', 'Variance', 'LessNoise', 'PC','random'};
+parcellation = 'aparcaseg';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 multipleProbes = false; % it this is true, only genes that have multiple probes will be selected.
 correctDistance = false;
@@ -18,8 +18,8 @@ percentDS = 5;
 distanceCorrection = 'Euclidean';
 coexpressionFor = 'all';
 Fit = {'removeMean'};
-normMethod = 'zscore'; %'scaledRobustSigmoid';
-normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex, Lcortex)
+normMethod = 'scaledRobustSigmoid'; %'scaledRobustSigmoid';
+normaliseWhat = 'LcortexSubcortex'; %(LcortexSubcortex, wholeBrain, LRcortex, Lcortex)
 % choose Lcortex if want to normalise samples assigned to left cortex separately;
 % choose LcortexSubcortex if want to normalise LEFT cortex + left subcortex together
 % choose wholeBrain if you want to normalise the whole brain.

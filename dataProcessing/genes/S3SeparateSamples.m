@@ -104,7 +104,7 @@ for subject = subjects
             sampleInformationS.StructureNames(strcmp('remove',sampleInformationS.StructureNames)) = [];
             sampleInformation.(side{1}).(brainPart{1}).StructureNames = sampleInformationS.StructureNames;
             
-            probeInformation = ProbeInformation;
+            %probeInformation = ProbeInformation;
         end
     end
     %------------------------------------------------------------------------------
