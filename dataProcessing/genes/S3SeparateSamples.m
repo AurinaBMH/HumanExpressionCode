@@ -10,8 +10,10 @@
 % Choose what to separate
 %------------------------------------------------------------------------------
 % separate according to sides
+clear all; 
+
 useCUSTprobes = true;
-probeSelection = 'Mean';% (Variance', LessNoise', 'Mean')
+probeSelections = {'Mean', 'Variance', 'LessNoise', 'Random', 'PC'}; 
 sides = {'right', 'left'};
 % separate according to brain part: cortex/subcortex
 brainParts = {'Cortex', 'Subcortex'};
@@ -30,13 +32,17 @@ else
     startFileName = 'MicroarrayData';
 end
 
+% load data file
+for t = 1:length(probeSelections)
+    
+FileName = sprintf('%s%s.mat',startFileName, probeSelections{t});
+load(FileName);
+
+expressionSubjects = cell(6,1); 
+sampleInfoSubjects = cell(6,1); 
+
 for subject = subjects
-    % load data file
-    
-    FileName = sprintf('%s%sS0%d.mat',startFileName, probeSelection, subject);
-    
-    load(FileName);
-    
+
     % select words that belong to cortex
     cortex = {'cortex', 'gyrus', 'gyri', 'sulcus', 'occipital pole', 'planum temporale', 'cuneus', ...
         'frontal pole', 'operculum', 'planum polare', 'temporal pole' , 'paracentral lobule' };%
@@ -46,8 +52,8 @@ for subject = subjects
     for side = sides
         for brainPart = brainParts
             % rename variables to keep the original
-            expressionS = Expression;
-            sampleInformationS = SampleInformation;
+            expressionS = expressionAll{subject}; 
+            sampleInformationS = sampleInfo{subject}; 
             
             % chack each structure name for side and brain pars separation
             for i=1:length(sampleInformationS.StructureNames)
@@ -107,13 +113,16 @@ for subject = subjects
             %probeInformation = ProbeInformation;
         end
     end
+    expressionSubjects{subject} = expression; 
+    sampleInfoSubjects{subject} = sampleInformation; 
     %------------------------------------------------------------------------------
-    % Save data for each subject separately
+    % Save data 
     %------------------------------------------------------------------------------
-    
-    SaveFileName = sprintf('%s%ssepS0%d.mat',startFileName, probeSelection, subject);
-    
-    save (SaveFileName, 'expression', 'probeInformation', 'sampleInformation');
 end
+    SaveFileName = sprintf('%s%ssep.mat',startFileName, probeSelections{t});
+
+    save (SaveFileName, 'expressionSubjects', 'probeInformation', 'sampleInfoSubjects');
+end
+
 cd ../../..
 

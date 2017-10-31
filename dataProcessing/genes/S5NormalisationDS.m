@@ -8,8 +8,8 @@ clear all;
 % Choose options
 %------------------------------------------------------------------------------
 useCUSTprobes = true; % choose if you want to use data with CUST probes
-probeSelection = {'Variance'}; %{'Mean', 'Variance', 'LessNoise', 'PC','random'};
-parcellation = 'aparcaseg';%, 'cust100', 'cust250'};
+probeSelection = {'Variance', 'Mean', 'Variance', 'LessNoise', 'PC','Random'};
+parcellation = 'HCP';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 multipleProbes = false; % it this is true, only genes that have multiple probes will be selected.
 correctDistance = false;
@@ -19,7 +19,7 @@ distanceCorrection = 'Euclidean';
 coexpressionFor = 'all';
 Fit = {'removeMean'};
 normMethod = 'scaledRobustSigmoid'; %'scaledRobustSigmoid';
-normaliseWhat = 'LcortexSubcortex'; %(LcortexSubcortex, wholeBrain, LRcortex, Lcortex)
+normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex, Lcortex)
 % choose Lcortex if want to normalise samples assigned to left cortex separately;
 % choose LcortexSubcortex if want to normalise LEFT cortex + left subcortex together
 % choose wholeBrain if you want to normalise the whole brain.
@@ -87,7 +87,7 @@ expSampNorm = cell(6,1);
 expSample = cell(6,1);
 
 entrezIDs = probeInformation.EntrezID;
-load('IDgenes3plus.mat');
+load('IDgenes2plus.mat');
 [~, keep] = intersect(entrezIDs, IDgene);
 %----------------------------------------------------------------------------------
 % Normalise data for each subject separately
@@ -158,7 +158,7 @@ for sub=subjects
     for j=1:length(ROIs)
         indROI = find(expSubj(:,2)==(ROIs(j)));
         noProbes = length(indROI);
-        fprintf(1,'%u samples for %u ROI found \n', noProbes, ROIs(j))
+       % fprintf(1,'%u samples for %u ROI found \n', noProbes, ROIs(j))
         % take expression values for a selected entrezID
         expressionRepInt = dataNorm(indROI,:); % try not normalised data for DS
         coordinatesRepInt = coord(indROI,:);
@@ -339,9 +339,3 @@ end
 % A = A(~any(isnan(A),2),:);
 % figure; scatter(A(:,1), A(:,2));
 % [r,p] = corr(A(:,1), A(:,2), 'type', 'Spearman')
-
-
-
-
-
-
