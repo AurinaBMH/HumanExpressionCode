@@ -2,10 +2,10 @@
 %------------------------------------------------------------------------------
 % Choose options
 %------------------------------------------------------------------------------
-
+clear all; 
 useCUSTprobes = true;
 signalThreshold = 0.5; % percentage of samples that a selected probe has expression levels that are higher than background
-doOriginal = true;
+doOriginal = false;
 %------------------------------------------------------------------------------
 % Load the data
 %------------------------------------------------------------------------------

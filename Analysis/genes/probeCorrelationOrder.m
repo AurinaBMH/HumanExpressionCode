@@ -4,7 +4,7 @@ cd ('data/genes/processedData');
 numProbes = 2;
 normMethod = ''; % '' for sigmoid; zscore for zscore;
 coexpressionOn = 'sample'; % sample of gene
-probeSelection = {'Variance', 'PC', 'LessNoise', 'Mean', 'random'};
+probeSelection = {'Variance', 'PC', 'LessNoise', 'Mean', 'Random'};
 DSthreshold = -1; % -1 will include all.
 
 DSscoresAll = cell(5,1);
