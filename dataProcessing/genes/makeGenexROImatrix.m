@@ -1,14 +1,26 @@
 % make ROI x gene matrix
+clear all; 
+
 useCUSTprobes = true;
 % choose what type of probe selection to use, hemisphere, subject list, parcellations, threshols.
-probeSelection = 'Variance';% (Variance', LessNoise', 'Mean')
-parcellation = {'aparcaseg'};%, aparcaseg, 'cust100', 'cust250'};
+probeSelection = 'Mean';% (Variance', LessNoise', 'Mean')
+parcellation = {'HCP'};%, aparcaseg, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 subjects = 1:6;
-normaliseWhat = 'LcortexSubcortex'; % 'Lcortex'; % 'LcortexSubcortex'
+normaliseWhat = 'Lcortex'; % 'Lcortex'; % 'LcortexSubcortex'
 normMethod = 'scaledRobustSigmoid';
 percentDS = 5;
+doNormalise = false; 
 
+options.probeSelection = probeSelection; 
+options.parcellation = parcellation;%, aparcaseg, 'cust100', 'cust250'};
+options.distanceThreshold = distanceThreshold; % first run 30, then with the final threshold 2
+options.subjects = subjects;
+options.normaliseWhat = normaliseWhat;
+options.normMethod = normMethod; 
+options.percentDS = percentDS; 
+options.useCUSTprobes = useCUSTprobes; 
+options.doNormalise = doNormalise; 
 
 if useCUSTprobes
     fprintf(1,'Using the data with CUST probes: %s \n', probeSelection)
@@ -97,7 +109,11 @@ for sub=subjects
             fprintf('Normalising gene expression data\n')
     end
     
+    if doNormalise
     expSampNorm{sub} = [ROI, dataNorm];
+    else
+    expSampNorm{sub} = [ROI, data];    
+    end
     expSample{sub} = [ROI, data];
     coordSampROI{sub} = [ROI, coord];
     
@@ -114,7 +130,7 @@ coordinatesROI = zeros(length(ROIs),3);
 for j=1:length(ROIs)
     indROI = find(expSampROI(:,1)==(ROIs(j)));
     noProbes = length(indROI);
-    fprintf(1,'%u samples for %u ROI found \n', noProbes, ROIs(j))
+    %fprintf(1,'%u samples for %u ROI found \n', noProbes, ROIs(j))
     % take expression values for a selected entrezID
     expressionRepInt = expSampROI(indROI,2:end);
     coordinatesRepInt = coordSamp(indROI,2:end);
@@ -148,6 +164,9 @@ coordinatesROI = [ROIs, coordinatesROI];
         DSvalues(ii,1) = ix(ii);
     end
     
+    %[expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect, distPlot] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance);
+    
+    
     %----------------------------------------------------------------------------------
     % Get probeIDs for selected DS genes
     %----------------------------------------------------------------------------------
@@ -163,9 +182,9 @@ coordinatesROI = [ROIs, coordinatesROI];
     probeInformation.DS = DS;
 %end
 cd 'forBen'
-save(sprintf('%dparcellation%s.mat', NumNodes, normaliseWhat), 'geneROI',  'coordinatesROI');
+save(sprintf('%dparcellation%s%d%s.mat', NumNodes, normaliseWhat, doNormalise, probeSelection), 'geneROI',  'coordinatesROI', 'options', 'probeInformation');
 %if strcmp(parcellation, 'aparcaseg')
-save(sprintf('%dDSgenes%s.mat', NumNodes, normaliseWhat), 'DSTable', 'probeInformation');
+%save(sprintf('%dDSgenes%s.mat', NumNodes, normaliseWhat), 'DSTable', 'probeInformation');
 %end
-cd ../../../..
+%cd ../../../..
 
