@@ -8,19 +8,19 @@ clear all;
 % Choose options
 %------------------------------------------------------------------------------
 useCUSTprobes = true; % choose if you want to use data with CUST probes
-probeSelection = {'Variance', 'Mean'}; %,'Mean', 'LessNoise', 'PC','Random'};
-parcellation = 'aparcaseg';%, 'cust100', 'cust250'};
+probeSelection = {'Variance', 'Mean', 'LessNoise', 'PC','Random'};
+parcellation = 'HCP';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 multipleProbes = false; % it this is true, only genes that have multiple probes will be selected.
-correctDistance = false;
+correctDistance = true;
 calculateDS = true;
-percentDS = 100;
+percentDS = 5;
 distanceCorrection = 'Euclidean';
 coexpressionFor = 'all';
 Fit = {'removeMean'};
-doNormalise = false; 
+doNormalise = true; 
 normMethod = 'scaledRobustSigmoid'; %'scaledRobustSigmoid';
-normaliseWhat = 'LcortexSubcortex'; %(LcortexSubcortex, wholeBrain, LRcortex, Lcortex)
+normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex, Lcortex)
 % choose Lcortex if want to normalise samples assigned to left cortex separately;
 % choose LcortexSubcortex if want to normalise LEFT cortex + left subcortex together
 % choose wholeBrain if you want to normalise the whole brain.
@@ -42,26 +42,26 @@ for p=probeSelection
 % Define number of subjects and parcellation details based on choises
 %------------------------------------------------------------------------------
 if strcmp(parcellation, 'aparcaseg')
-    NumNodes = 82;
+    numNodes = 82;
     LeftCortex = 1:34;
     LeftSubcortex = 35:41;
     RightCortex = 42:75;
     RightSubcortex = 76:82;
 elseif strcmp(parcellation, 'cust100')
-    NumNodes = 220;
+    numNodes = 220;
     LeftCortex = 1:100;
     LeftSubcortex = 101:110;
     RightCortex = 111:210;
     RightSubcortex = 211:220;
 elseif strcmp(parcellation, 'cust250')
-    NumNodes = 530;
+    numNodes = 530;
     LeftCortex = 1:250;
     LeftSubcortex = 251:265;
     RightCortex = 266:515;
     RightSubcortex = 516:530;
     
 elseif strcmp(parcellation, 'HCP')
-    NumNodes = 360;
+    numNodes = 360;
     LeftCortex = 1:180;
     %LeftSubcortex = 110;
     RightCortex = 181:360;
@@ -77,7 +77,7 @@ switch normaliseWhat
         nROIs = [LeftCortex,LeftSubcortex];
     case 'wholeBrain'
         subjects = 1:2;
-        nROIs = 1:NumNodes;
+        nROIs = 1:numNodes;
     case 'LRcortex'
         subjects = 1:2;
         nROIs = [LeftCortex,RightCortex];
@@ -90,7 +90,7 @@ else
 end
 
 cd ('data/genes/processedData');
-load(sprintf('%s%s%dDistThresh%d_CoordsAssigned.mat', startFileName, p{1}, NumNodes, distanceThreshold));
+load(sprintf('%s%s%dDistThresh%d_CoordsAssigned.mat', startFileName, p{1}, numNodes, distanceThreshold));
 
 
 expressionSubjROI = cell(6,1);
@@ -357,8 +357,8 @@ end
 SampleCoordinates = sortrows(combinedCoord,1); 
 SampleGeneExpression = sortrows(expSampNormalisedAll,1); 
 %save(sprintf('DSnew%s', p{1}), 'DS', 'averageCoexpression', 'DSProbeTable', 'expSampNormalisedAll', 'probeInformation'); 
-%save(sprintf('DSnew%s%s%d', normMethod, p{1}, doNormalise), 'DS', 'averageCoexpression', 'expSampNormalisedAll', 'probeInformation'); 
-save(sprintf('DSnew%s%s%dBEN', normMethod, p{1}, doNormalise), 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'options'); 
+save(sprintf('DS%d%s%s%d', numNodes, normMethod, p{1}, doNormalise), 'averageCoexpression', 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'options'); 
+%save(sprintf('DSnew%s%s%dBEN', normMethod, p{1}, doNormalise), 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'options'); 
 cd ../../..
 end
 %figure; imagesc(expPlotMNI); caxis([-1 1]); colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]); title('Average coexpression')

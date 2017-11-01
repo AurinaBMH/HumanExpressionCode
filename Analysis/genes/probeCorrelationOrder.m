@@ -1,31 +1,33 @@
 clear all;
 
 cd ('data/genes/processedData');
-numProbes = 3;
+numProbes = 2;
 normMethod = 'scaledRobustSigmoid'; % '' for sigmoid; zscore for zscore;
-coexpressionOn = 'gene'; % sample of gene
-probeSelections = {'Variance', 'LessNoise', 'Mean', 'Random', 'PC'}; %, 'Random'};
-DSthreshold = -1; % -1 will include all.
+coexpressionOn = 'sample'; % sample of gene
+probeSelections = {'Variance', 'LessNoise', 'Mean', 'PC', 'Random'}; %, 'Random'};
+%DSthreshold = -1; % -1 will include all.
+doNormalise = true; 
+numNodes = 360; 
 
 DSscoresAll = cell(5,1);
 allData = cell(5,1);
 
 for i=1:length(probeSelections)
-    load(sprintf('DSnew%s%s.mat', normMethod, probeSelections{i}))
+    load(sprintf('DS%d%s%s%d', numNodes, normMethod, probeSelections{i}, doNormalise))
     fprintf('Loading data with probes selected based on %s\n',probeSelections{i})
-    fprintf('Reordering probes\n')% - generated using S5 script (probes chosen based on variance)
-    DSscoresAll{i} = DS; probeSelections{i} = probeSelections{i};
-    allData{i} = expSampNormalisedAll(:,2:end);
+    %fprintf('Reordering probes\n')% - generated using S5 script (probes chosen based on variance)
+    DSscoresAll{i} = probeInformation.DS; probeSelections{i} = probeSelections{i};
+    allData{i} = SampleGeneExpression(:,2:end);
 end
 
 % entrezIDs for genes that have more than X probes.
-fprintf('Loading gene entrezIDs that have more than %d probes\n', numProbes)
+fprintf('Loading gene entrezIDs that have %d or more probes\n', numProbes)
 load(sprintf('IDgenes%dplus.mat', numProbes));
 
-DSscores = DS>DSthreshold;
+%DSscores = DS>DSthreshold;
 entrezIDs = probeInformation.EntrezID; %probeInformation.EntrezID;
 % select those genes that have more than X probes (and maybe also high DS)
-[~, keep] = intersect(entrezIDs(DSscores==1), IDgene);
+[~, keep] = intersect(entrezIDs, IDgene);
 
 allDatafinal = cell(length(probeSelections),1);
 coexpValues = cell(length(probeSelections),1);
