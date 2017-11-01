@@ -19,8 +19,8 @@
 clear all;
 useCUSTprobes = true;
 % choose what type of probe selection to use, hemisphere, subject list, parcellations, threshols.
-probeSelections = {'Mean', 'Variance', 'LessNoise', 'Random', 'PC'};
-parcellations = {'HCP'}; %,'cust100', 'cust250', 'aparcaseg'};
+probeSelections = {'Mean', 'Variance', 'LessNoise','Random', 'PC'};
+parcellations = {'HCP', 'aparcaseg'}; %,'cust100', 'cust250', 'aparcaseg'};
 distanceThreshold = 2; % first run with 40 for one probeSelection (will make a file that fits all)
 % then run with 2 for all probe selections. 
 subjects = 1:6;

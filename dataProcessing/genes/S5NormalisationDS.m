@@ -8,7 +8,7 @@ clear all;
 % Choose options
 %------------------------------------------------------------------------------
 useCUSTprobes = true; % choose if you want to use data with CUST probes
-probeSelection = {'Variance', 'Mean', 'Variance', 'LessNoise', 'PC','Random'};
+probeSelection = {'Variance', 'Mean', 'LessNoise', 'PC','Random'};
 parcellation = 'HCP';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 multipleProbes = false; % it this is true, only genes that have multiple probes will be selected.

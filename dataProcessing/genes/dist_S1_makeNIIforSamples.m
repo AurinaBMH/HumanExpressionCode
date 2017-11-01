@@ -18,9 +18,9 @@ for subject = subjects
     cd ('data/genes/parcellations')
     subjectDir = sprintf('S0%d_H0351', subject);
     cd (subjectDir)
-    
+
     fprintf('Subject %u parcellation %s assignment distance threshold %u\n; ', subject, parcellation{1}, distanceThreshold )
-    
+
     %------------------------------------------------------------------------------
     % Load parcellations
     %------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ for subject = subjects
         LeftSubcortex = 251:265;
         RightCortex = 266:515;
         RightSubcortex = 516:530;
-        
+
     end
     % make an empty image
     image = zeros(size(data_parcel));
@@ -69,7 +69,7 @@ for subject = subjects
     samplesIND = find(ismember(DataCoordinatesMRI{subject}(:,2),nROIs));
     coordinates2 = coordinates(samplesIND,:);
     index = numSamples:numSamples+max(samplesIND)-1;
-    
+
     [C,ia,ic] = unique(coordinates2, 'rows', 'stable');
     numSamples = numSamples+length(ia);
     sampleIND{subject} = ia;
@@ -82,14 +82,14 @@ for subject = subjects
     cd ('processedData')
     filename1 = sprintf('S%dsamples.nii', subject);
     write(hdr,image,filename1);
-    
+
     cd ../../..
-    
+
 end
 cd ('data/genes/processedData')
 % when calculating sample-smple coexpression keep only those samples
 save('samples2keep.mat', 'sampleIND');
 
-%% after running this script 
+%% after running this script
 % 1. we need to transform volume files (.nii) to surface files (.mgz) using mri_vol2surf command on massive (M2: /gpfs/M2Scratch/Monash076/aurina/AllenInstitute) for each subject and produce one .mgz file per subject
-% mri_vol2surf --mov S1samples.nii --regheader H0351_2001 --hemi lh --o S1samplesTEST.mgz --projfrac-max 0 1 0.1 ?interp nearest
+% mri_vol2surf --mov S1samples.nii --regheader H0351_2001 --hemi lh --o S1samplesTEST.mgz --projfrac-max 0 1 0.1 --interp nearest
