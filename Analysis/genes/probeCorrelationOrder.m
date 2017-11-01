@@ -1,57 +1,56 @@
 clear all;
 
 cd ('data/genes/processedData');
-numProbes = 2;
-normMethod = ''; % '' for sigmoid; zscore for zscore;
-coexpressionOn = 'sample'; % sample of gene
-probeSelection = {'Variance', 'PC', 'LessNoise', 'Mean', 'Random'};
+numProbes = 3;
+normMethod = 'scaledRobustSigmoid'; % '' for sigmoid; zscore for zscore;
+coexpressionOn = 'gene'; % sample of gene
+probeSelections = {'Variance', 'LessNoise', 'Mean', 'Random', 'PC'}; %, 'Random'};
 DSthreshold = -1; % -1 will include all.
 
 DSscoresAll = cell(5,1);
 allData = cell(5,1);
 
-for i=1:length(probeSelection)
-    load(sprintf('DSnew%s%s.mat', normMethod, probeSelection{i})) % - generated using S5 script (probes chosen based on variance)
-    [a,order] = sort(probeInformation.EntrezID);
-    DSscoresAll{i} = DS; probeSelection{i} = probeSelection{i};
-    data = expSampNormalisedAll(:,2:end);
-    allData{i} = data(:, order);
+for i=1:length(probeSelections)
+    load(sprintf('DSnew%s%s.mat', normMethod, probeSelections{i}))
+    fprintf('Loading data with probes selected based on %s\n',probeSelections{i})
+    fprintf('Reordering probes\n')% - generated using S5 script (probes chosen based on variance)
+    DSscoresAll{i} = DS; probeSelections{i} = probeSelections{i};
+    allData{i} = expSampNormalisedAll(:,2:end);
 end
 
 % entrezIDs for genes that have more than X probes.
+fprintf('Loading gene entrezIDs that have more than %d probes\n', numProbes)
 load(sprintf('IDgenes%dplus.mat', numProbes));
 
 DSscores = DS>DSthreshold;
-entrezIDs = a; %probeInformation.EntrezID;
+entrezIDs = probeInformation.EntrezID; %probeInformation.EntrezID;
 % select those genes that have more than X probes (and maybe also high DS)
-%[~, keep] = intersect(entrezIDs, IDgene);
 [~, keep] = intersect(entrezIDs(DSscores==1), IDgene);
 
-allDatafinal = cell(5,1);
-coexpValues = cell(5,1);
-for k=1:5
+allDatafinal = cell(length(probeSelections),1);
+coexpValues = cell(length(probeSelections),1);
+for k=1:length(probeSelections)
     
     % try to normaise data in columns before calculating coexpression
     selectedData = allData{k}(:,keep);
     allDatafinal{k} = selectedData; %BF_NormalizeMatrix(selectedData, 'zscore');
     switch coexpressionOn
         case 'sample'
-            %mat = corr(allDatafinal{k}, 'type', 'Spearman');
             mat = corr(allDatafinal{k}', 'type', 'Spearman');
         case 'gene'
             mat = corr(allDatafinal{k}, 'type', 'Spearman');
     end
-    %coexpression.
+
     coexpValues{k} = mat(:);
     
 end
 
 numGenes = size(allDatafinal{1},2);
-avCorr = zeros(5,5);
-coexpCorr = zeros(5,5);
+avCorr = zeros(length(probeSelections),length(probeSelections));
+coexpCorr = zeros(length(probeSelections),length(probeSelections));
 % calculate correlation between each way of choosing a probe
-for i=1:5
-    for j=i+1:5
+for i=1:length(probeSelections)
+    for j=i+1:length(probeSelections)
         
         correlation = zeros(numGenes,1);
         for g=1:numGenes
@@ -65,13 +64,13 @@ for i=1:5
 end
 
 figure; imagesc(avCorr); colormap([[1 1 1];BF_getcmap('reds',9)]); caxis([0 1]); colorbar;
-xticks([1 2 3 4 5]); yticks([1 2 3 4 5]);
+xticks(1:length(probeSelections)); yticks(1:length(probeSelections));
 title(sprintf('Correlation between genes with %d and more probes (%d genes)', numProbes, numGenes));
-xticklabels({'Variance','PC','noise','mean', 'random'});
-yticklabels({'Variance','PC','noise','mean', 'random'});
+xticklabels(probeSelections);
+yticklabels(probeSelections);
 
 figure; imagesc(coexpCorr); colormap([[1 1 1];BF_getcmap('reds',9)]); colorbar;
-xticks([1 2 3 4 5]); yticks([1 2 3 4 5]);
+xticks(1:length(probeSelections)); yticks(1:length(probeSelections));
 title(sprintf('Correlation between %s-%s coexpression matrices for genes with %d and more probes (%d genes)', coexpressionOn,coexpressionOn,numProbes, numGenes));
-xticklabels({'Variance','PC','noise','mean', 'random'});
-yticklabels({'Variance','PC','noise','mean', 'random'});
+xticklabels(probeSelections);
+yticklabels(probeSelections);

@@ -2,7 +2,7 @@ clear all;
 
 cd ('data/genes/processedData');
 
-normMethod = ''; % '' for sigmoid; zscore for zscore;
+normMethod = 'scaledRobustSigmoid'; % '' for sigmoid; zscore for zscore;
 probeSelection = {'Variance', 'PC', 'LessNoise', 'Mean', 'random'};
 onlyMultipleProbes = true; 
 numProbes = 3; %(2 or 3)
@@ -14,18 +14,18 @@ DSscoresAll = cell(length(probeSelection),1);
 for op=1:length(probeSelection)
     load(sprintf('DSnew%s%s.mat', normMethod, probeSelection{op})) % - generated using S5 script (probes chosen based on variance)
     % reorder entrez IDs for each probe selection
-    [entrezIDs,order] = sort(probeInformation.EntrezID);
-    DSone = DS(order); 
+    %[entrezIDs,order] = sort(probeInformation.EntrezID);
+   % DSone = DS(order); 
     
     if onlyMultipleProbes
         % find genes with multiple probes in the reordered
         % version and sub-select them. 
-    [~, keep] = intersect(entrezIDs, IDgene);
-    DSscoresAll{op} = DSone(keep); 
+    [~, keep] = intersect(probeInformation.EntrezID, IDgene);
+    DSscoresAll{op} = DS(keep); 
     
     else
         % id include all genes
-    DSscoresAll{op} = DSone; 
+    DSscoresAll{op} = DS; 
     
     end
 
