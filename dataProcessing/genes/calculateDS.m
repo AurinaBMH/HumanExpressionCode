@@ -95,7 +95,7 @@ for sub=subjects
     
     % transform from log2 scale to normal scale and then normalise using
     % scaled robust sigmoid.
-    data = 2.^(data);
+    % data = 2.^(data);
     
     coordSample{sub} = coord;
     ROI = expSubj(:,2);
