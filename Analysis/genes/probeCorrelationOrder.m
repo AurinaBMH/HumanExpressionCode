@@ -4,7 +4,7 @@ cd ('data/genes/processedData');
 numProbes = 2;
 normMethod = 'scaledRobustSigmoid'; % '' for sigmoid; zscore for zscore;
 coexpressionOn = 'sample'; % sample of gene
-probeSelections = {'Variance', 'LessNoise', 'Mean', 'PC', 'Random'}; %, 'Random'};
+probeSelections = {'Variance', 'PC', 'LessNoise', 'Mean', 'Random'}; %, 'Random'};
 %DSthreshold = -1; % -1 will include all.
 doNormalise = true; 
 numNodes = 360; 
