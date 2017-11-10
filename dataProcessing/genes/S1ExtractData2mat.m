@@ -20,7 +20,7 @@ useCUSTprobes = true;
 ExcludeCBandBS = true;
 
 if useCUSTprobes
-    fprintf(1,'CUST probes will NOT be excluded\n')
+    fprintf(1,'CUST probes will be included\n')
     startFileName = 'MicroarrayDataWITHcust';
 else
     fprintf(1,'CUST probes will be excluded\n')
@@ -140,8 +140,8 @@ ProbeID(isnan(ProbeID)) = [];
 % to do that import ProbesReordered.xlsx file (first 69 items for entrez IDs - they correspond to gene symbols that are incorrectly read)
 % take the unique values of entrez IDs and manually confirm their geneSymbols
 % 27 unique values (variable called entrez_id)
-
 % uniqueEntrezID = unique(entrez_id);
+
 GeneSymbol{170} = 'SEPT7';
 GeneSymbol{171} = 'SEPT7';
 GeneSymbol{172} = 'SEPT7';
@@ -238,6 +238,7 @@ GeneSymbol{40501} = 'SEPT7P2';
 GeneSymbol{41640} = 'SEPT7P2';
 GeneSymbol{44995} = 'SEPT7P2';
 
+% example of code how each entry was checked
 %ix = find(EntrezID{1}==uniqueEntrezID(27))
 %symb = GeneSymbol{1}(ix)
 %name = GeneName{1}(ix)
@@ -248,40 +249,9 @@ GeneSymbol{44995} = 'SEPT7P2';
 %------------------------------------------------------------------------------
 % Check for mistakes in probe naming 
 %------------------------------------------------------------------------------
+%changetoNumber = find(cell2mat(cellfun(@(x)any(isempty(x)),GeneSymbol,'UniformOutput',false))); 
 
-% [~, ind] = unique(GeneSymbol, 'stable');
-% % find duplicate indices
-% duplicate_ind = setdiff(1:size(GeneSymbol,1), ind);
-% 
-% k=1;
-% for gene = 1:length(duplicate_ind)
-% 
-%     % if gene names are not matching, exclude both of them
-%     symb = GeneSymbol(duplicate_ind(gene));
-%     test_ind = find(strcmp(GeneSymbol, symb{1}));
-%     % check if for all duplicated instances gene name is the same
-% 
-%     entrezID = EntrezID(test_ind);
-%     doMatch = zeros(length(test_ind));
-%     for j=1:length(test_ind)
-%         for i=1:length(test_ind)
-% 
-%             doMatch(j,i) = entrezID(j)~=entrezID(i);
-% 
-%         end
-%     end
-%     % if they're not matching, record indexes to exclude later
-%     if sum(doMatch(:))~=0
-%         toCheckOriginal{k,:} = test_ind;
-%         k=k+1;
-%     end
-% 
-% end
-% 
-% % remove duplicated rows in the cell
-% [r1, r2] = ndgrid(1:size(toCheckOriginal, 1));
-% duplicates = any(triu(arrayfun(@(r1, r2) isequal(toCheckOriginal(r1, :), toCheckOriginal(r2, :)), r1, r2), 1));
-% toCheckOriginal(duplicates, :) = [];
+toCheckSymbols = selectDuplicates(GeneSymbol, EntrezID);
 
 % for each row in the cell check names and symbols of the data manually and
 % confirm with the database
@@ -318,14 +288,14 @@ GeneSymbol{7889} = 'UBE2M';
 GeneSymbol{17389} = 'AHRR';
 GeneSymbol{17390} = 'AHRR';
 % 11
-GeneSymbol{24332} = []; % uncharacterized protein
-GeneSymbol{24333} = []; % uncharacterized protein
+GeneSymbol{24332} = NaN; % uncharacterized protein
+GeneSymbol{24333} = NaN;% uncharacterized protein
 % 12
 GeneSymbol{36610} = 'UGT2A2';
 % 13
-GeneSymbol{11621} = []; % maybe HYPK huntingtin interacting protein K, but not sure
-GeneSymbol{11622} = []; % maybe HYPK huntingtin interacting protein K, but not sure
-GeneSymbol{11623} = []; % maybe HYPK huntingtin interacting protein K, but not sure
+GeneSymbol{11621} = NaN;% maybe HYPK huntingtin interacting protein K, but not sure
+GeneSymbol{11622} = NaN;% maybe HYPK huntingtin interacting protein K, but not sure
+GeneSymbol{11623} = NaN;% maybe HYPK huntingtin interacting protein K, but not sure
 % 14
 GeneSymbol{37878} = 'ZNF283';
 GeneSymbol{41133} = 'ZNF283';
@@ -348,7 +318,8 @@ GeneSymbol{25503} = 'ANKHD1-EIF4EBP3';
 % 19
 GeneSymbol{14542} = 'SARS2';
 GeneSymbol{14543} = 'SARS2';
-% 20
+
+% 20 %bothed edited before
 % GeneSymbol{14947} = 'MARC2';
 % GeneSymbol{14948} = 'MARC2';
 % % 21
@@ -361,7 +332,7 @@ GeneSymbol{14543} = 'SARS2';
 EntrezID(15057) = 83869; 
 EntrezID(15058) = 83869; 
 % 22
-GeneSymbol{38137} = [];
+GeneSymbol{38137} = NaN;
 
 % 23 is correct 'uncharacterized LOC100130093' ir replaced with
 % synaptosomal-associated protein, 47kDa in https://www.ncbi.nlm.nih.gov/gene/?term=100130093
@@ -384,13 +355,13 @@ GeneSymbol{37046} = 'TAS2R46';
 
 % 28 very ambiguous annotations in the website, discontinued or changed to
 % something else.
-GeneSymbol{25885} = [];
-GeneSymbol{25886} = [];
-GeneSymbol{25927} = [];
-GeneSymbol{25928} = [];
-GeneSymbol{29847} = [];
-GeneSymbol{29848} = [];
-GeneSymbol{35196} = [];
+GeneSymbol{25885} = NaN; 
+GeneSymbol{25886} = NaN; 
+GeneSymbol{25927} = NaN; 
+GeneSymbol{25928} = NaN; 
+GeneSymbol{29847} = NaN; 
+GeneSymbol{29848} = NaN; 
+GeneSymbol{35196} = NaN; 
 % 29
 GeneSymbol{26499} = 'PRR5-ARHGAP8';
 GeneSymbol{26500} = 'PRR5-ARHGAP8';
@@ -435,7 +406,7 @@ GeneSymbol{38097} = 'CT47A3';
 GeneSymbol{38120} = 'CT47A9';
 % 38
 GeneSymbol{36691} = 'NPIPA5';
-GeneName{36691} = 'NPIPA5';
+GeneName{36691} = 'nuclear pore complex interacting protein family member A5';
 % 39
 GeneSymbol{34939} = 'HHLA1';
 GeneSymbol{40045} = 'HHLA1';
@@ -463,50 +434,21 @@ GeneSymbol{48065} = 'ZNF93';
 GeneSymbol{48066} = 'ZNF93';
 GeneSymbol{48067} = 'ZNF93';
 GeneSymbol{48068} = 'ZNF93';
-% 
- i=toCheckOriginal{6}
- symb = GeneSymbol(i)
- name = GeneName(i)
- probe = ProbeName(i)
- gene = GeneID(i)
- entrez = EntrezID(i)
+% % example of code how each entry was checked
+% i=toCheckSymbols{6}
+% symb = GeneSymbol(i)
+% name = GeneName(i)
+% probe = ProbeName(i)
+% gene = GeneID(i)
+% entrez = EntrezID(i)
 %------------------------------------------------------------------------------
 % when these changes are done, do the second round of rhecks for
 % duplicates, because geneSymbols are changed, there might be more
 % duplicated items now 
 %------------------------------------------------------------------------------
 
-% [~, ind] = unique(GeneSymbol, 'stable');
-% % find duplicate indices
-% duplicate_ind = setdiff(1:size(GeneSymbol,1), ind);
-% for gene = 1:length(duplicate_ind)
-% 
-%     % if gene names are not matching, exclude both of them
-%     symb = GeneSymbol(duplicate_ind(gene));
-%     test_ind = find(strcmp(GeneSymbol, symb{1}));
-%     % check if for all duplicated instances gene name is the same
-% 
-%     entrezID = EntrezID(test_ind);
-%     doMatch = zeros(length(test_ind));
-%     for j=1:length(test_ind)
-%         for i=1:length(test_ind)
-% 
-%             doMatch(j,i) = entrezID(j)~=entrezID(i);
-% 
-%         end
-%     end
-%     % if they're not matching, record indexes to exclude later
-%     if sum(doMatch(:))~=0
-%         toCheckOriginal{k,:} = test_ind;
-%         k=k+1;
-%     end
-% 
-% end
-% 
-% % remove duplicated rows in the cell
-% [r1, r2] = ndgrid(1:size(toCheckOriginal, 1));
-% duplicates = any(triu(arrayfun(@(r1, r2) isequal(toCheckOriginal(r1, :), toCheckOriginal(r2, :)), r1, r2), 1));
-% toCheckOriginal(duplicates, :) = [];
+changetoNumber = find(cell2mat(cellfun(@(x)any(isnan(x)),GeneSymbol,'UniformOutput',false))); 
+toCheckSymbolsAdditional = selectDuplicates(GeneSymbol, EntrezID, changetoNumber);
 
 GeneSymbol{42970} = 'ZNF222';
 GeneSymbol{42996} = 'ZNF222';
@@ -518,39 +460,7 @@ GeneSymbol{15902} = 'PCDHGA2';
 % Check for mistakes in GeneIDs
 %------------------------------------------------------------------------------
 
-[~, ind] = unique(EntrezID, 'stable');
-% find duplicate indices
-duplicate_ind = setdiff(1:size(EntrezID,1), ind);
-
-k=1;
-for gene = 1:length(duplicate_ind)
-
-    % if gene names are not matching, exclude both of them
-    symb = EntrezID(duplicate_ind(gene));
-    test_ind = find(EntrezID==symb);
-    % check if for all duplicated instances gene name is the same
-
-    geneID = GeneID(test_ind);
-    doMatch = zeros(length(test_ind));
-    for j=1:length(test_ind)
-        for i=1:length(test_ind)
-
-            doMatch(j,i) = geneID(j)~=geneID(i);
-
-        end
-    end
-    % if they're not matching, record indexes to exclude later
-    if sum(doMatch(:))~=0
-        toCheckOriginal{k,:} = test_ind;
-        k=k+1;
-    end
-
-end
-% 
-% remove duplicated rows in the cell
-[r1, r2] = ndgrid(1:size(toCheckOriginal, 1));
-duplicates = any(triu(arrayfun(@(r1, r2) isequal(toCheckOriginal(r1, :), toCheckOriginal(r2, :)), r1, r2), 1));
-toCheckOriginal(duplicates, :) = [];
+toCheckGeneIDs = selectDuplicates(EntrezID, GeneID); 
 
 % add corrections
 
@@ -561,9 +471,11 @@ GeneID(35442) = 78153;
 
 GeneID(28579) = 4334; 
 
-
+%------------------------------------------------------------------------------
 % for those where gene symbol is [], remove them
-emptyCells = cellfun(@isempty,GeneSymbol);
+%------------------------------------------------------------------------------
+
+emptyCells = find(cell2mat(cellfun(@(x)any(isnan(x)),GeneSymbol,'UniformOutput',false))); 
 fprintf(1,'Removing %d mislabeled probes \n', sum(emptyCells))
 fprintf(1,'Renaming misslabeled genes \n')
 ProbeID(emptyCells) = [];
@@ -642,6 +554,6 @@ noiseall = horzcat(DataTable{1,5}, DataTable{2,5}, DataTable{3,5}, DataTable{4,5
 cd ..
 cd ('processedData');
 
-%fprintf(1,'Saving data to the file\n')
-%save(sprintf('%s.mat', startFileName), 'DataTable','DataTableProbe', 'Expressionall', 'Coordinatesall', 'StructureNamesall', 'MRIvoxCoordinatesAll', 'noiseall');
-%cd ../../..
+fprintf(1,'Saving data to the file\n')
+save(sprintf('%s.mat', startFileName), 'DataTable','DataTableProbe', 'Expressionall', 'Coordinatesall', 'StructureNamesall', 'MRIvoxCoordinatesAll', 'noiseall');
+cd ../../..
