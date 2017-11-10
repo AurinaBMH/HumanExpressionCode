@@ -2,6 +2,7 @@
 %% Date modified: 2016-03-22
 %% Date modified: 2017-07-14
 %% Date modified: 2017-08-29 - noise level data added
+%% Date modified: 2017-11-10 - manual gene symbol naming fixed
 %% This script:
 %   1. Loads all microarray data from excell files for each subject
 %   2. Excludes custom probes;
@@ -133,216 +134,6 @@ ProbeID(isnan(ProbeID)) = [];
 %------------------------------------------------------------------------------
 % Check for mistakes in probe naming and fix them plus update expression values for those probes that are excluded
 %------------------------------------------------------------------------------
-[~, ind] = unique(GeneSymbol, 'stable');
-% find duplicate indices
-duplicate_ind = setdiff(1:size(GeneSymbol,1), ind);
-
-k=1;
-for gene = 1:length(duplicate_ind)
-
-    % if gene names are not matching, exclude both of them
-    symb = GeneSymbol(duplicate_ind(gene));
-    test_ind = find(strcmp(GeneSymbol, symb{1}));
-    % check if for all duplicated instances gene name is the same
-
-    entrezID = EntrezID(test_ind);
-    doMatch = zeros(length(test_ind));
-    for j=1:length(test_ind)
-        for i=1:length(test_ind)
-
-            doMatch(j,i) = entrezID(j)~=entrezID(i);
-
-        end
-    end
-    % if they're not matching, record indexes to exclude later
-    if sum(doMatch(:))~=0
-        toCheckOriginal{k,:} = test_ind;
-        k=k+1;
-    end
-
-end
-
-% remove duplicated rows in the cell
-[r1, r2] = ndgrid(1:size(toCheckOriginal, 1));
-duplicates = any(triu(arrayfun(@(r1, r2) isequal(toCheckOriginal(r1, :), toCheckOriginal(r2, :)), r1, r2), 1));
-toCheckOriginal(duplicates, :) = [];
-
-% for each row in the cell check names and symbols of the data manually and
-% confirm with the database
-
-% check each instance manually and rename or delete a probe
-% 1
-GeneSymbol{2174} = 'GYPA';
-GeneSymbol{2175} = 'GYPA';
-% 2
-GeneSymbol{34143} = 'INS-IGF2';
-% 3
-GeneSymbol{4373} = 'NPHS1';
-GeneSymbol{4374} = 'NPHS1';
-% 4
-GeneSymbol{26942} = 'PRSS3P2';
-% 5
-GeneSymbol{39302} = 'SEBOX';
-GeneSymbol{42587} = 'SEBOX';
-GeneSymbol{47956} = 'SEBOX';
-% 6
-GeneSymbol{7375} = 'ZNF221';
-GeneSymbol{7376} = 'ZNF221';
-% 7
-GeneSymbol{7454} = 'ZNF230';
-GeneSymbol{7455} = 'ZNF230';
-% 8
-GeneSymbol{7798} = 'SIGLEC5';
-GeneSymbol{7799} = 'SIGLEC5';
-GeneSymbol{47823} = 'SIGLEC5';
-% 9
-GeneSymbol{7888} = 'UBE2M';
-GeneSymbol{7889} = 'UBE2M';
-% 10
-GeneSymbol{17389} = 'AHRR';
-GeneSymbol{17390} = 'AHRR';
-% 11
-GeneSymbol{24332} = []; % uncharacterized protein
-GeneSymbol{24333} = []; % uncharacterized protein
-% 12
-GeneSymbol{36610} = 'UGT2A2';
-% 13
-GeneSymbol{11621} = []; % maybe HYPK huntingtin interacting protein K, but not sure
-GeneSymbol{11622} = []; % maybe HYPK huntingtin interacting protein K, but not sure
-GeneSymbol{11623} = []; % maybe HYPK huntingtin interacting protein K, but not sure
-% 14
-GeneSymbol{37878} = 'ZNF283';
-GeneSymbol{41133} = 'ZNF283';
-GeneSymbol{41930} = 'ZNF283';
-GeneSymbol{47952} = 'ZNF283';
-% 15
-GeneSymbol{12185} = 'OR4F4';
-GeneSymbol{12186} = 'OR4F4';
-
-% 16
-GeneSymbol{32243} = 'PCDHGC5';
-GeneSymbol{32244} = 'PCDHGC5';
-% 17
-GeneSymbol{12606} = 'RABGEF1';
-GeneSymbol{12607} = 'RABGEF1';
-GeneSymbol{40862} = 'RABGEF1';
-% 18
-GeneSymbol{25502} = 'ANKHD1-EIF4EBP3';
-GeneSymbol{25503} = 'ANKHD1-EIF4EBP3';
-% 19
-GeneSymbol{14542} = 'SARS2';
-GeneSymbol{14543} = 'SARS2';
-% 20
-GeneSymbol{14947} = 'MARC2';
-GeneSymbol{14948} = 'MARC2';
-% 21
-GeneSymbol{26205} = 'MARCH2';
-GeneSymbol{26206} = 'MARCH2';
-
-% 21 is correct 'non-protein coding RNA 185' ir replaced with
-% testis-specific transcript, Y-linked 14 (non-protein coding) in https://www.ncbi.nlm.nih.gov/gene/83869
-% 22
-GeneSymbol{38137} = [];
-
-% 23 is correct 'uncharacterized LOC100130093' ir replaced with
-% synaptosomal-associated protein, 47kDa in https://www.ncbi.nlm.nih.gov/gene/?term=100130093
-% 24
-GeneSymbol{21625} = 'MYL6B';
-GeneSymbol{21626} = 'MYL6B';
-% 25
-GeneSymbol{22929} = 'ZNF584';
-GeneSymbol{22930} = 'ZNF584';
-% 26
-GeneSymbol{24505} = 'DCDC1';
-GeneSymbol{24506} = 'DCDC1';
-% 27
-GeneSymbol{24670} = 'TAS2R46';
-GeneSymbol{24671} = 'TAS2R46';
-GeneSymbol{37046} = 'TAS2R46';
-
-% 28 very ambiguous annotations in the website, discontinued or changed to
-% something else.
-GeneSymbol{25885} = [];
-GeneSymbol{25886} = [];
-GeneSymbol{25927} = [];
-GeneSymbol{25928} = [];
-GeneSymbol{29847} = [];
-GeneSymbol{29848} = [];
-GeneSymbol{35196} = [];
-% 29
-GeneSymbol{26499} = 'PRR5-ARHGAP8';
-GeneSymbol{26500} = 'PRR5-ARHGAP8';
-% 30
-GeneSymbol{27893} = 'OR9G1';
-GeneSymbol{27894} = 'OR9G1';
-% 31
-% MRC1L1 replaced with MRC1 in the database
-GeneSymbol{3480} = 'MRC1';
-GeneSymbol{28579} = 'MRC1';
-GeneSymbol{46284} = 'MRC1';
-% 32
-GeneSymbol{30453} = 'GABARAPL1';
-GeneSymbol{30454} = 'GABARAPL1';
-% 33
-GeneSymbol{10522} = 'NUDT4';
-% 34
-GeneSymbol{30764} = 'TMEM189-UBE2V1';
-GeneSymbol{30765} = 'TMEM189-UBE2V1';
-GeneSymbol{30766} = 'TMEM189-UBE2V1';
-GeneSymbol{30767} = 'TMEM189-UBE2V1';
-GeneSymbol{30768} = 'TMEM189-UBE2V1';
-GeneSymbol{30769} = 'TMEM189-UBE2V1';
-GeneSymbol{30770} = 'TMEM189-UBE2V1';
-% 35
-GeneName{32506} = 'ELMO domain containing 1';
-GeneName{32507} = 'ELMO domain containing 1';
-GeneName{38909} = 'ELMO domain containing 1';
-GeneName{40316} = 'ELMO domain containing 1';
-GeneName{40447} = 'ELMO domain containing 1';
-% 36
-GeneSymbol{32505} = 'NBPF10';
-GeneSymbol{35693} = 'NBPF11';
-GeneSymbol{36886} = 'NBPF11';
-% 37
-GeneSymbol{38097} = 'CT47A3';
-GeneSymbol{38120} = 'CT47A9';
-% 38
-GeneSymbol{36691} = 'NPIPA5';
-GeneName{36691} = 'nuclear pore complex interacting protein family member A5';
-% 39
-GeneSymbol{34939} = 'HHLA1';
-GeneSymbol{40045} = 'HHLA1';
-% 40
-GeneSymbol{42431} = 'JMJD7';
-% 41
-GeneSymbol{39835} = 'AGAP9';
-GeneSymbol{43502} = 'AGAP9';
-GeneSymbol{44951} = 'AGAP9';
-% 42
-GeneSymbol{44093} = 'APOC2';
-GeneSymbol{44410} = 'APOC2';
-% 43
-GeneSymbol{44220} = 'ADH1A';
-GeneSymbol{44221} = 'ADH1A';
-% 44
-GeneSymbol{45661} = 'OR8U1';
-GeneSymbol{45662} = 'OR8U1';
-GeneSymbol{45663} = 'OR8U1';
-% 45
-EntrezID(47836) = 401024;
-GeneID(47836) = 125404;
-% 46
-GeneSymbol{48065} = 'ZNF93';
-GeneSymbol{48066} = 'ZNF93';
-GeneSymbol{48067} = 'ZNF93';
-GeneSymbol{48068} = 'ZNF93';
-
-%i=toCheckOriginal{46}
-%symb = GeneSymbol(i)
-%name = GeneName(i)
-%probe = ProbeName(i)
-%gene = GeneID(i)
-%entrez = EntrezID(i)
 
 % find all that are
 % '01-Mar-2002' and other dates and rename them
@@ -351,7 +142,6 @@ GeneSymbol{48068} = 'ZNF93';
 % 27 unique values (variable called entrez_id)
 
 % uniqueEntrezID = unique(entrez_id);
-
 GeneSymbol{170} = 'SEPT7';
 GeneSymbol{171} = 'SEPT7';
 GeneSymbol{172} = 'SEPT7';
@@ -382,7 +172,7 @@ GeneSymbol{11458} = 'SEPT6';
 GeneSymbol{11459} = 'SEPT6';
 GeneSymbol{11460} = 'SEPT6';
 
-GeneSymbol{7383} = 'SEPT8';
+GeneSymbol{37383} = 'SEPT8';
 GeneSymbol{38984} = 'SEPT8';
 GeneSymbol{39630} = 'SEPT8';
 GeneSymbol{42931} = 'SEPT8';
@@ -455,10 +245,327 @@ GeneSymbol{44995} = 'SEPT7P2';
 %gene = GeneID{1}(ix)
 %entrez = EntrezID{1}(ix)
 
+%------------------------------------------------------------------------------
+% Check for mistakes in probe naming 
+%------------------------------------------------------------------------------
+
+% [~, ind] = unique(GeneSymbol, 'stable');
+% % find duplicate indices
+% duplicate_ind = setdiff(1:size(GeneSymbol,1), ind);
+% 
+% k=1;
+% for gene = 1:length(duplicate_ind)
+% 
+%     % if gene names are not matching, exclude both of them
+%     symb = GeneSymbol(duplicate_ind(gene));
+%     test_ind = find(strcmp(GeneSymbol, symb{1}));
+%     % check if for all duplicated instances gene name is the same
+% 
+%     entrezID = EntrezID(test_ind);
+%     doMatch = zeros(length(test_ind));
+%     for j=1:length(test_ind)
+%         for i=1:length(test_ind)
+% 
+%             doMatch(j,i) = entrezID(j)~=entrezID(i);
+% 
+%         end
+%     end
+%     % if they're not matching, record indexes to exclude later
+%     if sum(doMatch(:))~=0
+%         toCheckOriginal{k,:} = test_ind;
+%         k=k+1;
+%     end
+% 
+% end
+% 
+% % remove duplicated rows in the cell
+% [r1, r2] = ndgrid(1:size(toCheckOriginal, 1));
+% duplicates = any(triu(arrayfun(@(r1, r2) isequal(toCheckOriginal(r1, :), toCheckOriginal(r2, :)), r1, r2), 1));
+% toCheckOriginal(duplicates, :) = [];
+
+% for each row in the cell check names and symbols of the data manually and
+% confirm with the database
+
+% check each instance manually and rename or delete a probe
+% 1
+GeneSymbol{2174} = 'GYPA';
+GeneSymbol{2175} = 'GYPA';
+% 2
+GeneSymbol{34143} = 'INS-IGF2';
+% 3
+GeneSymbol{4373} = 'NPHS1';
+GeneSymbol{4374} = 'NPHS1';
+% 4
+GeneSymbol{26942} = 'PRSS3P2';
+% 5
+GeneSymbol{39302} = 'SEBOX';
+GeneSymbol{42587} = 'SEBOX';
+GeneSymbol{47956} = 'SEBOX';
+% 6
+GeneSymbol{7375} = 'ZNF221';
+GeneSymbol{7376} = 'ZNF221';
+% 7%%%%%%%
+GeneSymbol{7454} = 'ZNF230';
+GeneSymbol{7455} = 'ZNF230';
+% 8
+GeneSymbol{7798} = 'SIGLEC5';
+GeneSymbol{7799} = 'SIGLEC5';
+GeneSymbol{47823} = 'SIGLEC5';
+% 9
+GeneSymbol{7888} = 'UBE2M';
+GeneSymbol{7889} = 'UBE2M';
+% 10
+GeneSymbol{17389} = 'AHRR';
+GeneSymbol{17390} = 'AHRR';
+% 11
+GeneSymbol{24332} = []; % uncharacterized protein
+GeneSymbol{24333} = []; % uncharacterized protein
+% 12
+GeneSymbol{36610} = 'UGT2A2';
+% 13
+GeneSymbol{11621} = []; % maybe HYPK huntingtin interacting protein K, but not sure
+GeneSymbol{11622} = []; % maybe HYPK huntingtin interacting protein K, but not sure
+GeneSymbol{11623} = []; % maybe HYPK huntingtin interacting protein K, but not sure
+% 14
+GeneSymbol{37878} = 'ZNF283';
+GeneSymbol{41133} = 'ZNF283';
+GeneSymbol{41930} = 'ZNF283';
+GeneSymbol{47952} = 'ZNF283';
+% 15
+GeneSymbol{12185} = 'OR4F4';
+GeneSymbol{12186} = 'OR4F4';
+
+% 16
+GeneSymbol{32243} = 'PCDHGC5';
+GeneSymbol{32244} = 'PCDHGC5';
+% 17
+GeneSymbol{12606} = 'RABGEF1';
+GeneSymbol{12607} = 'RABGEF1';
+GeneSymbol{40862} = 'RABGEF1';
+% 18
+GeneSymbol{25502} = 'ANKHD1-EIF4EBP3';
+GeneSymbol{25503} = 'ANKHD1-EIF4EBP3';
+% 19
+GeneSymbol{14542} = 'SARS2';
+GeneSymbol{14543} = 'SARS2';
+% 20
+% GeneSymbol{14947} = 'MARC2';
+% GeneSymbol{14948} = 'MARC2';
+% % 21
+% GeneSymbol{26205} = 'MARCH2';
+% GeneSymbol{26206} = 'MARCH2';
+
+% 21 is correct 'non-protein coding RNA 185' ir replaced with
+% testis-specific transcript, Y-linked 14 (non-protein coding) in https://www.ncbi.nlm.nih.gov/gene/83869
+% change entrez id to the updated one
+EntrezID(15057) = 83869; 
+EntrezID(15058) = 83869; 
+% 22
+GeneSymbol{38137} = [];
+
+% 23 is correct 'uncharacterized LOC100130093' ir replaced with
+% synaptosomal-associated protein, 47kDa in https://www.ncbi.nlm.nih.gov/gene/?term=100130093
+% change entrez id to the updated one
+EntrezID(35442) = 116841; 
+
+% 24
+GeneSymbol{21625} = 'MYL6B';
+GeneSymbol{21626} = 'MYL6B';
+% 25
+GeneSymbol{22929} = 'ZNF584';
+GeneSymbol{22930} = 'ZNF584';
+% 26
+GeneSymbol{24505} = 'DCDC1';
+GeneSymbol{24506} = 'DCDC1';
+% 27
+GeneSymbol{24670} = 'TAS2R46';
+GeneSymbol{24671} = 'TAS2R46';
+GeneSymbol{37046} = 'TAS2R46';
+
+% 28 very ambiguous annotations in the website, discontinued or changed to
+% something else.
+GeneSymbol{25885} = [];
+GeneSymbol{25886} = [];
+GeneSymbol{25927} = [];
+GeneSymbol{25928} = [];
+GeneSymbol{29847} = [];
+GeneSymbol{29848} = [];
+GeneSymbol{35196} = [];
+% 29
+GeneSymbol{26499} = 'PRR5-ARHGAP8';
+GeneSymbol{26500} = 'PRR5-ARHGAP8';
+% 30
+GeneSymbol{27893} = 'OR9G1';
+GeneSymbol{27894} = 'OR9G1';
+% 31
+% MRC1L1 replaced with MRC1 in the database
+GeneSymbol{3480} = 'MRC1';
+GeneSymbol{28579} = 'MRC1';
+EntrezID(28579) = 4360;
+GeneSymbol{46284} = 'MRC1';
+% 32
+GeneSymbol{30453} = 'GABARAPL1';
+GeneSymbol{30454} = 'GABARAPL1';
+% 33
+GeneSymbol{10522} = 'NUDT4';
+% 34
+GeneSymbol{30764} = 'TMEM189-UBE2V1';
+GeneSymbol{30765} = 'TMEM189-UBE2V1';
+GeneSymbol{30766} = 'TMEM189-UBE2V1';
+GeneSymbol{30767} = 'TMEM189-UBE2V1';
+GeneSymbol{30768} = 'TMEM189-UBE2V1';
+GeneSymbol{30769} = 'TMEM189-UBE2V1';
+GeneSymbol{30770} = 'TMEM189-UBE2V1';
+% 35
+GeneName{32506} = 'ELMO domain containing 1';
+GeneName{32507} = 'ELMO domain containing 1';
+GeneName{38909} = 'ELMO domain containing 1';
+GeneName{40316} = 'ELMO domain containing 1';
+GeneName{40447} = 'ELMO domain containing 1';
+EntrezID(32506) = 55531; %643923; 
+EntrezID(32507) = 55531; %643923; 
+GeneID(32506) = 34820; 
+GeneID(32507) = 34820; 
+% 36
+GeneSymbol{32505} = 'NBPF10';
+GeneSymbol{35693} = 'NBPF11';
+GeneSymbol{36886} = 'NBPF11';
+% 37
+GeneSymbol{38097} = 'CT47A3';
+GeneSymbol{38120} = 'CT47A9';
+% 38
+GeneSymbol{36691} = 'NPIPA5';
+GeneName{36691} = 'NPIPA5';
+% 39
+GeneSymbol{34939} = 'HHLA1';
+GeneSymbol{40045} = 'HHLA1';
+% 40
+GeneSymbol{42431} = 'JMJD7';
+% 41
+GeneSymbol{39835} = 'AGAP9';
+GeneSymbol{43502} = 'AGAP9';
+GeneSymbol{44951} = 'AGAP9';
+% 42
+GeneSymbol{44093} = 'APOC2';
+GeneSymbol{44410} = 'APOC2';
+% 43
+GeneSymbol{44220} = 'ADH1A';
+GeneSymbol{44221} = 'ADH1A';
+% 44
+GeneSymbol{45661} = 'OR8U1';
+GeneSymbol{45662} = 'OR8U1';
+GeneSymbol{45663} = 'OR8U1';
+% 45
+EntrezID(47836) = 401024;
+GeneID(47836) = 125404;
+% 46
+GeneSymbol{48065} = 'ZNF93';
+GeneSymbol{48066} = 'ZNF93';
+GeneSymbol{48067} = 'ZNF93';
+GeneSymbol{48068} = 'ZNF93';
+% 
+ i=toCheckOriginal{6}
+ symb = GeneSymbol(i)
+ name = GeneName(i)
+ probe = ProbeName(i)
+ gene = GeneID(i)
+ entrez = EntrezID(i)
+%------------------------------------------------------------------------------
+% when these changes are done, do the second round of rhecks for
+% duplicates, because geneSymbols are changed, there might be more
+% duplicated items now 
+%------------------------------------------------------------------------------
+
+% [~, ind] = unique(GeneSymbol, 'stable');
+% % find duplicate indices
+% duplicate_ind = setdiff(1:size(GeneSymbol,1), ind);
+% for gene = 1:length(duplicate_ind)
+% 
+%     % if gene names are not matching, exclude both of them
+%     symb = GeneSymbol(duplicate_ind(gene));
+%     test_ind = find(strcmp(GeneSymbol, symb{1}));
+%     % check if for all duplicated instances gene name is the same
+% 
+%     entrezID = EntrezID(test_ind);
+%     doMatch = zeros(length(test_ind));
+%     for j=1:length(test_ind)
+%         for i=1:length(test_ind)
+% 
+%             doMatch(j,i) = entrezID(j)~=entrezID(i);
+% 
+%         end
+%     end
+%     % if they're not matching, record indexes to exclude later
+%     if sum(doMatch(:))~=0
+%         toCheckOriginal{k,:} = test_ind;
+%         k=k+1;
+%     end
+% 
+% end
+% 
+% % remove duplicated rows in the cell
+% [r1, r2] = ndgrid(1:size(toCheckOriginal, 1));
+% duplicates = any(triu(arrayfun(@(r1, r2) isequal(toCheckOriginal(r1, :), toCheckOriginal(r2, :)), r1, r2), 1));
+% toCheckOriginal(duplicates, :) = [];
+
+GeneSymbol{42970} = 'ZNF222';
+GeneSymbol{42996} = 'ZNF222';
+ 
+GeneSymbol{15901} = 'PCDHGA2';
+GeneSymbol{15902} = 'PCDHGA2';
+
+%------------------------------------------------------------------------------
+% Check for mistakes in GeneIDs
+%------------------------------------------------------------------------------
+
+[~, ind] = unique(EntrezID, 'stable');
+% find duplicate indices
+duplicate_ind = setdiff(1:size(EntrezID,1), ind);
+
+k=1;
+for gene = 1:length(duplicate_ind)
+
+    % if gene names are not matching, exclude both of them
+    symb = EntrezID(duplicate_ind(gene));
+    test_ind = find(EntrezID==symb);
+    % check if for all duplicated instances gene name is the same
+
+    geneID = GeneID(test_ind);
+    doMatch = zeros(length(test_ind));
+    for j=1:length(test_ind)
+        for i=1:length(test_ind)
+
+            doMatch(j,i) = geneID(j)~=geneID(i);
+
+        end
+    end
+    % if they're not matching, record indexes to exclude later
+    if sum(doMatch(:))~=0
+        toCheckOriginal{k,:} = test_ind;
+        k=k+1;
+    end
+
+end
+% 
+% remove duplicated rows in the cell
+[r1, r2] = ndgrid(1:size(toCheckOriginal, 1));
+duplicates = any(triu(arrayfun(@(r1, r2) isequal(toCheckOriginal(r1, :), toCheckOriginal(r2, :)), r1, r2), 1));
+toCheckOriginal(duplicates, :) = [];
+
+% add corrections
+
+GeneID(15057) = 58103;
+GeneID(15058) = 58103;
+
+GeneID(35442) = 78153; 
+
+GeneID(28579) = 4334; 
+
+
 % for those where gene symbol is [], remove them
 emptyCells = cellfun(@isempty,GeneSymbol);
 fprintf(1,'Removing %d mislabeled probes \n', sum(emptyCells))
-fprintf(1,'Renames 73 misslabeled genes \n')
+fprintf(1,'Renaming misslabeled genes \n')
 ProbeID(emptyCells) = [];
 EntrezID(emptyCells) = [];
 ProbeName(emptyCells) = [];
@@ -518,7 +625,7 @@ DataProbe{1,3} = ProbeName;
 DataProbe{1,4} = GeneID;
 DataProbe{1,5} = GeneSymbol;
 DataProbe{1,6} = GeneName;
-
+DataTableProbe = dataset({DataProbe, headerprobe{:}});
 %------------------------------------------------------------------------------
 % Combine data for all subjects
 %------------------------------------------------------------------------------
