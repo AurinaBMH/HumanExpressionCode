@@ -485,6 +485,11 @@ GeneID(emptyCells) = [];
 GeneSymbol(emptyCells) = [];
 GeneName(emptyCells) = [];
 
+
+% do the checks again to make sure all fixed
+toCheckSymbols2 = selectDuplicates(GeneSymbol, EntrezID);
+toCheckGeneIDs2 = selectDuplicates(EntrezID, GeneID); 
+
 %------------------------------------------------------------------------------
 % Make a table from all the data
 %------------------------------------------------------------------------------
