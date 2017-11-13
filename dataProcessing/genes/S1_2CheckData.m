@@ -135,6 +135,8 @@ ProbeID(isnan(ProbeID)) = [];
 %------------------------------------------------------------------------------
 % Check for mistakes in probe naming and fix them plus update expression values for those probes that are excluded
 %------------------------------------------------------------------------------
+% load ncbi data
+load('HomoSampiens_geneInfo20171111.mat'); 
 matches = zeros(length(EntrezID), 2);
 k=1;
 l=1;
@@ -146,93 +148,93 @@ for gene = 1:length(EntrezID)
         matches(gene,1) = NaN;
         matches(gene,2) = NaN;
         % record that entrez ID
-        chechEntrezID(k) = EntrezID(gene);
+        checkEntrezID(k) = EntrezID(gene);
         k=k+1;
     else
         % check if other information matches
-        % 1. gene symbol
-        matches(gene, 1) = strcmp(Homosapiens.Symbol{gene_ind}, GeneSymbol{gene});
-        % 1.2. if a match is not found among symbols, check for all synonims
+        symbolAllen = GeneSymbol{gene}; 
+                
+        symbolNCBI = Homosapiens.Symbol{gene_ind};
+        % delete commas, lines and spaces from the gene name
         
-        if ~matches(gene,1)
-            matches(gene, 1) = length(strfind(Homosapiens.Synonyms{gene_ind},GeneSymbol{gene}));
+        % 1. gene symbol
+        matches(gene, 1) = strcmp(symbolNCBI, symbolAllen);
+        % 1.2. if a match is not found among symbols, check for all synonims
+
+        if matches(gene,1)==0
+            symbolNCBIother = [Homosapiens.Synonyms{gene_ind}, Homosapiens.Symbol_from_nomenclature_authority{gene_ind}]; 
+            symbolNCBIother(regexp(symbolNCBIother,',')) = [];
+            symbolNCBIother(regexp(symbolNCBIother,'-')) = [];
+            symbolNCBIother(regexp(symbolNCBIother,' ')) = [];
+            matches(gene, 1) = length(strfind(symbolNCBIother,symbolAllen));
         end
+        
         
         % 2. gene name (check both with comma and witohout)
         nameAllen = GeneName{gene};
-        % delete commas from the gene name
+        % delete commas, lines and spaces from the gene name
         nameAllen(regexp(nameAllen,',')) = [];
         nameAllen(regexp(nameAllen,'-')) = [];
         nameAllen(regexp(nameAllen,' ')) = [];
         
         
         nameNCBI = Homosapiens.Full_name_from_nomenclature_authority{gene_ind};
-        % delete commas from the gene name
+        % delete commas, lines and spaces from the gene name
         nameNCBI(regexp(nameNCBI,',')) = [];
         nameNCBI(regexp(nameNCBI,'-')) = [];
         nameNCBI(regexp(nameNCBI,' ')) = [];
         
-        nameNCBIother = Homosapiens.Other_designations{gene_ind};
+        nameNCBIother = [Homosapiens.Other_designations{gene_ind}, Homosapiens.description{gene_ind}]; 
+        % delete commas, lines and spaces from the gene name
         nameNCBIother(regexp(nameNCBIother,',')) = [];
         nameNCBIother(regexp(nameNCBIother,'-')) = [];
         nameNCBIother(regexp(nameNCBIother,' ')) = [];
-        nameNCBIother(regexp(nameNCBIother,'|')) = [];
         
         % compare to the database entry
         %1. first try original name
         matches(gene, 2) = strcmp(nameNCBI, nameAllen);
         % if no match, compare to other descriptions
-        if ~matches(gene,2)
+        if matches(gene,2)==0
             
             matches(gene, 2) = length(strfind(nameNCBIother,nameAllen));
             
         end
-        
-        %2. Then try name without the comma
-        %         if ~matches(gene,2)
-        %             matches(gene, 2) = strcmp(Homosapiens.Full_name_from_nomenclature_authority{gene_ind}, nameAllen);
-        %         end
-        %3. then try original name to synonims
-        %         if ~matches(gene,2)
-        %             matches(gene, 2) = length(strfind(nameNCBI,nameAllen));
-        %         end
-        %4. then try name without the comma to synonims
-        %         if ~matches(gene,2)
-        %             matches(gene, 2) = length(strfind(Homosapiens.Other_designations{gene_ind},nameAllen));
-        %         end
-        
+
         % if one of 2 matches (gene symbol or gene ID) update the other one
+        % according to the main name or gene symbol. 
         allData = sum(logical(matches(gene,:)));
         if allData == 1
             nrUpdated(l) = EntrezID(gene);
             l=l+1;
-            if matches(gene,1) || ~matches(gene,2)
-                
-                GeneSymbol{gene} = Homosapiens.Symbol{gene_ind};
-                
-            elseif ~matches(gene,1) || matches(gene,2)
+            if matches(gene,1)==1 && matches(gene,2)==0
                 
                 GeneName{gene} = Homosapiens.Full_name_from_nomenclature_authority{gene_ind};
+                
+            elseif matches(gene,1)==0 && matches(gene,2)==1
+                
+                GeneSymbol{gene} = Homosapiens.Symbol{gene_ind};
                 
             end
         end
         
     end
-    
-    % the if gene symbol matches and name doesn't then replace name with tie
-    % official one. If name matches, but symbol doesn't, then replace the
-    % symbol.
-    
+
 end
-chechEntrezID = unique(chechEntrezID);
-fprintf('%d entrezIDs not found\n', length(chechEntrezID));
+checkEntrezID = unique(checkEntrezID);
+fprintf('%d entrezIDs not found\n', length(checkEntrezID));
 fprintf('%d probes not match gene symbol\n', (length(EntrezID) - nansum(matches(:,1))));
 fprintf('%d probes not match gene names\n', (length(EntrezID) - nansum(matches(:,2))));
 fprintf('%d probes with updated information according symbol on gene name\n', length(nrUpdated));
 
 onlyExisting = matches;
-onlyExisting(any(isnan(onlyExisting), 2), :) = [];
-fprintf('%d entrezID exists but both name and symbol doesnt match\n', length(find(sum(onlyExisting,2)==0)));
+E1 = EntrezID; 
+onlyExisting(any(isnan(matches), 2), :) = [];
+E1(any(isnan(matches), 2), :) = [];
+
+ind = find(sum(onlyExisting,2)==0); 
+nrMissing = unique(E1(ind)); 
+
+fprintf('%d genes where entrezID exists but both name and symbol doesnt match\n', length(nrMissing));
 
 
 
