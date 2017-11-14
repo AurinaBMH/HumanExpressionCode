@@ -3,7 +3,7 @@
 %% Date modified: 2016-03-22
 %% Date modified: 2017-07-14
 %% Date modified: 2017-08-29 - noise level data added
-%% Date modified: 2017-11-10 - manual gene symbol naming fixed
+%% Date modified: 2017-11-14 - data checks added
 %% This script:
 %   1. Loads all microarray data from excell files for each subject
 %   2. Excludes custom probes;
@@ -136,19 +136,10 @@ ProbeID(isnan(ProbeID)) = [];
 % Check for mistakes in probe naming and fix them plus update expression values for those probes that are excluded
 %------------------------------------------------------------------------------
 % load ncbi data
+fprintf(1,'Loading ncbi data\n')
 load('HomoSampiens_geneInfo20171111.mat'); 
 
-[matches, GeneSymbol, GeneName, nrUpdated, checkEntrezID] = checkGene(Homosapiens, GeneSymbol, GeneName, EntrezID); 
-
-onlyExisting = matches;
-E1 = EntrezID; 
-onlyExisting(any(isnan(matches), 2), :) = [];
-E1(any(isnan(matches), 2), :) = [];
-
-ind = find(sum(onlyExisting,2)==0); 
-nrMissing = unique(E1(ind)); 
-
-fprintf('%d genes where entrezID exists but both name and symbol doesnt match\n', length(nrMissing));
+[matches, GeneSymbol, GeneName, nrUpdated, checkEntrezID, MissingProbes] = checkGene(Homosapiens, GeneSymbol, GeneName, EntrezID); 
 
 % save a list of entrezIDs that were not found 
 fileID = fopen('entrezIDs.txt','w');
@@ -156,22 +147,63 @@ fprintf(fileID, '%d\n',checkEntrezID);
 fclose(fileID);
 
 % check if entrezIDs that were not found were discontinued
-% run this from the terminal
-awk 'NR==FNR{pats[$0]; next} $3 in pats' entrezIDs.txt gene_history.txt > listOfentrezIDs.txt
+%% run this from the terminal
+% awk 'NR==FNR{pats[$0]; next} $3 in pats' entrezIDs.txt gene_history.txt > listOfentrezIDs.txt
+%% load the list 
 
-%load the list 
-load ('listOfentrezIDs.txt')
-
-
+listOfentrezIDs = readtable('listOfentrezIDs.txt'); 
+% name columns according to history file
+listOfentrezIDs.Properties.VariableNames = {'tax_id' 'GeneID' 'Discontinued_GeneID' 'Discontinued_Symbol' 'Discontinue_Date'}; 
 % remove those that were discontinued and replace those that are changed
 % with new ones. 
+% find entrezIDs that were discintinued
 
+entrez2change = listOfentrezIDs.Discontinued_GeneID(~strcmp(listOfentrezIDs.GeneID, '-')); 
+changeInd = find((ismember(EntrezID,entrez2change)));
+fprintf('EntrezIDs for %d probes should be changed\n', length(changeInd));
 
-% write code here
+% first change entrezIDs to updated ones, then keep only the valid ones.
+for j=1:length(changeInd)
+    entrez = EntrezID(changeInd(j)); 
+    index = find(listOfentrezIDs.Discontinued_GeneID==entrez); 
+    EntrezID(changeInd(j)) = str2double(listOfentrezIDs.GeneID{index}); 
+end
+
+% select entrezIDs to keep (meaning - remove the ones that were
+% discontinued)
+entrez2rem = listOfentrezIDs.Discontinued_GeneID(strcmp(listOfentrezIDs.GeneID, '-'));
+keepInd = find((~ismember(EntrezID,entrez2rem)));
+fprintf('Removing %d entrezIDs - %d corresponding probes\n', length(entrez2rem), (length(EntrezID) - length(keepInd)));
+% keep only existing ones
+ProbeName = ProbeName(keepInd); 
+EntrezID = EntrezID(keepInd); 
+GeneID = GeneID(keepInd);
+GeneSymbol = GeneSymbol(keepInd);
+GeneName = GeneName(keepInd);
+ProbeID = ProbeID(keepInd);
+
 % run the function again to make changes for new entries. 
-[matches, GeneSymbol, GeneName, nrUpdated, checkEntrezID] = checkGene(Homosapiens, GeneSymbol, GeneName, EntrezID);
+[matches2, GeneSymbol, GeneName, nrUpdated, checkEntrezID, MissingProbes] = checkGene(Homosapiens, GeneSymbol, GeneName, EntrezID);
 
+% then check if entrezID in allen data matches probeIDs compared to agilent
+% annotations for agilent probes (CUST probes can't be compared). 
+load('annotations20150612.mat')
 
+[probes, iallen, iannot] = intersect(ProbeName, annotations20150612.ProbeID);
+%getEntrez allen
+entrezAllen = EntrezID(iallen); 
+entrezAnnot = annotations20150612.EntrezGeneID(iannot); 
+
+doesMatch = entrezAllen==entrezAnnot; 
+EntrezIDnomatchAllen = entrezAllen(doesMatch==0); 
+ProbeIDnomatchAllen = probes(doesMatch==0);
+EntrezIDnomatchAnnot = entrezAnnot(doesMatch==0);
+
+% remove those entrez that don't exist in annotation file 
+nonmatchingEntrez = table; 
+nonmatchingEntrez.probe = ProbeIDnomatchAllen(~isnan(EntrezIDnomatchAnnot)); 
+nonmatchingEntrez.entrezAllen = EntrezIDnomatchAllen(~isnan(EntrezIDnomatchAnnot)); 
+nonmatchingEntrez.entrezAnnot = EntrezIDnomatchAnnot(~isnan(EntrezIDnomatchAnnot)); 
 
 
 % after that check if each uniwue gene ID has a unique EntrezID and the

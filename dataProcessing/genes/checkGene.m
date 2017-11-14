@@ -1,4 +1,4 @@
-function [matches, GeneSymbol, GeneName, nrUpdated, checkEntrezID] = checkGene(Homosapiens, GeneSymbol, GeneName, EntrezID)
+function [matches, GeneSymbol, GeneName, nrUpdated, checkEntrezID, MissingProbes] = checkGene(Homosapiens, GeneSymbol, GeneName, EntrezID)
 matches = zeros(length(EntrezID),2);
 k=1;
 l=1;
@@ -34,7 +34,7 @@ for gene = 1:length(EntrezID)
             symbolNCBIother(regexp(symbolNCBIother,',')) = [];
             symbolNCBIother(regexp(symbolNCBIother,'-')) = [];
             symbolNCBIother(regexp(symbolNCBIother,' ')) = [];
-            matches(gene, 1) = length(strfind(symbolNCBIother,symbolAllen));
+            matches(gene, 1) = logical(length(strfind(symbolNCBIother,symbolAllen)));
         end
         
         
@@ -64,7 +64,7 @@ for gene = 1:length(EntrezID)
         % if no match, compare to other descriptions
         if matches(gene,2)==0
             
-            matches(gene, 2) = length(strfind(nameNCBIother,nameAllen));
+            matches(gene, 2) = logical(length(strfind(nameNCBIother,nameAllen)));
             
         end
         % make a way to record nr matches updated.
@@ -79,7 +79,7 @@ for gene = 1:length(EntrezID)
                 
                 GeneName{gene} = Homosapiens.Full_name_from_nomenclature_authority{gene_ind};
                 % update match information as it matches now
-                matches(gene,2) = gene;
+                matches(gene,2) = 1;
                 
             elseif matches(gene,1)==0 && matches(gene,2)==1
                 
@@ -93,16 +93,33 @@ for gene = 1:length(EntrezID)
     end
     
 end
-
-checkEntrezID = unique(checkEntrezID);
-fprintf('%d entrezIDs not found\n', length(checkEntrezID));
+doesExistCheck = exist('checkEntrezID');
+if doesExistCheck
+    checkEntrezID = unique(checkEntrezID);
+    fprintf('%d entrezIDs not found\n', length(checkEntrezID));
+else
+    checkEntrezID = [];
+end
 % calculate how many don't match after corrections
 %fprintf('%d probes initially do not match gene symbol\n', (length(EntrezID) - nansum(matches(:,1))));
 %fprintf('%d probes initially do not match gene names\n', (length(EntrezID) - nansum(matches(:,2))));
+doesExist = exist('nrUpdated');
+if doesExist
+    fprintf('%d probes with updated information according symbol or gene name\n', length(nrUpdated));
+else
+    fprintf('NO probes with updated information \n');
+    nrUpdated = [];
+end
 
-fprintf('%d probes with updated information according symbol on gene name\n', length(nrUpdated));
+onlyExisting = matches;
+E = EntrezID;
+onlyExisting(any(isnan(matches), 2), :) = [];
+E(any(isnan(matches), 2), :) = [];
 
-fprintf('%d probes STILL do not match gene symbol\n', (length(EntrezID) - nansum(matches(:,1))));
-fprintf('%d probes STILL do not match gene names\n', (length(EntrezID) - nansum(matches(:,2))));
+ind = sum(onlyExisting,2)==0;
+MissingProbes = E(ind);
+
+fprintf('%d probes where entrezID exists, but STILL do not match gene symbol\n', length(find(matches(:,1)==0)));
+fprintf('%d probes where entrezID exists, but STILL do not match gene symbol\n', length(find(matches(:,2)==0)))
 
 end
