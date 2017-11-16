@@ -16,7 +16,7 @@
 % without cust probes.
 clear all;
 useCUSTprobes = true;
-probeSelection = 'PC';% probeSelection = {'Mean', 'Variance', 'LessNoise', 'Random', 'PC'};
+probeSelection = 'Variance';% probeSelection = {'Mean', 'Variance', 'LessNoise', 'Random', 'PC'};
 signalThreshold = 0.5; % percentage of samples that a selected probe has expression levels that are higher than background
 %------------------------------------------------------------------------------
 % Load the data
