@@ -184,20 +184,26 @@ ProbeID = ProbeID(keepInd);
 
 % run the function again to make changes for new entries. 
 [matches2, GeneSymbol, GeneName, nrUpdated, checkEntrezID, MissingProbes] = checkGene(Homosapiens, GeneSymbol, GeneName, EntrezID);
-
-% then check if entrezID in allen data matches probeIDs compared to agilent
+%------------------------------------------------------------------------------
+% % then check if entrezID in allen data matches probeIDs compared to agilent
 % annotations for agilent probes (CUST probes can't be compared). 
+%------------------------------------------------------------------------------
+% load annotation file downloaded from
+% https://earray.chem.agilent.com/earray/ on 14/11/2017
 load('annotations20150612.mat')
 
+% find all probes that are in both files
 [probes, iallen, iannot] = intersect(ProbeName, annotations20150612.ProbeID);
-%getEntrez allen
+% getEntrez allen and annot
 entrezAllen = EntrezID(iallen); 
 entrezAnnot = annotations20150612.EntrezGeneID(iannot); 
 
+% check if they match
 doesMatch = entrezAllen==entrezAnnot; 
-EntrezIDnomatchAllen = entrezAllen(doesMatch==0); 
-ProbeIDnomatchAllen = probes(doesMatch==0);
-EntrezIDnomatchAnnot = entrezAnnot(doesMatch==0);
+% save non-matching in the table
+EntrezIDnomatchAllen = entrezAllen(~doesMatch); 
+ProbeIDnomatchAllen = probes(~doesMatch);
+EntrezIDnomatchAnnot = entrezAnnot(~doesMatch);
 
 % remove those entrez that don't exist in annotation file 
 nonmatchingEntrez = table; 
@@ -205,9 +211,6 @@ nonmatchingEntrez.probe = ProbeIDnomatchAllen(~isnan(EntrezIDnomatchAnnot));
 nonmatchingEntrez.entrezAllen = EntrezIDnomatchAllen(~isnan(EntrezIDnomatchAnnot)); 
 nonmatchingEntrez.entrezAnnot = EntrezIDnomatchAnnot(~isnan(EntrezIDnomatchAnnot)); 
 
-
-% after that check if each uniwue gene ID has a unique EntrezID and the
-% other way around using selectDuplicates(IDone, IDtwo, changetoNumber).
 
 
 
