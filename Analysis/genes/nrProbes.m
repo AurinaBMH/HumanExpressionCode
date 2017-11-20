@@ -5,7 +5,7 @@
 clear all; 
 useCUSTprobes = true;
 signalThreshold = 0.5; % percentage of samples that a selected probe has expression levels that are higher than background
-doOriginal = false;
+doOriginal = false; %false;
 %------------------------------------------------------------------------------
 % Load the data
 %------------------------------------------------------------------------------
@@ -64,7 +64,7 @@ for gene=1:length(genes)
     signalLevelProbes{gene} = signalLevel(indGene);
     numberProbes(gene) = length(indGene);
     if numberProbes(gene)==2
-        [r(k),p(k)] = corr(expression(indGene(1),:)', expression(indGene(2),:)'); 
+        [r(k),p(k)] = corr(expression(indGene(1),:)', expression(indGene(2),:)', 'type', 'Spearman'); 
         variance12(k) = var(expression(indGene(1),:)'); 
         variance22(k) = var(expression(indGene(2),:)'); 
         G{k} = indGene; 
@@ -82,7 +82,7 @@ for gene=1:length(genes)
     
     % save entrez ID for genes with multiple probes to be used to check the
     % influence of probe selection
-    if numberProbes(gene)>1
+    if numberProbes(gene)>4
         IDgene(m) = listGenes(indGene(1));
          m=m+1; 
     end
@@ -90,7 +90,20 @@ for gene=1:length(genes)
     
 end
 
-%save('IDgenes2plus.mat', 'IDgene'); 
+% [nrProbesSummary(:,1),nrProbesSummary(:,2)] = hist(numberProbes,unique(numberProbes)); 
+% 
+% 
+nice_cmap = [make_cmap('steelblue',50,30,0);flipud(make_cmap('orangered',50,30,0))];
+figure; histogram(rall,100, 'facecolor',nice_cmap(98,:),'facealpha',.5,'edgecolor',nice_cmap(100,:)); hold on; ...
+    histogram(r, 100, 'facecolor',nice_cmap(20,:),'facealpha',.5,'edgecolor',nice_cmap(10,:));
+leg1 = sprintf('Before filtering, %d genes', length(rall)); 
+leg2 = sprintf('After filtering, %d genes', length(r)); 
+
+legend(leg1, leg2)
+xlabel('Correlation between probes for the same gene'); ylabel('Number of genes'); 
+set(gcf,'color','w');
+
+save('IDgenes5plus.mat', 'IDgene'); 
 
 uniqNrProbes = unique(numberProbes);
 HowManyProbes = zeros(length(uniqNrProbes),1);

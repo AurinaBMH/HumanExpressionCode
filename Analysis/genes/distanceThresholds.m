@@ -23,3 +23,6 @@ yticks([1:4])
 yticklabels({'0mm','2mm','5mm','10mm'})
 colorbar; 
 set(gcf,'color','w');
+nice_cmap = [make_cmap('steelblue',50,30,0);flipud(make_cmap('orangered',50,30,0))];
+colormap(nice_cmap)
+caxis([0.5 1])
