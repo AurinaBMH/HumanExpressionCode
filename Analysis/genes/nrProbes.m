@@ -93,11 +93,11 @@ end
 % [nrProbesSummary(:,1),nrProbesSummary(:,2)] = hist(numberProbes,unique(numberProbes)); 
 % 
 % 
-nice_cmap = [make_cmap('steelblue',50,30,0);flipud(make_cmap('orangered',50,30,0))];
-figure; histogram(rall,100, 'facecolor',nice_cmap(98,:),'facealpha',.5,'edgecolor',nice_cmap(100,:)); hold on; ...
-    histogram(r, 100, 'facecolor',nice_cmap(20,:),'facealpha',.5,'edgecolor',nice_cmap(10,:));
-leg1 = sprintf('Before filtering, %d genes', length(rall)); 
-leg2 = sprintf('After filtering, %d genes', length(r)); 
+% nice_cmap = [make_cmap('steelblue',50,30,0);flipud(make_cmap('orangered',50,30,0))];
+% figure; histogram(rall,100, 'facecolor',nice_cmap(98,:),'facealpha',.5,'edgecolor',nice_cmap(100,:)); hold on; ...
+%     histogram(r, 100, 'facecolor',nice_cmap(20,:),'facealpha',.5,'edgecolor',nice_cmap(10,:));
+% leg1 = sprintf('Before filtering, %d genes', length(rall)); 
+% leg2 = sprintf('After filtering, %d genes', length(r)); 
 
 legend(leg1, leg2)
 xlabel('Correlation between probes for the same gene'); ylabel('Number of genes'); 
