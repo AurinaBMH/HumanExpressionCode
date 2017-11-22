@@ -13,7 +13,7 @@
 clear all; 
 
 useCUSTprobes = true;
-probeSelections = {'Variance'}; %{'Mean', 'Variance', 'LessNoise', 'Random', 'PC'}; 
+probeSelections = {'Mean', 'Variance', 'LessNoise', 'Random', 'PC'}; 
 sides = {'right', 'left'};
 % separate according to brain part: cortex/subcortex
 brainParts = {'Cortex', 'Subcortex'};

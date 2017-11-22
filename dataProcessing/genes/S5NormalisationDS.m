@@ -8,8 +8,8 @@ clear all;
 % Choose options
 %------------------------------------------------------------------------------
 useCUSTprobes = true; % choose if you want to use data with CUST probes
-probeSelection = {'Variance', 'Mean', 'LessNoise', 'PC','Random'};
-parcellation = 'HCP';%, 'cust100', 'cust250'};
+probeSelection = {'Variance', 'Mean', 'LessNoise'}; %{'Variance', 'Mean', 'LessNoise', 'PC','Random'};
+parcellation = 'aparcaseg';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 multipleProbes = false; % it this is true, only genes that have multiple probes will be selected.
 correctDistance = true;
@@ -18,9 +18,9 @@ percentDS = 5;
 distanceCorrection = 'Euclidean';
 coexpressionFor = 'all';
 Fit = {'removeMean'};
-doNormalise = true; 
+doNormalise = false; 
 normMethod = 'scaledRobustSigmoid'; %'scaledRobustSigmoid';
-normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex, Lcortex)
+normaliseWhat = 'LcortexSubcortex'; %(LcortexSubcortex, wholeBrain, LRcortex, Lcortex)
 % choose Lcortex if want to normalise samples assigned to left cortex separately;
 % choose LcortexSubcortex if want to normalise LEFT cortex + left subcortex together
 % choose wholeBrain if you want to normalise the whole brain.
@@ -357,7 +357,7 @@ end
 SampleCoordinates = sortrows(combinedCoord,1); 
 SampleGeneExpression = sortrows(expSampNormalisedAll,1); 
 %save(sprintf('DSnew%s', p{1}), 'DS', 'averageCoexpression', 'DSProbeTable', 'expSampNormalisedAll', 'probeInformation'); 
-save(sprintf('DS%d%s%s%d', numNodes, normMethod, p{1}, doNormalise), 'averageCoexpression', 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'options'); 
+save(sprintf('DS%d%s%s%d', numNodes, normMethod, p{1}, doNormalise), 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'options'); 
 %save(sprintf('DSnew%s%s%dBEN', normMethod, p{1}, doNormalise), 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'options'); 
 cd ../../..
 end

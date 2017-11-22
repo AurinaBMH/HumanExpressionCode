@@ -1,6 +1,7 @@
 clear all;
 doEqual = false;
 useCUSTprobes = true;
+coexpressionOn = 'sample';
 signalThreshold = 0.5; % percentage of samples that a selected probe has expression levels that are higher than background
 doOriginal = false; %false;
 probeSelection = {'Variance','PC','LessNoise', 'Mean', 'random'};
@@ -90,16 +91,35 @@ end
 
 numGenes = size(allData{1},2);
 avCorr = zeros(5,5);
+coexpCorr = zeros(length(probeSelection),length(probeSelection));
+
+for k=1:length(probeSelection)
+    
+    switch coexpressionOn
+        case 'sample'
+            mat = corr(allData{k}', 'type', 'Spearman');
+        case 'gene'
+            mat = corr(allData{k}, 'type', 'Spearman');
+    end
+    
+    coexpValues{k} = mat(:);
+    
+end
+
+
 % calculate correlation between each way of choosing a probe
-for i=1:5
-    for j=i+1:5
+for i=1:length(probeSelection)
+    for j=i+1:length(probeSelection)
         
         correlation = zeros(numGenes,1);
         for g=1:numGenes
             correlation(g) = corr(allData{i}(:,g), allData{j}(:,g), 'type', 'Spearman');
         end
         
+        
         avCorr(j,i) = median(correlation);
+        coexpCorr(j,i) = corr(coexpValues{i}, coexpValues{j}, 'type', 'Spearman');
+        
         
     end
 end
