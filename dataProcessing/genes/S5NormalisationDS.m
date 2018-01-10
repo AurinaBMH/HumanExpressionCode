@@ -1,5 +1,6 @@
 %% Author: Aurina
 clear all; 
+%close all; 
 %Last modiffied: 2017-07-31
 %Last modiffied: 2017-08-01
 %close all;
@@ -8,20 +9,20 @@ clear all;
 % Choose options
 %------------------------------------------------------------------------------
 useCUSTprobes = true; % choose if you want to use data with CUST probes
-probeSelection = {'Variance', 'Mean', 'LessNoise'}; %{'Variance', 'Mean', 'LessNoise', 'PC','Random'};
+probeSelection = {'LessNoise'}; %{'Variance', 'Mean', 'LessNoise', 'PC','Random'};
 parcellation = 'aparcaseg';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
-multipleProbes = false; % it this is true, only genes that have multiple probes will be selected.
-correctDistance = true;
+onlyMultipleProbes = false; % it this is true, only genes that have multiple probes will be selected.
+correctDistance = false;
 calculateDS = true;
 percentDS = 5;
 distanceCorrection = 'Euclidean';
 coexpressionFor = 'all';
 Fit = {'removeMean'};
-doNormalise = false; 
+doNormalise = true; 
 normMethod = 'scaledRobustSigmoid'; %'scaledRobustSigmoid';
 normaliseWhat = 'LcortexSubcortex'; %(LcortexSubcortex, wholeBrain, LRcortex, Lcortex)
-% choose Lcortex if want to normalise samples assigned to left cortex separately;
+% choose Lcortex if want tnormalise samples assigned to left cortex separately;
 % choose LcortexSubcortex if want to normalise LEFT cortex + left subcortex together
 % choose wholeBrain if you want to normalise the whole brain.
 % choose LRcortex if you want to normalise left cortex + right cortex.
@@ -81,6 +82,7 @@ switch normaliseWhat
     case 'LRcortex'
         subjects = 1:2;
         nROIs = [LeftCortex,RightCortex];
+
 end
 options.subjects = subjects;
 if useCUSTprobes
@@ -141,7 +143,7 @@ for sub=subjects
     coord = coordSingle(ind,3:5);
     data = expSubj(:,3:size(expSubj,2));
     %data = 2.^(data);
-    if multipleProbes
+    if onlyMultipleProbes
         data = data(:,keep);
     end
     %coordSample{sub} = coord;
@@ -357,7 +359,7 @@ end
 SampleCoordinates = sortrows(combinedCoord,1); 
 SampleGeneExpression = sortrows(expSampNormalisedAll,1); 
 %save(sprintf('DSnew%s', p{1}), 'DS', 'averageCoexpression', 'DSProbeTable', 'expSampNormalisedAll', 'probeInformation'); 
-save(sprintf('DS%d%s%s%d', numNodes, normMethod, p{1}, doNormalise), 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'options'); 
+save(sprintf('%dDS%d%s%s%d', percentDS, numNodes, normMethod, p{1}, doNormalise), 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'options', 'averageCoexpression'); 
 %save(sprintf('DSnew%s%s%dBEN', normMethod, p{1}, doNormalise), 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'options'); 
 cd ../../..
 end

@@ -35,12 +35,12 @@ yStds = arrayfun(@(x)std(yData(xData>=xThresholds(x) & xData < xThresholds(x+1))
 if makeNewFigure
     f = figure('color','w'); box('on'); hold on
 end
-theColor = 'k';
+theColor = [.7 .7 .7];
 theStyle = '-';
 theLineWidth = 2;
 
 if alsoScatter
-    plot(xData,yData,'.k');
+    plot(xData,yData,'.', 'MarkerFaceColor', [.81 .07 .15]);
 end
 
 for k = 1:numThresholds-1
