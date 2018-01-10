@@ -16,7 +16,7 @@
 % without cust probes.
 clear all;
 useCUSTprobes = true;
-probeSelection = 'PC'; %{'Mean', 'Variance', 'LessNoise', 'Random', 'PC'};% probeSelection = {'Mean', 'Variance', 'LessNoise', 'Random', 'PC'};
+probeSelection = 'RNAseq'; %{'Mean', 'Variance', 'LessNoise', 'Random', 'PC', 'RNAseq'};% probeSelection = {'Mean', 'Variance', 'LessNoise', 'Random', 'PC'};
 signalThreshold = 0.5; % percentage of samples that a selected probe has expression levels that are higher than background
 %------------------------------------------------------------------------------
 % Load the data
@@ -65,15 +65,25 @@ indKeepProbes = find(signalLevel>signalThreshold);
 ProbeName = DataTableProbe.ProbeName{1,1}(indKeepProbes);
 ProbeID = ProbeID(indKeepProbes);
 EntrezID = DataTableProbe.EntrezID{1,1}(indKeepProbes);
-GeneID = DataTableProbe.GeneID{1,1}(indKeepProbes);
+%GeneID = DataTableProbe.GeneID{1,1}(indKeepProbes);
 GeneSymbol = DataTableProbe.GeneSymbol{1,1}(indKeepProbes);
-GeneName = DataTableProbe.GeneName{1,1}(indKeepProbes);
+%GeneName = DataTableProbe.GeneName{1,1}(indKeepProbes);
+
+% if choosing probes based on RNAseq, then use data only from 1 subject
+if strcmp(probeSelection, 'RNAseq')
+    
+indProbe = selectProbeRNAseq(DataTable, EntrezID, indKeepProbes, 0.1); 
+nSub = 1; 
+else
+    nSub = 6; 
+end
+
 
 Uniq = unique(EntrezID);
 ProbeList = zeros(length(Uniq),2);
-indMsubj = zeros(length(Uniq),6);
+indMsubj = zeros(length(Uniq),nSub);
 
-for subj = 1:6
+for subj = 1:nSub
     expression = (DataTable.Expression{subj}(indKeepProbes,:))';
     noise = DataTable.Noise{subj}(indKeepProbes,:)';
     
@@ -121,15 +131,31 @@ for subj = 1:6
                     
                     % determine max var value
                     [indMaxV] = randsample(1:size(expRepEntrezIDs,2),1);
-                    
+                case 'RNAseq'
+                    indMaxV = indProbe(k); 
             end
-            indMsubj(k,subj) = indRepEntrezIDs(indMaxV);
-            
+            %if NaN, use NaN; 
+            if isnan(indMaxV)
+                indMsubj(k,subj) = NaN;
+
+            else
+               indMsubj(k,subj) = indRepEntrezIDs(indMaxV); 
+            end
+                
         else
             if strcmp(probeSelection, 'Mean')
                 expressionSelected{subj}(:,k) = expRepEntrezIDs;
             end
+            
+            if strcmp(probeSelection, 'RNAseq')
+                if isnan(indProbe(k))
+                indMsubj(k,subj) = NaN; 
+                else
+                indMsubj(k,subj) = indRepEntrezIDs;
+                end
+            else
             indMsubj(k,subj) = indRepEntrezIDs;
+            end
             
         end
         
@@ -139,8 +165,13 @@ end
 for j=1:length(Uniq)
     
     indINlist = mode(indMsubj(j,:),2);
+    if isnan(indINlist)
+    ProbeList(j,1) = NaN;
+    ProbeList(j,2) = NaN;
+    else
     ProbeList(j,1) = ProbeID(indINlist);
     ProbeList(j,2) = EntrezID(indINlist);
+    end
     
 end
 %% check to exclude probes with not maximum variance or max PC and repeating entrezIDs (assign NaN value to
@@ -150,9 +181,9 @@ end
 % of selected probes (1...n) from Unique. 
 EntrezID = EntrezID(reorder_ind);
 ProbeID = ProbeID(reorder_ind);
-GeneID = GeneID(reorder_ind);
+%GeneID = GeneID(reorder_ind);
 GeneSymbol = GeneSymbol(reorder_ind);
-GeneName = GeneName(reorder_ind);
+%GeneName = GeneName(reorder_ind);
 ProbeName = ProbeName(reorder_ind);
 
 [a,ind2rem] = setdiff(ProbeID, ProbeList(:,1));
@@ -160,9 +191,9 @@ ProbeID(ind2rem) = NaN;
 EntrezID(ind2rem) = NaN;
 
 EntrezID(isnan(EntrezID)) = [];
-GeneID(isnan(ProbeID)) = [];
+%GeneID(isnan(ProbeID)) = [];
 GeneSymbol(isnan(ProbeID)) = [];
-GeneName(isnan(ProbeID)) = [];
+%GeneName(isnan(ProbeID)) = [];
 ProbeName(isnan(ProbeID)) = [];
 
 % % ------------------------------------------------------------------------------
@@ -201,9 +232,9 @@ excludeGenes = unique(cell2mat(toExclude));
 keepGenes = setdiff(1:size(GeneSymbol,1), excludeGenes, 'stable');% changed from stable
 
 probeInformation.EntrezID = EntrezID(keepGenes); %[reordered, reorder_ind] = sort(probeInformation.EntrezID);
-probeInformation.GeneID = GeneID(keepGenes);
+%probeInformation.GeneID = GeneID(keepGenes);
 probeInformation.GeneSymbol = GeneSymbol(keepGenes);
-probeInformation.GeneName = GeneName(keepGenes);
+%probeInformation.GeneName = GeneName(keepGenes);
 probeInformation.ProbeName = ProbeName(keepGenes);
 ProbeID2nd = ProbeID; % assign probe ID values to a variable (will be used to filter gene expression values)
 ProbeID(isnan(ProbeID)) = []; % remove redundant probes
@@ -214,7 +245,7 @@ cd ('processedData')
 expressionAll = cell(6,1);
 sampleInfo = cell(6,1);
 for subject=1:6
-    if strcmp(probeSelection, 'Variance') || strcmp(probeSelection, 'PC') || strcmp(probeSelection, 'LessNoise') || strcmp(probeSelection, 'Random')
+    if strcmp(probeSelection, 'Variance') || strcmp(probeSelection, 'PC') || strcmp(probeSelection, 'LessNoise') || strcmp(probeSelection, 'Random') || strcmp(probeSelection, 'RNAseq')
         
         % exclude NaN probes keeping 1 probe for 1 entrezID.
         fprintf(1,'Combining and saving the data for subject %u\n', subject)

@@ -7,7 +7,8 @@
 %% This script:
 %   1. Loads all microarray data from excell files for each subject
 %   2. Excludes custom probes;
-%   3. Excludes probes with missing entrezIDs
+%   3. Excludes probes with missing entrezIDs or updates probe to gene
+%   assignment (depending on options chosen)
 %   4. Saves expression data, coordinates, sample structure names for all samples
 %   5. Saves data for separate subjects to DataTable
 %   6. Saves data for all subjects combined as variables 'MicorarrayData.mat' file
@@ -18,7 +19,7 @@
 clear all; 
 ExcludeCBandBS = true; % will exclude samples from brainstem and cerebellum
 useCUSTprobes = false; % use CUST probes
-updateProbes = false; % update probe --> gene assignment based on latest data
+updateProbes = true; % update probe --> gene assignment based on latest data
 
 if ExcludeCBandBS
     fprintf(1,'Brainstem and cerebellum samples will be EXCLUDED\n')
@@ -56,9 +57,9 @@ GeneName = ProbeTable.gene_name;
 % entrez IDs because some of them can be updated
 fprintf(1,'%d probes with missing entrez IDs\n', sum(isnan(EntrezID)));
 % creat a Data cell to store the output
-headerdata = {'Expression' , 'MMcoordinates', 'StructureName', 'MRIvoxCoordinates', 'Noise'};
+headerdata = {'Expression' , 'MMcoordinates', 'StructureName', 'MRIvoxCoordinates', 'Noise', 'SampleID'};
 headerprobe = { 'ProbeID', 'EntrezID','ProbeName', 'GeneSymbol'};
-Data = cell(6,5);
+Data = cell(6,6);
 DataProbe = cell(1,4);
 
 %------------------------------------------------------------------------------
@@ -83,6 +84,7 @@ for subj=1:6
     StructureName(1) = [];                      % remove headline
     MMcoordinates = xlsread(FileAnnot, 'K:M');
     MRIvoxCoordinates = xlsread(FileAnnot, 'H:J');
+    SampleID = xlsread(FileAnnot, 'A:A');
     [~,probeList] = intersect(noise(:,1),ProbeID, 'stable');
     noise = noise(probeList,2:end);
     
@@ -100,6 +102,7 @@ for subj=1:6
         Expression(:,BSandCBind) = NaN;
         MMcoordinates(BSandCBind,:) = NaN;
         MRIvoxCoordinates(BSandCBind,:) = NaN;
+        SampleID(BSandCBind,:) = NaN;
         noise(:,BSandCBind) = NaN;
         StructureName(BSandCBind) = {NaN};
     end
@@ -110,6 +113,7 @@ for subj=1:6
     % keep only existing coordinates
     MMcoordinates = MMcoordinates(all(~isnan(MMcoordinates),2),:); % for nan rows
     MRIvoxCoordinates = MRIvoxCoordinates(all(~isnan(MRIvoxCoordinates),2),:); % for nan rows
+    SampleID = SampleID(all(~isnan(SampleID),2),:); % for nan rows
     noise = noise(:,all(~isnan(noise)));
     % keep only existing structure names
     StructureName(cellfun(@(StructureName) any(isnan(StructureName)),StructureName)) = [];
@@ -120,6 +124,7 @@ for subj=1:6
     Data{subj,3} = StructureName;
     Data{subj,4} = MRIvoxCoordinates;
     Data{subj,5} = noise;
+    Data{subj,6} = SampleID; 
     cd ..
     
 end
@@ -246,5 +251,5 @@ cd ..
 cd ('processedData');
 
 fprintf(1,'Saving data to the file\n')
-save(sprintf('%s.mat', startFileName), 'DataTable','DataTableProbe', 'Expressionall', 'Coordinatesall', 'StructureNamesall', 'MRIvoxCoordinatesAll', 'noiseall');
+save(sprintf('%sProbesUpdated.mat', startFileName), 'DataTable','DataTableProbe', 'Expressionall', 'Coordinatesall', 'StructureNamesall', 'MRIvoxCoordinatesAll', 'noiseall');
 cd ../../..
