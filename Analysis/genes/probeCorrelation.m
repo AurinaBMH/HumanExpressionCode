@@ -1,7 +1,7 @@
 clear all;
 doEqual = false;
 useCUSTprobes = true;
-coexpressionOn = 'sample';
+coexpressionOn = 'gene';
 signalThreshold = 0.5; % percentage of samples that a selected probe has expression levels that are higher than background
 doOriginal = false; %false;
 probeSelection = {'Variance','PC','LessNoise', 'Mean', 'random'};
@@ -59,7 +59,7 @@ numberProbes = zeros(length(genes),1);
 
   end
 
-for numProbes=5
+for numProbes=2
     if doEqual
         IDgene = genes(numberProbes==numProbes);
     else
@@ -134,6 +134,16 @@ title(sprintf('Correlation between genes with %d probes (%d genes)', numProbes, 
 xticklabels(probeSelection);
 yticklabels(probeSelection);
 
+figure; imagesc(coexpCorr);
+set(gcf,'color','w');
+nice_cmap = [make_cmap('steelblue',50,30,0);flipud(make_cmap('orangered',50,30,0))];
+colormap(nice_cmap)
+caxis([0 1])
+%colormap([[1 1 1];BF_getcmap('reds',9)]); caxis([0 1]); colorbar;
+xticks([1 2 3 4 5]); yticks([1 2 3 4 5]);
+title(sprintf('Correlation between samples with %d probes (%d genes)', numProbes, numGenes));
+xticklabels(probeSelection);
+yticklabels(probeSelection);
 end
 
 

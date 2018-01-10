@@ -1,9 +1,9 @@
 % Select only cortical samples
 cd ('data/genes/processedData'); 
-load('MicroarrayDataWITHcustVariance360DistThresh2_CoordsAssigned.mat')
+load('MicroarrayDataWITHcustLessNoise82DistThresh2_CoordsAssigned.mat')
 doNormalise = false;
 doNormalScale = false; 
-Lcortex = 1:180;
+Lcortex = 1:34;
 D = cell(6,1);
 subjNr = cell(6,1);
 
@@ -29,18 +29,37 @@ if doNormalScale
 expression = 2.^(expression); 
 end
 
-[W,score,~,~,explained] = pca(expression); 
-x = score(:,1); y = score(:,2); z = score(:,3); 
-C = subjects; 
-S = ones(length(subjects),1)+30; 
+p = randperm(length(subjects)); 
+[W,score,~,~,explained] = pca(expression, 'NumComponents',4);
+x = score(p,1); y = score(p,2); z = score(p,3); 
+C = subjects(p); 
+S = ones(length(subjects),1)+60;
+A = zeros(size(C,1),3); 
 
-figure; h = scatter(x,y,S,C); %'filled','MarkerEdgeColor',[0 .7 .7]);
+for s=1:length(C)
+    if C(s)==1
+        A(s,:) = [0 0 .5]; % dark blue
+    elseif C(s)==2
+        A(s,:) = [.53 .83 .97]; % light blue
+    elseif C(s)==3
+        A(s,:) = [.7 .7 .7]; % grey
+    elseif C(s)==4
+        A(s,:) = [1 .60 .40]; % orange
+    elseif C(s)==5
+        A(s,:) = [.81 .07 .15]; % red
+    elseif C(s)==6
+        A(s,:) = [.99 .87 .09]; % yellow
+    end
+end
+
+
+figure; h = scatter(x,y,S,A,'filled','MarkerEdgeColor',[.55 .55 .55],'LineWidth',1.5); 
 set(gcf,'color','w');
 xlabel(sprintf('PC1, explains %d%% variance', round(explained(1))));
 ylabel(sprintf('PC2, explains %d%% variance', round(explained(2))));
 set(gca,'fontsize',15)
 
-figure; h = scatter3(x,y,z,S,C);
+figure; h = scatter3(x,y,z,S,A,'filled','MarkerEdgeColor',[.7 .7 .7],'LineWidth',1.5); 
 xlabel(sprintf('PC1, explains %d%% variance', round(explained(1))));
 ylabel(sprintf('PC2, explains %d%% variance', round(explained(2))));
 zlabel(sprintf('PC3, explains %d%% variance', round(explained(3))));

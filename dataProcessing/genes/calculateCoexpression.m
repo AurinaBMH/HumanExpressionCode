@@ -26,7 +26,7 @@ end
 %[param,stat] = sigm_fit(distExpVect(:,1),distExpVect(:,2));
 
 % plot original coexpression-distance .
-[xThresholds,yMeans] = BF_PlotQuantiles(distExpVect(:,1),distExpVect(:,2),25,0,1); xlabel('Euclidean distance (mm)'); ylabel('Correlated gene expression');ylim([-0.8 0.8]); set(gca,'fontsize',15)
+[xThresholds,yMeans] = BF_PlotQuantiles(distExpVect(:,1),distExpVect(:,2),25,1,1); xlabel('Euclidean distance (mm)'); ylabel('Correlated gene expression');ylim([-0.8 0.8]); set(gca,'fontsize',15)
 switch Fit{1}
     
     case 'linear'
@@ -57,9 +57,9 @@ if strcmp(Fit{1}, 'linear') || strcmp(Fit{1}, 'exp') || strcmp(Fit{1}, 'exp_1_0'
     hold on; scatter(distExpVect(:,1),FitCurve,1, '.', 'r');
     % get residuals
     Residuals = Rvect - FitCurve;
-    BF_PlotQuantiles(distExpVect(:,1),nonzeros(Residuals(:)),50,0,1); title('Coexpresion vs distance corrected'); ylim([-0.8 1]);
+    BF_PlotQuantiles(distExpVect(:,1),nonzeros(Residuals(:)),50,1,1); title('Coexpresion vs distance corrected'); ylim([-0.8 1]);
 else
-    BF_PlotQuantiles(distExpVect(:,1),Residuals(:),50,0,1); title('Coexpresion vs distance corrected'); ylim([-0.8 1]);
+    BF_PlotQuantiles(distExpVect(:,1),Residuals(:),50,1,1); title('Coexpresion vs distance corrected'); ylim([-0.8 1]);
 end
 
 
