@@ -15,8 +15,9 @@
 % UseDataWithCUSTprobes = 1; if UseDataWithCUSTprobes=0, it will load data
 % without cust probes.
 clear all;
-useCUSTprobes = true;
+useCUSTprobes = false;
 probeSelection = 'RNAseq'; %{'Mean', 'Variance', 'LessNoise', 'Random', 'PC', 'RNAseq'};% probeSelection = {'Mean', 'Variance', 'LessNoise', 'Random', 'PC'};
+RNAseqThreshold = 0.3; 
 signalThreshold = 0.5; % percentage of samples that a selected probe has expression levels that are higher than background
 %------------------------------------------------------------------------------
 % Load the data
@@ -29,7 +30,7 @@ if useCUSTprobes
     startFileName = 'MicroarrayDataWITHcust';
 else
     fprintf(1,'Loading the data without CUST probes and assigning variables\n')
-    startFileName = 'MicroarrayData';
+    startFileName = 'MicroarrayDataProbesUpdated';
 end
 fprintf(1,sprintf('Probe selection based on %s is chosen\n', probeSelection))
 load(sprintf('%s.mat', startFileName));
@@ -72,7 +73,7 @@ GeneSymbol = DataTableProbe.GeneSymbol{1,1}(indKeepProbes);
 % if choosing probes based on RNAseq, then use data only from 1 subject
 if strcmp(probeSelection, 'RNAseq')
     
-indProbe = selectProbeRNAseq(DataTable, EntrezID, indKeepProbes, 0.1); 
+[correlations, avgCorr, indProbe] = selectProbeRNAseq(DataTable, EntrezID, indKeepProbes, RNAseqThreshold); 
 nSub = 1; 
 else
     nSub = 6; 
@@ -174,8 +175,8 @@ for j=1:length(Uniq)
     end
     
 end
-%% check to exclude probes with not maximum variance or max PC and repeating entrezIDs (assign NaN value to
-% them)
+% %% check to exclude probes with not maximum variance or max PC and repeating entrezIDs (assign NaN value to
+% % them)
 [reordered, reorder_ind] = sort(EntrezID);
 % reorder all values based on sorted entrezIDs, because this is the order
 % of selected probes (1...n) from Unique. 
@@ -200,34 +201,34 @@ ProbeName(isnan(ProbeID)) = [];
 % Check if all genes that are left have unique gene symbols
 % % ------------------------------------------------------------------------------
 
-[~, ind] = unique(GeneSymbol, 'stable');
-% find duplicate indices
-duplicate_ind = setdiff(1:size(GeneSymbol,1), ind);
-
-toExclude = cell(length(duplicate_ind),1);
-for gene = 1:length(duplicate_ind)
-    
-    % if gene names are not matching, exclude both of them
-    symbs = GeneSymbol(duplicate_ind(gene));
-    test_ind = find(strcmp(GeneSymbol, symbs{1}));
-    % check if for all duplicated instances gene name is the same
-    
-    names = GeneName(test_ind);
-    doMatch = zeros(length(test_ind));
-    for j=1:length(test_ind)
-        for i=j+1:length(test_ind)
-            
-            doMatch(j,i) = strcmp(names{j}, names{i});
-            
-        end
-    end
-    % if they're not matching, record indexes to exclude later
-    if sum(doMatch)==0
-        toExclude{gene,:} = test_ind;
-    end
-    
-end
-excludeGenes = unique(cell2mat(toExclude));
+% [~, ind] = unique(GeneSymbol, 'stable');
+% % find duplicate indices
+% duplicate_ind = setdiff(1:size(GeneSymbol,1), ind);
+% 
+% toExclude = cell(length(duplicate_ind),1);
+% for gene = 1:length(duplicate_ind)
+%     
+%     % if gene names are not matching, exclude both of them
+%     symbs = GeneSymbol(duplicate_ind(gene));
+%     test_ind = find(strcmp(GeneSymbol, symbs{1}));
+%     % check if for all duplicated instances gene name is the same
+%     
+%     names = GeneName(test_ind);
+%     doMatch = zeros(length(test_ind));
+%     for j=1:length(test_ind)
+%         for i=j+1:length(test_ind)
+%             
+%             doMatch(j,i) = strcmp(names{j}, names{i});
+%             
+%         end
+%     end
+%     % if they're not matching, record indexes to exclude later
+%     if sum(doMatch)==0
+%         toExclude{gene,:} = test_ind;
+%     end
+%     
+% end
+excludeGenes = []; %unique(cell2mat(toExclude));
 % make a vector if indexes for genes to keep
 keepGenes = setdiff(1:size(GeneSymbol,1), excludeGenes, 'stable');% changed from stable
 
