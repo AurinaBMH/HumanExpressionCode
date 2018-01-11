@@ -16,9 +16,10 @@
 % without cust probes.
 clear all;
 useCUSTprobes = false;
-probeSelection = 'RNAseq'; %{'Mean', 'Variance', 'LessNoise', 'Random', 'PC', 'RNAseq'};% probeSelection = {'Mean', 'Variance', 'LessNoise', 'Random', 'PC'};
+probeSelection = 'Random'; %{'Mean', 'Variance', 'LessNoise', 'Random', 'PC', 'RNAseq'};% probeSelection = {'Mean', 'Variance', 'LessNoise', 'Random', 'PC'};
 RNAseqThreshold = 0.3; 
-signalThreshold = 0.5; % percentage of samples that a selected probe has expression levels that are higher than background
+signalThreshold = 0.5;% percentage of samples that a selected probe has expression levels that are higher than background
+rng shuffle % for selecting different seed for random probe selection
 %------------------------------------------------------------------------------
 % Load the data
 %------------------------------------------------------------------------------
@@ -270,7 +271,7 @@ for subject=1:6
     
 end
 
-save(sprintf('%s%s.mat', startFileName, probeSelection), 'expressionAll', 'probeInformation' , 'sampleInfo');
+save(sprintf('%s%s2.mat', startFileName, probeSelection), 'expressionAll', 'probeInformation' , 'sampleInfo');
 cd ../../..
 
 

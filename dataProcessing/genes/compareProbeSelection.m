@@ -1,6 +1,6 @@
 % load initial data
 clear all; 
-
+cd ('data/genes/processedData')
 load('MicroarrayDataProbesUpdated.mat')
 % select genes that have multiple probes, so thay will be sub-selected for
 % comparison
@@ -20,6 +20,8 @@ load('MicroarrayDataProbesUpdatedPC.mat')
 probes{4} = probeInformation; 
 load('MicroarrayDataProbesUpdatedRNAseq.mat')
 probes{5} = probeInformation; 
+load('MicroarrayDataProbesUpdatedRandom2.mat')
+probes{6} = probeInformation; 
 
 %select only genes that had more than one probe available
 [~, indFilter] = intersect(probes{1}.EntrezID, duplicate_value); % separatelly for RNAseq and others as the numbef of genes is different
@@ -30,20 +32,21 @@ probes{1}.ProbeID = probes{1}.ProbeID(indFilter); probes{1}.EntrezID = probes{1}
 probes{2}.ProbeID = probes{2}.ProbeID(indFilter); probes{2}.EntrezID = probes{2}.EntrezID(indFilter);  
 probes{3}.ProbeID = probes{3}.ProbeID(indFilter); probes{3}.EntrezID = probes{3}.EntrezID(indFilter); 
 probes{4}.ProbeID = probes{4}.ProbeID(indFilter); probes{4}.EntrezID = probes{4}.EntrezID(indFilter);   
+probes{6}.ProbeID = probes{6}.ProbeID(indFilter); probes{6}.EntrezID = probes{6}.EntrezID(indFilter); 
 probes{5}.ProbeID = probes{5}.ProbeID(indFilterRNA); probes{5}.EntrezID = probes{5}.EntrezID(indFilterRNA); 
 
 % find genes that are both in RNAseq and in t=other methods
 [both, indRNA, indOthers] = intersect(probes{5}.EntrezID, probes{1}.EntrezID); 
 
- perc = zeros(5,5);
+ perc = zeros(6,6);
  % calculate what percentage of probes match
- for j=1:5
+ for j=1:6
      if j==5
          probe1 = probes{j}.ProbeID(indRNA);
      else
          probe1 = probes{j}.ProbeID(indOthers);
      end
-     for i=1:5
+     for i=1:6
          if i==5
              probe2 = probes{i}.ProbeID(indRNA);
          else
@@ -56,7 +59,7 @@ probes{5}.ProbeID = probes{5}.ProbeID(indFilterRNA); probes{5}.EntrezID = probes
  end
  % plot
 figure; imagesc(perc); 
-xticks([1 2 3 4 5])
-xticklabels({'Variance', 'Random', 'Noise', 'PC','RNAseq'}); 
-yticks([1 2 3 4 5])
-yticklabels({'Variance', 'Random', 'Noise', 'PC','RNAseq'}); 
+xticks([1 2 3 4 5 6])
+xticklabels({'Variance', 'Random', 'Noise', 'PC','RNAseq', 'Random2'}); 
+yticks([1 2 3 4 5 6])
+yticklabels({'Variance', 'Random', 'Noise', 'PC','RNAseq', 'Random2'}); 
