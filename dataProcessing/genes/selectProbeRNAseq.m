@@ -16,9 +16,12 @@ for subject=1:2
     RNAseqGene = RNAseqinfo.NCBIgeneID;
     
     % import info about RNAseq tissue samples
-    structureIDrna = importRNAseqStructInf('SampleAnnot.csv');
+    %structureIDrna = importRNAseqStructInf('SampleAnnot.csv');
     % import information about microarray samples
-    structureIDmic = DataTable.SampleID{subject};
+    %structureIDmic = DataTable.SampleID{subject};
+    % use well ID instead of SampleID (well is higher resolution)
+    structureIDmic = DataTable.WellID{subject};
+    structureIDrna = importRNAseqWellID('SampleAnnot.csv');
     
     % import expression values for microarray
     microarray = DataTable.Expression{subject}(indKeepProbes,:);

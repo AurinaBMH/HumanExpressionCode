@@ -1,4 +1,6 @@
 % load initial data
+clear all; 
+
 load('MicroarrayDataProbesUpdated.mat')
 % select genes that have multiple probes, so thay will be sub-selected for
 % comparison
@@ -41,7 +43,7 @@ probes{5}.ProbeID = probes{5}.ProbeID(indFilterRNA); probes{5}.EntrezID = probes
      else
          probe1 = probes{j}.ProbeID(indOthers);
      end
-     for i=1:4
+     for i=1:5
          if i==5
              probe2 = probes{i}.ProbeID(indRNA);
          else

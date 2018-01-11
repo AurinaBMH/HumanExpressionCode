@@ -57,9 +57,9 @@ GeneName = ProbeTable.gene_name;
 % entrez IDs because some of them can be updated
 fprintf(1,'%d probes with missing entrez IDs\n', sum(isnan(EntrezID)));
 % creat a Data cell to store the output
-headerdata = {'Expression' , 'MMcoordinates', 'StructureName', 'MRIvoxCoordinates', 'Noise', 'SampleID'};
+headerdata = {'Expression' , 'MMcoordinates', 'StructureName', 'MRIvoxCoordinates', 'Noise', 'SampleID', 'WellID'};
 headerprobe = { 'ProbeID', 'EntrezID','ProbeName', 'GeneSymbol'};
-Data = cell(6,6);
+Data = cell(6,7);
 DataProbe = cell(1,4);
 
 %------------------------------------------------------------------------------
@@ -85,6 +85,7 @@ for subj=1:6
     MMcoordinates = xlsread(FileAnnot, 'K:M');
     MRIvoxCoordinates = xlsread(FileAnnot, 'H:J');
     SampleID = xlsread(FileAnnot, 'A:A');
+    WellID = xlsread(FileAnnot, 'C:C');
     [~,probeList] = intersect(noise(:,1),ProbeID, 'stable');
     noise = noise(probeList,2:end);
     
@@ -103,6 +104,7 @@ for subj=1:6
         MMcoordinates(BSandCBind,:) = NaN;
         MRIvoxCoordinates(BSandCBind,:) = NaN;
         SampleID(BSandCBind,:) = NaN;
+        WellID(BSandCBind,:) = NaN; 
         noise(:,BSandCBind) = NaN;
         StructureName(BSandCBind) = {NaN};
     end
@@ -114,6 +116,7 @@ for subj=1:6
     MMcoordinates = MMcoordinates(all(~isnan(MMcoordinates),2),:); % for nan rows
     MRIvoxCoordinates = MRIvoxCoordinates(all(~isnan(MRIvoxCoordinates),2),:); % for nan rows
     SampleID = SampleID(all(~isnan(SampleID),2),:); % for nan rows
+    WellID = WellID(all(~isnan(WellID),2),:); % for nan rows
     noise = noise(:,all(~isnan(noise)));
     % keep only existing structure names
     StructureName(cellfun(@(StructureName) any(isnan(StructureName)),StructureName)) = [];
@@ -125,6 +128,7 @@ for subj=1:6
     Data{subj,4} = MRIvoxCoordinates;
     Data{subj,5} = noise;
     Data{subj,6} = SampleID; 
+    Data{subj,7} = WellID; 
     cd ..
     
 end
