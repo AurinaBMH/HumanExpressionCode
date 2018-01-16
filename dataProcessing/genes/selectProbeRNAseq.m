@@ -1,7 +1,8 @@
 % function to select probe based on RNA seq values
-function [correlations, avgCorr, indProbe] = selectProbeRNAseq(DataTable, EntrezID, indKeepProbes, threshold)
+function [correlations, avgCorr, indProbe, genes] = selectProbeRNAseq(DataTable, EntrezID, indKeepProbes, threshold)
 
 numGenes = length(unique(EntrezID));
+genes = unique(EntrezID);
 correlations = cell(numGenes,2);
 for subject=1:2
     

@@ -16,9 +16,9 @@
 % without cust probes.
 clear all;
 useCUSTprobes = false;
-probeSelection = 'Random'; %{'Mean', 'Variance', 'LessNoise', 'Random', 'PC', 'RNAseq'};% probeSelection = {'Mean', 'Variance', 'LessNoise', 'Random', 'PC'};
-RNAseqThreshold = 0.3; 
-signalThreshold = 0.5;% percentage of samples that a selected probe has expression levels that are higher than background
+probeSelection = 'RNAseq'; %{'Mean', 'Variance', 'LessNoise', 'Random', 'PC', 'RNAseq'};% probeSelection = {'Mean', 'Variance', 'LessNoise', 'Random', 'PC'};
+RNAseqThreshold = 0.5; 
+signalThreshold = -1;% percentage of samples that a selected probe has expression levels that are higher than background
 rng shuffle % for selecting different seed for random probe selection
 %------------------------------------------------------------------------------
 % Load the data
@@ -71,10 +71,16 @@ EntrezID = DataTableProbe.EntrezID{1,1}(indKeepProbes);
 GeneSymbol = DataTableProbe.GeneSymbol{1,1}(indKeepProbes);
 %GeneName = DataTableProbe.GeneName{1,1}(indKeepProbes);
 
+probeInformationALL.ProbeName = ProbeName; 
+probeInformationALL.ProbeID = ProbeID; 
+probeInformationALL.EntrezID = EntrezID; 
+probeInformationALL.GeneSymbol = GeneSymbol; 
+
+
 % if choosing probes based on RNAseq, then use data only from 1 subject
 if strcmp(probeSelection, 'RNAseq')
     
-[correlations, avgCorr, indProbe] = selectProbeRNAseq(DataTable, EntrezID, indKeepProbes, RNAseqThreshold); 
+[correlations, avgCorr, indProbe, genes] = selectProbeRNAseq(DataTable, EntrezID, indKeepProbes, RNAseqThreshold); 
 nSub = 1; 
 else
     nSub = 6; 
@@ -198,6 +204,9 @@ GeneSymbol(isnan(ProbeID)) = [];
 %GeneName(isnan(ProbeID)) = [];
 ProbeName(isnan(ProbeID)) = [];
 
+
+
+
 % % ------------------------------------------------------------------------------
 % Check if all genes that are left have unique gene symbols
 % % ------------------------------------------------------------------------------
@@ -271,7 +280,11 @@ for subject=1:6
     
 end
 
-save(sprintf('%s%s2.mat', startFileName, probeSelection), 'expressionAll', 'probeInformation' , 'sampleInfo');
+if strcmp(probeSelection, 'RNAseq')
+save(sprintf('%s%s%dthr2.mat', startFileName, probeSelection, RNAseqThreshold), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes');
+else
+    save(sprintf('%s%s2.mat', startFileName, probeSelection), 'expressionAll', 'probeInformation' , 'sampleInfo');
+end
 cd ../../..
 
 
