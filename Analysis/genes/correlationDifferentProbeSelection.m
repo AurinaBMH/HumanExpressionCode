@@ -5,26 +5,32 @@ load('MicroarrayDataProbesUpdated.mat')
 % select genes that have multiple probes, so thay will be sub-selected for
 % comparison
 [v, ind] = unique(DataTableProbe.EntrezID{1});
-m=0; 
+% m=0; w=1; 
+% for p=1:length(ind)
+%     A = find(DataTableProbe.EntrezID{1}==v(p)); 
+%     %howMany = length(A); 
+%     if length(A)>1
+%         m=m+1;
+%         PL{p} = A;
+%         for k=1:length(A)
+%         IND2(w) = A(k);
+%         w=w+1;
+%         end
+%         %w=w+length(A);
+%     end
+%     
+% end
 
-for p=1:length(ind)
-    A = find(DataTableProbe.EntrezID{1}==v(p)); 
-    %howMany = length(A); 
-    if length(A)>1
-        m=m+1;
-    end
-    
-end
-percentage = (m/length(unique(DataTableProbe.EntrezID{1})))*100; 
+% duplicate_ind = IND2; 
+% duplicate_value = unique(DataTableProbe.EntrezID{1}(duplicate_ind));
+
+duplicate_ind = setdiff(1:size(DataTableProbe.EntrezID{1}, 1), ind);
+duplicate_value = unique(DataTableProbe.EntrezID{1}(duplicate_ind));
+
+percentage = (length(duplicate_value)/length(unique(DataTableProbe.EntrezID{1})))*100; 
 format compact
 fprintf('%d genes have more than one probe\n', m); 
 percentage 
-
-
-[~, ind] = unique(DataTableProbe.EntrezID{1});
-% duplicate indices
-duplicate_ind = setdiff(1:size(DataTableProbe.EntrezID{1}, 1), ind);
-duplicate_value = DataTableProbe.EntrezID{1}(duplicate_ind);
 
 % Load probes, selected using different methods
 load('MicroarrayDataProbesUpdatedMean.mat')
