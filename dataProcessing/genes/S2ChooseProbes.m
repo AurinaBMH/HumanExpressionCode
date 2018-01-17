@@ -18,7 +18,7 @@ clear all;
 useCUSTprobes = false;
 probeSelection = 'RNAseq'; %{'Mean', 'Variance', 'LessNoise', 'Random', 'PC', 'RNAseq'};% probeSelection = {'Mean', 'Variance', 'LessNoise', 'Random', 'PC'};
 RNAseqThreshold = 0.5; 
-signalThreshold = -1;% percentage of samples that a selected probe has expression levels that are higher than background
+signalThreshold = 0;% percentage of samples that a selected probe has expression levels that are higher than background
 rng shuffle % for selecting different seed for random probe selection
 %------------------------------------------------------------------------------
 % Load the data
@@ -60,7 +60,7 @@ ProbeID = DataTableProbe.ProbeID{1,1};
 % % ------------------------------------------------------------------------------
 
 signalLevel = sum(noiseall,2)./size(noiseall,2);
-indKeepProbes = find(signalLevel>signalThreshold);
+indKeepProbes = find(signalLevel>=signalThreshold);
 
 % remove selected probes from data and perform other calculations only on
 % non-noisy probes
@@ -281,7 +281,7 @@ for subject=1:6
 end
 
 if strcmp(probeSelection, 'RNAseq')
-save(sprintf('%s%s%dthr2.mat', startFileName, probeSelection, RNAseqThreshold), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes');
+save(sprintf('%s%s%dthr.mat', startFileName, probeSelection, RNAseqThreshold), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes');
 else
     save(sprintf('%s%s2.mat', startFileName, probeSelection), 'expressionAll', 'probeInformation' , 'sampleInfo');
 end

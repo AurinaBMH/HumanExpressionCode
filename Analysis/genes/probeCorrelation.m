@@ -1,7 +1,7 @@
 clear all;
 doEqual = false;
 useCUSTprobes = true;
-coexpressionOn = 'gene';
+coexpressionOn = 'sample';
 signalThreshold = 0.5; % percentage of samples that a selected probe has expression levels that are higher than background
 doOriginal = false; %false;
 probeSelection = {'Variance','PC','LessNoise', 'Mean', 'random'};

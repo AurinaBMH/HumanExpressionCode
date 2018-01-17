@@ -58,7 +58,11 @@ probes{5}.ProbeID = probes{5}.ProbeID(indFilterRNA); probes{5}.EntrezID = probes
      end
  end
  % plot
-figure; imagesc(perc); 
+nice_cmap = [make_cmap('steelblue',50,30,0);flipud(make_cmap('orangered',50,30,0))];
+
+figure; imagesc(perc);set(gcf,'color','w'); 
+colormap(nice_cmap)
+caxis([0 1])
 xticks([1 2 3 4 5 6])
 xticklabels({'Variance', 'Random', 'Noise', 'PC','RNAseq', 'Random2'}); 
 yticks([1 2 3 4 5 6])
