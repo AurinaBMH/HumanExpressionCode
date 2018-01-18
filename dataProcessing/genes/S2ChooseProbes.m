@@ -16,7 +16,7 @@
 % without cust probes.
 clear all;
 useCUSTprobes = false;
-probeSelection = 'RNAseq'; %{'Mean', 'Variance', 'LessNoise', 'Random', 'PC', 'RNAseq'};% probeSelection = {'Mean', 'Variance', 'LessNoise', 'Random', 'PC'};
+probeSelection = 'RNAseq'; %{'Mean', 'Variance', 'LessNoise', 'Random', 'PC', 'RNAseq', DS};% probeSelection = {'Mean', 'Variance', 'LessNoise', 'Random', 'PC'};
 RNAseqThreshold = 0.5; 
 signalThreshold = 0;% percentage of samples that a selected probe has expression levels that are higher than background
 rng shuffle % for selecting different seed for random probe selection
@@ -82,6 +82,9 @@ if strcmp(probeSelection, 'RNAseq')
     
 [correlations, avgCorr, indProbe, genes] = selectProbeRNAseq(DataTable, EntrezID, indKeepProbes, RNAseqThreshold); 
 nSub = 1; 
+elseif strcmp(probeSelection, 'DS')
+    
+    nSub = 1; 
 else
     nSub = 6; 
 end
@@ -141,6 +144,9 @@ for subj = 1:nSub
                     [indMaxV] = randsample(1:size(expRepEntrezIDs,2),1);
                 case 'RNAseq'
                     indMaxV = indProbe(k); 
+                case 'DS'
+                    indMaxV = indProbe(k); 
+                    
             end
             %if NaN, use NaN; 
             if isnan(indMaxV)
