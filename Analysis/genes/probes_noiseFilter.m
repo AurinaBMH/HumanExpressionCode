@@ -38,16 +38,15 @@ for j=1:2
         
         
         A = find(Ent==duplicate_value(i));
-        %howMany = length(A);
+
         if length(A)>1
-            
-            %PL{p} = A;
+
             r = NaN(length(A));
             for k=1:length(A)
                 for l=k+1:length(A)
                     r(k,l) = corr(Expr(A(k),:)', Expr(A(l),:)', 'type', 'Spearman');
                 end
-                %IND2(w) = A(k);
+
                 
             end
             t=r(:);
@@ -56,10 +55,7 @@ for j=1:2
             corVal(i,j) = mean(t);
             
             corVal(i,j) = mean(t);
-            
-            
-            
-            %w=w+length(A);
+
         end
         
     end
