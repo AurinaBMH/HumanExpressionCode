@@ -1,9 +1,9 @@
 % Dscalculation based on overlapping structures for probe selection
-function [indProbe,avCorr] = selectProbeDS(DataTableProbe, DataTable, indKeepProbes)
+function [indProbe,avCorr] = selectProbeDS(EntrezID, DataTable, indKeepProbes)
 
 % for each pair of subjects find overlapping samples, average data and
 % calculate correlation between each probe for the same gene
-ugenes = unique(DataTableProbe.EntrezID{1});
+ugenes = unique(EntrezID);
 
 probeS = cell(6,6); %,length(ugenes));
 mCorrs = cell(6,6);
@@ -34,7 +34,7 @@ for s1=1:6
         
         for g = 1:length(ugenes)
             % find unique genes
-            gprobes = find(DataTableProbe.EntrezID{1}==ugenes(g));
+            gprobes = find(EntrezID==ugenes(g));
             if length(gprobes)>1
                 C = zeros(length(gprobes),1);
                 for d = 1:length(gprobes)
@@ -44,6 +44,7 @@ for s1=1:6
                 end
                 [valM,indM] = max(C);
                 Pr(g) = gprobes(indM);
+               % Pr(g) = indM;
                 maxCor(g) = valM;
             else
                 Pr(g) = gprobes;

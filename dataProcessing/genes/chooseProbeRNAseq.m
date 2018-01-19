@@ -1,5 +1,5 @@
 % function to select probe based on RNA seq values
-function indProbe = selectProbeRNAseq(DataTable, DataTableProbe, threshold)
+function indProbe = chooseProbeRNAseq(DataTable, DataTableProbe, threshold)
 
 numGenes = length(unique(DataTableProbe.EntrezID{1}));
 correlations = cell(numGenes,2);

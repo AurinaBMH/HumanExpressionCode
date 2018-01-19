@@ -29,7 +29,7 @@ duplicate_value = unique(DataTableProbe.EntrezID{1}(duplicate_ind));
 
 percentage = (length(duplicate_value)/length(unique(DataTableProbe.EntrezID{1})))*100; 
 format compact
-fprintf('%d genes have more than one probe\n', m); 
+%fprintf('%d genes have more than one probe\n', m); 
 percentage 
 
 % Load probes, selected using different methods
@@ -61,12 +61,17 @@ load('MicroarrayDataProbesUpdatedRandom2.mat')
 probes{7} = probeInformation; 
 expression{7} = vertcat(expressionAll{1}, expressionAll{2}, expressionAll{3}, expressionAll{4}, expressionAll{5},expressionAll{6}); 
 
+
+load('MicroarrayDataProbesUpdatedDSTEST.mat')
+probes{8} = probeInformation; 
+expression{8} = vertcat(expressionAll{1}, expressionAll{2}, expressionAll{3}, expressionAll{4}, expressionAll{5},expressionAll{6}); 
+
 %select only genes that had more than one probe available
 [genesMultiple, indFilter] = intersect(probes{1}.EntrezID, duplicate_value); % separatelly for RNAseq and others as the numbef of genes is different
 [genesMultipleRNAseq, indFilterRNA] = intersect(probes{5}.EntrezID, duplicate_value); 
 
 % filter genes that had multiple probes
-for k=1:7
+for k=1:8
     if k==5
         expression{k} = expression{k}(:,indFilterRNA); 
     else 
@@ -77,16 +82,16 @@ end
 [v1, indALL] = intersect(genesMultiple, genesMultipleRNAseq); 
 [v2, indRNA] = intersect(genesMultipleRNAseq,genesMultiple); 
 % calculate correlation between each way of choosing a probe
-avCorr = zeros(7,7); 
+avCorr = zeros(8,8); 
 
-for i=1:7
+for i=1:8
 %     if i==5
 %         expr1 = expression{i}(:,indRNA);
 %     else
 %         expr1 = expression{i};
 %     end
     
-    for j=1:7
+    for j=1:8
         if j==5 && i~=5
             expr1 = expression{i}(:,indALL);
             expr2 = expression{j}(:,indRNA);
@@ -119,7 +124,7 @@ nice_cmap = [make_cmap('steelblue',50,30,0);flipud(make_cmap('orangered',50,30,0
 figure; imagesc(avCorr);set(gcf,'color','w'); 
 colormap(nice_cmap)
 caxis([0.5 1])
-xticks([1 2 3 4 5 6 7])
-xticklabels({'Mean', 'Variance', 'Noise', 'PC','RNAseq', 'Random1', 'Random2'}); 
-yticks([1 2 3 4 5 6 7])
-yticklabels({'Mean', 'Variance', 'Noise', 'PC','RNAseq', 'Random1', 'Random2'}); 
+xticks([1 2 3 4 5 6 7 8])
+xticklabels({'Mean', 'Variance', 'Noise', 'PC','RNAseq', 'Random1', 'Random2', 'DS'}); 
+yticks([1 2 3 4 5 6 7 8])
+yticklabels({'Mean', 'Variance', 'Noise', 'PC','RNAseq', 'Random1', 'Random2', 'DS'}); 

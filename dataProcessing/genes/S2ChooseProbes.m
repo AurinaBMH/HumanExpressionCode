@@ -17,7 +17,7 @@
 clear all;
 useCUSTprobes = false;
 probeSelection = 'RNAseq'; %{'Mean', 'Variance', 'LessNoise', 'Random', 'PC', 'RNAseq', DS};% probeSelection = {'Mean', 'Variance', 'LessNoise', 'Random', 'PC'};
-RNAseqThreshold = 0.5; 
+RNAseqThreshold = 0.5;
 signalThreshold = 0;% percentage of samples that a selected probe has expression levels that are higher than background
 rng shuffle % for selecting different seed for random probe selection
 %------------------------------------------------------------------------------
@@ -71,22 +71,22 @@ EntrezID = DataTableProbe.EntrezID{1,1}(indKeepProbes);
 GeneSymbol = DataTableProbe.GeneSymbol{1,1}(indKeepProbes);
 %GeneName = DataTableProbe.GeneName{1,1}(indKeepProbes);
 
-probeInformationALL.ProbeName = ProbeName; 
-probeInformationALL.ProbeID = ProbeID; 
-probeInformationALL.EntrezID = EntrezID; 
-probeInformationALL.GeneSymbol = GeneSymbol; 
+probeInformationALL.ProbeName = ProbeName;
+probeInformationALL.ProbeID = ProbeID;
+probeInformationALL.EntrezID = EntrezID;
+probeInformationALL.GeneSymbol = GeneSymbol;
 
 
 % if choosing probes based on RNAseq, then use data only from 1 subject
 if strcmp(probeSelection, 'RNAseq')
     
-[correlations, avgCorr, indProbe, genes] = selectProbeRNAseq(DataTable, EntrezID, indKeepProbes, RNAseqThreshold); 
-nSub = 1; 
+    [correlations, avgCorr, indProbe, genes] = selectProbeRNAseq(DataTable, EntrezID, indKeepProbes, RNAseqThreshold);
+    nSub = 1;
 elseif strcmp(probeSelection, 'DS')
-    
-    nSub = 1; 
+    [indProbe, avCorr] = selectProbeDS(EntrezID, DataTable, indKeepProbes);
+    nSub = 1;
 else
-    nSub = 6; 
+    nSub = 6;
 end
 
 
@@ -108,67 +108,75 @@ for subj = 1:nSub
             
             % take expression values for a selected entrezID
             % calculate variances for expression data for a selected entrezID
-            switch probeSelection
+            %switch probeSelection
+            if strcmp(probeSelection, 'Variance')
+                %case 'Variance'
+                %fprintf(1,'Performing probe selection using Max variance\n');
+                measure = var(expRepEntrezIDs,0,1);
+                % determine max var value
+                [MaxV, indMaxV] = max(measure);
                 
-                case 'Variance'
-                    %fprintf(1,'Performing probe selection using Max variance\n');
-                    measure = var(expRepEntrezIDs,0,1);
-                    % determine max var value
-                    [MaxV, indMaxV] = max(measure);
-                    
-                case 'PC'
-                    %fprintf(1,'Performing probe selection using max PC\n');
-                    measure = pca(expRepEntrezIDs,'Centered',false);
-                    % determine max PC loading
-                    [MaxV, indMaxV] = max(measure(:,1));
-                    
-                case 'LessNoise'
-                    %fprintf(1,'Performing probe selection using less noise criteria\n');
-                    noiseRepEntrezIDs = noise(:,indRepEntrezIDs);
-                    % find probe with most signal in it compared to noise
-                    measure = sum(noiseRepEntrezIDs,1);
-                    % determine probe with max signal
-                    [MaxV, indMaxV] = max(measure);
-                    
-                case 'Mean'
-                    expressionSelected{subj}(:,k) = mean(expRepEntrezIDs,2);
-                    [indMaxV] = randsample(1:size(expRepEntrezIDs,2),1);
-                    % choose one of probes as a place holder (at random)
-                    % for probeInformation (expression values are mean of
-                    % al probes)
-                    
-                case 'Random'
-                    %fprintf(1,'Performing probe selection using random selection\n');
-                    
-                    % determine max var value
-                    [indMaxV] = randsample(1:size(expRepEntrezIDs,2),1);
-                case 'RNAseq'
-                    indMaxV = indProbe(k); 
-                case 'DS'
-                    indMaxV = indProbe(k); 
-                    
-            end
-            %if NaN, use NaN; 
-            if isnan(indMaxV)
-                indMsubj(k,subj) = NaN;
+                
+            elseif strcmp(probeSelection, 'PC')
+                %fprintf(1,'Performing probe selection using max PC\n');
+                measure = pca(expRepEntrezIDs,'Centered',false);
+                % determine max PC loading
+                [MaxV, indMaxV] = max(measure(:,1));
+                
+            elseif strcmp(probeSelection, 'LessNoise')
+                %fprintf(1,'Performing probe selection using less noise criteria\n');
+                noiseRepEntrezIDs = noise(:,indRepEntrezIDs);
+                % find probe with most signal in it compared to noise
+                measure = sum(noiseRepEntrezIDs,1);
+                % determine probe with max signal
+                [MaxV, indMaxV] = max(measure);
+                
+            elseif strcmp(probeSelection, 'Mean')
+                expressionSelected{subj}(:,k) = mean(expRepEntrezIDs,2);
+                [indMaxV] = randsample(1:size(expRepEntrezIDs,2),1);
+                
+                % choose one of probes as a place holder (at random)
+                % for probeInformation (expression values are mean of
+                % al probes)
+                
+            elseif strcmp(probeSelection, 'Random')
+                %fprintf(1,'Performing probe selection using random selection\n');
+                
+                % determine max var value
+                [indMaxV] = randsample(1:size(expRepEntrezIDs,2),1);
+            elseif strcmp(probeSelection, 'RNAseq')
+                indMaxV = indProbe(k);
+            elseif strcmp(probeSelection, 'DS')
+                %indMaxV = indProbe(k);
+                indMsubj(k,subj) = indProbe(k);
 
-            else
-               indMsubj(k,subj) = indRepEntrezIDs(indMaxV); 
             end
-                
+            
+            if (strcmp(probeSelection, 'Mean') || strcmp(probeSelection, 'Variance') || strcmp(probeSelection, 'Random') ||...
+                    strcmp(probeSelection, 'PC') || strcmp(probeSelection, 'LessNoise') || strcmp(probeSelection, 'RNAseq'))
+                %indMsubj(k,subj) = indProbe(k); %(indMaxV);
+                %if NaN, use NaN;
+                if isnan(indMaxV)
+                    indMsubj(k,subj) = NaN;
+                    
+                else
+                    indMsubj(k,subj) = indRepEntrezIDs(indMaxV);
+                end
+            end
+            
         else
             if strcmp(probeSelection, 'Mean')
                 expressionSelected{subj}(:,k) = expRepEntrezIDs;
-            end
-            
-            if strcmp(probeSelection, 'RNAseq')
+
+                
+            elseif strcmp(probeSelection, 'RNAseq')
                 if isnan(indProbe(k))
-                indMsubj(k,subj) = NaN; 
+                    indMsubj(k,subj) = NaN;
                 else
-                indMsubj(k,subj) = indRepEntrezIDs;
+                    indMsubj(k,subj) = indRepEntrezIDs;
                 end
             else
-            indMsubj(k,subj) = indRepEntrezIDs;
+                indMsubj(k,subj) = indRepEntrezIDs;
             end
             
         end
@@ -180,11 +188,11 @@ for j=1:length(Uniq)
     
     indINlist = mode(indMsubj(j,:),2);
     if isnan(indINlist)
-    ProbeList(j,1) = NaN;
-    ProbeList(j,2) = NaN;
+        ProbeList(j,1) = NaN;
+        ProbeList(j,2) = NaN;
     else
-    ProbeList(j,1) = ProbeID(indINlist);
-    ProbeList(j,2) = EntrezID(indINlist);
+        ProbeList(j,1) = ProbeID(indINlist);
+        ProbeList(j,2) = EntrezID(indINlist);
     end
     
 end
@@ -192,7 +200,7 @@ end
 % % them)
 [reordered, reorder_ind] = sort(EntrezID);
 % reorder all values based on sorted entrezIDs, because this is the order
-% of selected probes (1...n) from Unique. 
+% of selected probes (1...n) from Unique.
 EntrezID = EntrezID(reorder_ind);
 ProbeID = ProbeID(reorder_ind);
 %GeneID = GeneID(reorder_ind);
@@ -220,29 +228,29 @@ ProbeName(isnan(ProbeID)) = [];
 % [~, ind] = unique(GeneSymbol, 'stable');
 % % find duplicate indices
 % duplicate_ind = setdiff(1:size(GeneSymbol,1), ind);
-% 
+%
 % toExclude = cell(length(duplicate_ind),1);
 % for gene = 1:length(duplicate_ind)
-%     
+%
 %     % if gene names are not matching, exclude both of them
 %     symbs = GeneSymbol(duplicate_ind(gene));
 %     test_ind = find(strcmp(GeneSymbol, symbs{1}));
 %     % check if for all duplicated instances gene name is the same
-%     
+%
 %     names = GeneName(test_ind);
 %     doMatch = zeros(length(test_ind));
 %     for j=1:length(test_ind)
 %         for i=j+1:length(test_ind)
-%             
+%
 %             doMatch(j,i) = strcmp(names{j}, names{i});
-%             
+%
 %         end
 %     end
 %     % if they're not matching, record indexes to exclude later
 %     if sum(doMatch)==0
 %         toExclude{gene,:} = test_ind;
 %     end
-%     
+%
 % end
 excludeGenes = []; %unique(cell2mat(toExclude));
 % make a vector if indexes for genes to keep
@@ -262,7 +270,9 @@ cd ('processedData')
 expressionAll = cell(6,1);
 sampleInfo = cell(6,1);
 for subject=1:6
-    if strcmp(probeSelection, 'Variance') || strcmp(probeSelection, 'PC') || strcmp(probeSelection, 'LessNoise') || strcmp(probeSelection, 'Random') || strcmp(probeSelection, 'RNAseq')
+    if strcmp(probeSelection, 'Variance') || strcmp(probeSelection, 'PC') ...
+            || strcmp(probeSelection, 'LessNoise') || strcmp(probeSelection, 'Random') ...
+            || strcmp(probeSelection, 'RNAseq') || strcmp(probeSelection, 'DS')
         
         % exclude NaN probes keeping 1 probe for 1 entrezID.
         fprintf(1,'Combining and saving the data for subject %u\n', subject)
@@ -287,16 +297,8 @@ for subject=1:6
 end
 
 if strcmp(probeSelection, 'RNAseq')
-save(sprintf('%s%s%dthr.mat', startFileName, probeSelection, RNAseqThreshold), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes');
+    save(sprintf('%s%s%dthr.mat', startFileName, probeSelection, RNAseqThreshold), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes');
 else
-    save(sprintf('%s%s2.mat', startFileName, probeSelection), 'expressionAll', 'probeInformation' , 'sampleInfo');
+    save(sprintf('%s%s.mat', startFileName, probeSelection), 'expressionAll', 'probeInformation' , 'sampleInfo');
 end
 cd ../../..
-
-
-
-
-
-
-
-
