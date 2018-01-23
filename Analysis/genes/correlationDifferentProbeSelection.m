@@ -49,7 +49,8 @@ load('MicroarrayDataProbesUpdatedDS.mat')
 probes{4} = probeInformation; 
 expression{4} = vertcat(expressionAll{1}, expressionAll{2}, expressionAll{3}, expressionAll{4}, expressionAll{5},expressionAll{6}); 
 
-load('MicroarrayDataProbesUpdatedRNAseq3.000000e-01thr.mat')
+%load('MicroarrayDataProbesUpdatedRNAseq3.000000e-01thr.mat')
+load('MicroarrayDataProbesUpdatedRNAseq2.000000e-01RNAthr5.000000e-01noisethr.mat')
 probes{5} = probeInformation; 
 expression{5} = vertcat(expressionAll{1}, expressionAll{2}, expressionAll{3}, expressionAll{4}, expressionAll{5},expressionAll{6}); 
 
@@ -104,8 +105,8 @@ for i=1:9
             expr1 = expression{i}(:,indRNA);
             expr2 = expression{j}(:,indALL);
         elseif j~=5 && i~=5
-            expr1 = expression{i};
-            expr2 = expression{j};
+            expr1 = expression{i}(:,indALL);
+            expr2 = expression{j}(:,indALL);
         else
             expr1 = expression{i}(:,indRNA);
             expr2 = expression{j}(:,indRNA);

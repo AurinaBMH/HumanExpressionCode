@@ -17,8 +17,8 @@
 clear all;
 useCUSTprobes = false;
 probeSelection = 'RNAseq'; %{'Mean', 'Variance', 'LessNoise', 'Random', 'PC', 'RNAseq', DS};% probeSelection = {'Mean', 'Variance', 'LessNoise', 'Random', 'PC'};
-RNAseqThreshold = 0.3;
-signalThreshold = 0;% percentage of samples that a selected probe has expression levels that are higher than background
+RNAseqThreshold = 0.2;
+signalThreshold = 0.5;% percentage of samples that a selected probe has expression levels that are higher than background
 rng shuffle % for selecting different seed for random probe selection
 %------------------------------------------------------------------------------
 % Load the data
@@ -305,7 +305,7 @@ for subject=1:6
 end
 
 if strcmp(probeSelection, 'RNAseq')
-    save(sprintf('%s%s%dthr.mat', startFileName, probeSelection, RNAseqThreshold), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes');
+    save(sprintf('%s%s%dRNAthr%dnoisethr.mat', startFileName, probeSelection, RNAseqThreshold, signalThreshold), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes');
 else
     save(sprintf('%s%s.mat', startFileName, probeSelection), 'expressionAll', 'probeInformation' , 'sampleInfo');
 end
