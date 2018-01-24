@@ -13,7 +13,7 @@
 clear all; 
 
 useCUSTprobes = false;
-probeSelections = {'LessNoise'}; %{'Mean', 'Variance', 'LessNoise', 'Random', 'PC'}; 
+probeSelections = {'RNAseq'}; %{'Mean', 'Variance', 'LessNoise', 'Random', 'PC'}; 
 sides = {'right', 'left'};
 % separate according to brain part: cortex/subcortex
 brainParts = {'Cortex', 'Subcortex'};
