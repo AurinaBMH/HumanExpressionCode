@@ -1,6 +1,12 @@
 % Select only cortical samples
 cd ('data/genes/processedData'); 
-load('MicroarrayDataWITHcustLessNoise82DistThresh2_CoordsAssigned.mat')
+%load('MicroarrayDataProbesUpdatedRNAseq360DistThresh2_CoordsAssigned.mat')
+load('MicroarrayDataProbesUpdatedRNAseq82DistThresh2_CoordsAssigned.mat') % this is better if attempting to 
+% visualise regions (only 34); 
+% or
+% load('MicroarrayDataProbesUpdatedRNAseq360DistThresh2_CoordsAssigned.mat')
+
+
 doNormalise = false;
 doNormalScale = false; 
 Lcortex = 1:34;
@@ -18,16 +24,26 @@ for s=1:6
     select = ismember(data(:,2), Lcortex);
     D{s} = expData(select==1,:);
     subjNr{s} = data(select==1,1);
+    R{s} = data(select==1,2);
  
 end
 
 expression = vertcat(D{1}, D{2}, D{3}, D{4}, D{5}, D{6}); 
 subjects = vertcat(subjNr{1}, subjNr{2}, subjNr{3}, subjNr{4}, subjNr{5}, subjNr{6}); 
+regions = vertcat(R{1}, R{2}, R{3}, R{4}, R{5}, R{6});
+uregions = unique(regions); 
 
 
 if doNormalScale
 expression = 2.^(expression); 
 end
+
+nice_cmap = [make_cmap('steelblue',50,30,0);flipud(make_cmap('orangered',50,30,0))];
+
+r = randi([1 100],1,34);
+%use_map = distinguishable_colors(length(r)); %,bg,func)
+%use_map = use_map(r,:);
+use_map = nice_cmap(r,:); 
 
 p = randperm(length(subjects)); 
 [W,score,~,~,explained] = pca(expression, 'NumComponents',4);
@@ -51,9 +67,22 @@ for s=1:length(C)
         A(s,:) = [.99 .87 .09]; % yellow
     end
 end
-
+% color according to region
+Samp = zeros(length(subjects),3); 
+for j=1:length(uregions)
+    ind = find(regions==uregions(j)); 
+    for in = 1:length(ind)
+    Samp(ind(in),:) = use_map(j,:);
+    end
+end
 
 figure; h = scatter(x,y,S,A,'filled','MarkerEdgeColor',[.55 .55 .55],'LineWidth',1.5); 
+set(gcf,'color','w');
+xlabel(sprintf('PC1, explains %d%% variance', round(explained(1))));
+ylabel(sprintf('PC2, explains %d%% variance', round(explained(2))));
+set(gca,'fontsize',15)
+
+figure; h = scatter(x,y,S,Samp,'filled','MarkerEdgeColor',[.55 .55 .55],'LineWidth',1.5); 
 set(gcf,'color','w');
 xlabel(sprintf('PC1, explains %d%% variance', round(explained(1))));
 ylabel(sprintf('PC2, explains %d%% variance', round(explained(2))));
