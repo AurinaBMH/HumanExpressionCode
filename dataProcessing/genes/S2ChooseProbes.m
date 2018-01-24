@@ -16,7 +16,7 @@
 % without cust probes.
 clear all;
 useCUSTprobes = false;
-probeSelection = 'RNAseq'; %{'Mean', 'Variance', 'LessNoise', 'Random', 'PC', 'RNAseq', DS};% probeSelection = {'Mean', 'Variance', 'LessNoise', 'Random', 'PC'};
+probeSelection = 'PC'; %{'Mean', 'Variance', 'LessNoise', 'Random', 'PC', 'RNAseq', DS};% probeSelection = {'Mean', 'Variance', 'LessNoise', 'Random', 'PC'};
 RNAseqThreshold = 0.2;
 signalThreshold = 0.5;% percentage of samples that a selected probe has expression levels that are higher than background
 rng shuffle % for selecting different seed for random probe selection
@@ -120,7 +120,9 @@ for subj = 1:nSub
                 
             elseif strcmp(probeSelection, 'PC')
                 %fprintf(1,'Performing probe selection using max PC\n');
-                measure = pca(expRepEntrezIDs,'Centered',false);
+                % substract the mean before doing pca
+                expRepEntrezIDsNOmean = expRepEntrezIDs-mean(expRepEntrezIDs); 
+                measure = pca(expRepEntrezIDsNOmean,'Centered',false);
                 % determine max PC loading
                 [MaxV, indMaxV] = max(measure(:,1));
                 
@@ -307,6 +309,6 @@ end
 if strcmp(probeSelection, 'RNAseq')
     save(sprintf('%s%s%dRNAthr%dnoisethr.mat', startFileName, probeSelection, RNAseqThreshold, signalThreshold), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes');
 else
-    save(sprintf('%s%s.mat', startFileName, probeSelection), 'expressionAll', 'probeInformation' , 'sampleInfo');
+    save(sprintf('%s%sNOmean.mat', startFileName, probeSelection), 'expressionAll', 'probeInformation' , 'sampleInfo');
 end
 cd ../../..
