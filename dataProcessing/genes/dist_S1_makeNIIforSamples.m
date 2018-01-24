@@ -26,7 +26,7 @@ for subject = subjects
     %------------------------------------------------------------------------------
     if strcmp(parcellation, 'aparcaseg')
         parcName = 'default_NativeAnat';
-        cd (parcName);
+        %cd (parcName);
         [hdr, data_parcel]=read('defaultparc_NativeAnat.nii');
         NumNodes = 82;
         LeftCortex = 1:34;
@@ -35,7 +35,7 @@ for subject = subjects
         RightSubcortex = 76:82;
     elseif strcmp(parcellation, 'cust100')
         parcName = 'custom100_NativeAnat';
-        cd (parcName);
+        %cd (parcName);
         [hdr, data_parcel]=read('customparc_NativeAnat.nii');
         NumNodes = 220;
         LeftCortex = 1:100;
@@ -44,7 +44,7 @@ for subject = subjects
         RightSubcortex = 211:220;
     elseif strcmp(parcellation, 'cust250')
         parcName = 'custom250_NativeAnat';
-        cd (parcName);
+        %cd (parcName);
         [hdr, data_parcel]=read('customparc_NativeAnat.nii');
         NumNodes = 530;
         LeftCortex = 1:250;
