@@ -41,7 +41,7 @@ load('MicroarrayDataProbesUpdatedLessNoise.mat')
 probes{2} = probeInformation; 
 expression{2} = vertcat(expressionAll{1}, expressionAll{2}, expressionAll{3}, expressionAll{4}, expressionAll{5},expressionAll{6}); 
 
-load('MicroarrayDataProbesUpdatedPC.mat')
+load('MicroarrayDataProbesUpdatedPCNOmean.mat')
 probes{3} = probeInformation; 
 expression{3} = vertcat(expressionAll{1}, expressionAll{2}, expressionAll{3}, expressionAll{4}, expressionAll{5},expressionAll{6}); 
 
