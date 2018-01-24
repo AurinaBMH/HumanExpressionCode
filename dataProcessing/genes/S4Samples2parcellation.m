@@ -17,11 +17,11 @@
 %------------------------------------------------------------------------------
 % choose if you want to use data with CUST probes
 clear all;
-useCUSTprobes = true;
+useCUSTprobes = false;
 % choose what type of probe selection to use, hemisphere, subject list, parcellations, threshols.
-probeSelections = {'Mean', 'Variance', 'LessNoise'};
-parcellations = {'cust100'}; %,'cust100', 'cust250', 'aparcaseg', HCP};
-distanceThreshold = 2; % first run with 40 for one probeSelection (will make a file that fits all)
+probeSelections = {'LessNoise'}; % {'Mean', 'Variance', 'LessNoise'};
+parcellations = {'aparcaseg'}; %,'cust100', 'cust250', 'aparcaseg', HCP};
+distanceThreshold = 5; % first run with 40 for one probeSelection (will make a file that fits all)
 % then run with 2 for all probe selections. 
 subjects = 1:6;
 
@@ -42,6 +42,7 @@ sides = {'left', 'right'};
 %------------------------------------------------------------------------------
 for parcellation = parcellations
     for t=1:length(probeSelections)
+        assignDistance = cell(length(subjects),1); 
         for subject = subjects
             cd ('data/genes/parcellations')
             subjectDir = sprintf('S0%d_H0351', subject);
@@ -102,8 +103,8 @@ for parcellation = parcellations
                 fprintf(1,'Using the data with CUST probes %s for %d\n', probeSelections{t}, subject)
                 startFileName = 'MicroarrayDataWITHcust';
             else
-                fprintf(1,'Using the data without CUST probes %s for %d\n', probeSelection{t}, subject)
-                startFileName = 'MicroarrayData';
+                fprintf(1,'Using the data without CUST probes %s for %d\n', probeSelections{t}, subject)
+                startFileName = 'MicroarrayDataProbesUpdated';
             end
             
             
@@ -160,15 +161,17 @@ for parcellation = parcellations
                     %------------------------------------------------------------------------------
                     % Salculate the distance between original and reassigned coordinate
                     %------------------------------------------------------------------------------
-                    assignDistance = zeros(size(coordsAssigned,1),1);
+                    %(size(coordsAssigned,1),1);
                     coordsNONassigned = zeros(size(coordsAssigned,1),3);
                     coordsToAssignAll = coords2assign;
                     
+                   % assignDistance{subject}.(side{1}).(brainPart{1}) = zeros(size(coordsAssigned,1),1); 
+                    
                     for j=1:size(coordsAssigned,1)
                         
-                        assignDistance(j,1) = pdist2(coordsAssigned(j,:), coords2assign(j,:));
+                        assignDistance{subject}.(side{1}).(brainPart{1})(j,1) = pdist2(coordsAssigned(j,:), coords2assign(j,:));
                         
-                        if assignDistance(j)>distanceThreshold
+                        if assignDistance{subject}.(side{1}).(brainPart{1})(j,1)>distanceThreshold
                             coordsNONassigned(j,:,:,:)=coords2assign(j,:,:,:);
                             coordsAssigned(j,:)=0;
                             coords2assign(j,:)=0;
@@ -315,7 +318,7 @@ for parcellation = parcellations
         %% save data for all subjects
         cd ('data/genes/processedData')
         if distanceThreshold < 35
-            save(sprintf('%s%s%dDistThresh%d_CoordsAssigned.mat', startFileName, probeSelections{t}, NumNodes, distanceThreshold), 'DataExpression', 'DataCoordinatesMRI', 'DataCoordinatesMNI', 'probeInformation');
+            save(sprintf('%s%s%dDistThresh%d_CoordsAssigned.mat', startFileName, probeSelections{t}, NumNodes, distanceThreshold), 'DataExpression', 'DataCoordinatesMRI', 'DataCoordinatesMNI', 'probeInformation', 'assignDistance');
         end
         cd ../../..
         

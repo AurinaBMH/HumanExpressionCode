@@ -12,8 +12,8 @@
 % separate according to sides
 clear all; 
 
-useCUSTprobes = true;
-probeSelections = {'Mean', 'Variance', 'LessNoise', 'Random', 'PC'}; 
+useCUSTprobes = false;
+probeSelections = {'LessNoise'}; %{'Mean', 'Variance', 'LessNoise', 'Random', 'PC'}; 
 sides = {'right', 'left'};
 % separate according to brain part: cortex/subcortex
 brainParts = {'Cortex', 'Subcortex'};
@@ -29,7 +29,7 @@ if useCUSTprobes
     startFileName = 'MicroarrayDataWITHcust';
 else
     fprintf(1,'Using the data without CUST probes\n')
-    startFileName = 'MicroarrayData';
+    startFileName = 'MicroarrayDataProbesUpdated';
 end
 
 % load data file
