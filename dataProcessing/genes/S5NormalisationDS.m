@@ -1,5 +1,6 @@
 %% Author: Aurina
 clear all; 
+close all; 
 %close all; 
 %Last modiffied: 2017-07-31
 %Last modiffied: 2017-08-01
@@ -8,20 +9,21 @@ clear all;
 %------------------------------------------------------------------------------
 % Choose options
 %------------------------------------------------------------------------------
-useCUSTprobes = true; % choose if you want to use data with CUST probes
-probeSelection = {'LessNoise'}; %{'Variance', 'Mean', 'LessNoise', 'PC','Random'};
-parcellation = 'aparcaseg';%, 'cust100', 'cust250'};
+useCUSTprobes = false; % choose if you want to use data with CUST probes
+probeSelection = {'RNAseq'}; %{'Variance', 'Mean', 'LessNoise', 'PC','Random'};
+parcellation = 'HCP';%, 'cust100', 'cust250'};
 distanceThreshold = 2; % first run 30, then with the final threshold 2
 onlyMultipleProbes = false; % it this is true, only genes that have multiple probes will be selected.
-correctDistance = false;
+correctDistance = true;
+resolution = 'ROI'; 
 calculateDS = true;
-percentDS = 5;
+percentDS = 100;
 distanceCorrection = 'Euclidean';
 coexpressionFor = 'all';
 Fit = {'removeMean'};
 doNormalise = true; 
 normMethod = 'scaledRobustSigmoid'; %'scaledRobustSigmoid';
-normaliseWhat = 'LcortexSubcortex'; %(LcortexSubcortex, wholeBrain, LRcortex, Lcortex)
+normaliseWhat = 'Lcortex'; %(LcortexSubcortex, wholeBrain, LRcortex, Lcortex)
 % choose Lcortex if want tnormalise samples assigned to left cortex separately;
 % choose LcortexSubcortex if want to normalise LEFT cortex + left subcortex together
 % choose wholeBrain if you want to normalise the whole brain.
@@ -35,6 +37,7 @@ options.normMethod = normMethod;
 options.percentDS = percentDS; 
 options.useCUSTprobes = useCUSTprobes; 
 options.doNormalise = doNormalise;
+options.resolution = resolution; 
 
 for p=probeSelection
     
@@ -88,7 +91,7 @@ options.subjects = subjects;
 if useCUSTprobes
     startFileName = 'MicroarrayDataWITHcust';
 else
-    startFileName = 'MicroarrayData';
+    startFileName = 'MicroarrayDataProbesUpdated';
 end
 
 cd ('data/genes/processedData');
@@ -326,7 +329,7 @@ if calculateDS
             fprintf(sprintf('%s distance correction is chosen\n', distanceCorrection))
             W = unique(expSampNormalisedAll(:,1));
             ROIs = expSampNormalisedAll(:,1);
-            [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect, distPlot] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance);
+            [expPlot, parcelCoexpression, Residuals, distExpVect, distPlot] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance, resolution);
         case 'separate'
             
             expPlotALL = zeros(max(nROIs),max(nROIs),max(subjects));
@@ -344,7 +347,7 @@ if calculateDS
                 W = unique(expSampNorm{sub}(:,1));
                 ROIs = expSampNorm{sub}(:,1);
                 
-                [expPlot, correctedCoexpression, parcelCoexpression, Residuals, distExpVect, distPlot] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance);
+                [expPlot, parcelCoexpression, Residuals, distExpVect, distPlot] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance);
                 expPlotALL(:,:,sub) = expPlot;
                 %expPlotALL2{sub} = expPlot;
                 correctedCoexpressionALL{sub} = correctedCoexpression;
