@@ -7,22 +7,22 @@ load('MicroarrayDataProbesUpdatedRNAseq82DistThresh2_CoordsAssigned.mat') % this
 % load('MicroarrayDataProbesUpdatedRNAseq360DistThresh2_CoordsAssigned.mat')
 
 
-doNormalise = false;
+doNormalise = true;
 doNormalScale = false; 
 Lcortex = 1:34;
 D = cell(6,1);
 subjNr = cell(6,1);
 
 for s=1:6
-    data = DataExpression{s};
-    subjNr{s} = data(:,2);
-    if doNormalise
-        expData = BF_NormalizeMatrix(data(:,3:end),'scaledRobustSigmoid');
-    else
-        expData = data(:,3:end);
-    end
+data = DataExpression{s}; 
     select = ismember(data(:,2), Lcortex);
-    D{s} = expData(select==1,:);
+    cortexData = data(select==1,3:end);
+    if doNormalise
+        expData = BF_NormalizeMatrix(cortexData,'maxmin');
+    else
+        expData = cortexData;
+    end
+    D{s} = expData; 
     subjNr{s} = data(select==1,1);
     R{s} = data(select==1,2);
  
