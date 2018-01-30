@@ -69,7 +69,7 @@ case 'exp_1_0'
 
     if ~suppressFigure
         figure('color','w'); box('on');
-        plot(xData,yData,'.k'); hold on; plot(xData,f_handle(xData),'xk');
+        plot(xData,yData,'.k'); hold on; plot(xData,f_handle(xData),'.r');
         title(sprintf('Fit exponential to %u points with eta = %.4g\n',length(xData),c.n),'interpreter','none')
     end
     fprintf(1,'Fit exponential with eta = %.4g\n',c.n);
