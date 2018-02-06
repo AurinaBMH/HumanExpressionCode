@@ -33,19 +33,19 @@ format compact
 percentage 
 
 % Load probes, selected using different methods
-load('MicroarrayDataProbesUpdatedMean.mat')
+load('MicroarrayDataProbesUpdatedMeannoQC.mat')
 probes{1} = probeInformation; 
 expression{1} = vertcat(expressionAll{1}, expressionAll{2}, expressionAll{3}, expressionAll{4}, expressionAll{5},expressionAll{6}); 
 
-load('MicroarrayDataProbesUpdatedLessNoise.mat')
+load('MicroarrayDataProbesUpdatedLessNoisenoQC.mat')
 probes{2} = probeInformation; 
 expression{2} = vertcat(expressionAll{1}, expressionAll{2}, expressionAll{3}, expressionAll{4}, expressionAll{5},expressionAll{6}); 
 
-load('MicroarrayDataProbesUpdatedPCNOmean.mat')
+load('MicroarrayDataProbesUpdatedPCnoQC.mat')
 probes{3} = probeInformation; 
 expression{3} = vertcat(expressionAll{1}, expressionAll{2}, expressionAll{3}, expressionAll{4}, expressionAll{5},expressionAll{6}); 
 
-load('MicroarrayDataProbesUpdatedDS.mat')
+load('MicroarrayDataProbesUpdatedDSnoQC.mat')
 probes{4} = probeInformation; 
 expression{4} = vertcat(expressionAll{1}, expressionAll{2}, expressionAll{3}, expressionAll{4}, expressionAll{5},expressionAll{6}); 
 
@@ -54,19 +54,19 @@ load('MicroarrayDataProbesUpdatedRNAseq2.000000e-01RNAthr5.000000e-01noisethr.ma
 probes{5} = probeInformation; 
 expression{5} = vertcat(expressionAll{1}, expressionAll{2}, expressionAll{3}, expressionAll{4}, expressionAll{5},expressionAll{6}); 
 
-load('MicroarrayDataProbesUpdatedRandom.mat')
+load('MicroarrayDataProbesUpdatedRandomnoQC.mat')
 probes{6} = probeInformation; 
 expression{6} = vertcat(expressionAll{1}, expressionAll{2}, expressionAll{3}, expressionAll{4}, expressionAll{5},expressionAll{6}); 
 
-load('MicroarrayDataProbesUpdatedRandom2.mat')
+load('MicroarrayDataProbesUpdatedRandom2noQC.mat')
 probes{7} = probeInformation; 
 expression{7} = vertcat(expressionAll{1}, expressionAll{2}, expressionAll{3}, expressionAll{4}, expressionAll{5},expressionAll{6}); 
 
-load('MicroarrayDataProbesUpdatedVariance.mat')
+load('MicroarrayDataProbesUpdatedVariancenoQC.mat')
 probes{8} = probeInformation; 
 expression{8} = vertcat(expressionAll{1}, expressionAll{2}, expressionAll{3}, expressionAll{4}, expressionAll{5},expressionAll{6}); 
 
-load('MicroarrayDataProbesUpdatedCV.mat')
+load('MicroarrayDataProbesUpdatedCVnoQC.mat')
 probes{9} = probeInformation; 
 expression{9} = vertcat(expressionAll{1}, expressionAll{2}, expressionAll{3}, expressionAll{4}, expressionAll{5},expressionAll{6}); 
 
@@ -141,3 +141,18 @@ xticks([1 2 3 4 5 6 7 8 9])
 xticklabels(tickNames); 
 yticks([1 2 3 4 5 6 7 8 9])
 yticklabels(tickNames); 
+
+RNAcorr = avCorr(:,5); 
+[valS, indS] = sort(RNAcorr); 
+namesS = tickNames(indS); 
+
+figure; set(gcf,'color','w'); 
+scatter([1:8], valS(1:8), 100, ...
+    'MarkerEdgeColor',[.55 .55 .55],...
+              'MarkerFaceColor',[1 .60 .40],...
+              'LineWidth',1.5); 
+ylim([0.5 1]); ylabel('Spearman correlation'); xlabel('Probe selection methods'); 
+title(sprintf('Correlation to probes selected based on highest correlation to RNA-seq (%d)', length(indRNA)))
+xticks([1 2 3 4 5 6 7 8])
+xticklabels(namesS); 
+set(gca,'fontsize',15)
