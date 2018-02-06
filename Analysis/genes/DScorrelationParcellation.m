@@ -3,14 +3,14 @@ clear all;
 cd ('data/genes/processedData');
 
 normMethod = 'scaledRobustSigmoid'; % '' for sigmoid; zscore for zscore;
-probeSelection = {'Mean'};
+probeSelection = {'LessNoise'};
 onlyMultipleProbes = false;
-percentDS = 5; 
-numNodes = [82, 220, 360]; 
+percentDS = 100; 
+numNodes = [82, 360]; 
 doNormalise = true; 
-numProbes = 3; %(2 or 3)
+%numProbes = 3; %(2 or 3)
 
-load(sprintf('IDgenes%dplus.mat', numProbes));
+%load(sprintf('IDgenes%dplus.mat', numProbes));
 DSscoresAll = cell(length(probeSelection),1);
 
 
@@ -36,21 +36,28 @@ for op=1:length(numNodes)
 end
 
 % make a plot
-sz=10; 
+sz=50; 
 figure; title ('Correlation between DS scores'); 
 set(gcf,'color','w');
-r = zeros(length(numNodes),length(numNodes)); 
-p = zeros(length(numNodes),length(numNodes)); 
-f=1; 
-for i=1:length(numNodes)
-    for j=i+1:length(numNodes)
-
-        subplot(2,length(numNodes),f); scatter(DSscoresAll{i}, DSscoresAll{j}, sz, 'filled');
-        [r(i,j),p(i,j)] = corr(DSscoresAll{i}, DSscoresAll{j}, 'type', 'Spearman'); 
-        xlabel(sprintf('DS for probes selected based on %d node parcellation', numNodes(i))); 
-        ylabel(sprintf('DS for probes selected based on %d node parcellation', numNodes(j)));
-        f=f+1; 
-    end
-end
+scatter(DSscoresAll{1}, DSscoresAll{2}, sz, 'MarkerEdgeColor',[0.45 0.45 0.45],...
+              'MarkerFaceColor',[.53 .83 .97]); 
+        [r,p] = corr(DSscoresAll{1}, DSscoresAll{2}, 'type', 'Spearman'); 
+        xlabel(sprintf('DS for probes selected based on %d node parcellation', numNodes(1))); 
+        ylabel(sprintf('DS for probes selected based on %d node parcellation', numNodes(2)));
+        
+        
+% r = zeros(length(numNodes),length(numNodes)); 
+% p = zeros(length(numNodes),length(numNodes)); 
+% f=1; 
+% for i=1:length(numNodes)
+%     for j=i+1:length(numNodes)
+% 
+%         subplot(2,length(numNodes),f); scatter(DSscoresAll{i}, DSscoresAll{j}, sz, 'filled');
+%         [r(i,j),p(i,j)] = corr(DSscoresAll{i}, DSscoresAll{j}, 'type', 'Spearman'); 
+%         xlabel(sprintf('DS for probes selected based on %d node parcellation', numNodes(i))); 
+%         ylabel(sprintf('DS for probes selected based on %d node parcellation', numNodes(j)));
+%         f=f+1; 
+%     end
+% end
 cd ../../..
 
