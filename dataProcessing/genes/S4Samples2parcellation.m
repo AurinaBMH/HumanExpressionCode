@@ -20,7 +20,7 @@ clear all;
 useCUSTprobes = false;
 % choose what type of probe selection to use, hemisphere, subject list, parcellations, threshols.
 probeSelections = {'RNAseq'}; % {'Mean', 'Variance', 'LessNoise'};
-parcellations = {'HCP'}; %,'cust100', 'cust250', 'aparcaseg', HCP};
+parcellations = {'cust100'}; %,'cust100', 'cust250', 'aparcaseg', HCP};
 distanceThreshold = 2; % first run with 40 for one probeSelection (will make a file that fits all)
 % then run with 2 for all probe selections. 
 subjects = 1:6;
