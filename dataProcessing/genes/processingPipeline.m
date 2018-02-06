@@ -22,7 +22,7 @@ close all;
 
 options.ExcludeCBandBS =  true;
 options.useCUSTprobes = false;
-options.updateProbes = true;
+options.updateProbes = 'reannotator'; %'Biomart', 'reannotator', 'no'; 
 
 S1_extractData(options)
 

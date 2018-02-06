@@ -85,7 +85,7 @@ else
 end
 
 cd ('data/genes/processedData');
-load(sprintf('%s%s%dDistThresh%dQQQ.mat', startFileName, p{1}, numNodes, distanceThreshold));
+load(sprintf('%s%s%dDistThresh%d.mat', startFileName, p{1}, numNodes, distanceThreshold));
 
 
 expressionSubjROI = cell(6,1);

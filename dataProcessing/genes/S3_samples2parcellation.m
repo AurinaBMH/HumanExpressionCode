@@ -25,7 +25,7 @@ fprintf('Separating samples according to side and structure\n')
 % load data file
 for t = 1:length(probeSelections)
     
-    FileName = sprintf('%s%sQQQ.mat',startFileName, probeSelections{t});
+    FileName = sprintf('%s%s.mat',startFileName, probeSelections{t});
     load(FileName);
     
     expressionSubjects = cell(6,1);
@@ -401,7 +401,7 @@ end
                         
                     elseif distanceThreshold > 35
                         
-                        save(sprintf('CoordsAssignedAll%dQQQ.mat', NumNodes), 'coordsAssignedALL');
+                        save(sprintf('CoordsAssignedAll%d.mat', NumNodes), 'coordsAssignedALL');
                         
                     end
                     % cd ../../..
@@ -412,7 +412,7 @@ end
                 %% save data for all subjects
                 cd ('data/genes/processedData')
                 if distanceThreshold < 35
-                    save(sprintf('%s%s%dDistThresh%dQQQ.mat', startFileName, probeSelections{t}, NumNodes, distanceThreshold), 'DataExpression', 'DataCoordinatesMRI', 'DataCoordinatesMNI', 'probeInformation', 'assignDistance', 'options');
+                    save(sprintf('%s%s%dDistThresh%d.mat', startFileName, probeSelections{t}, NumNodes, distanceThreshold), 'DataExpression', 'DataCoordinatesMRI', 'DataCoordinatesMNI', 'probeInformation', 'assignDistance', 'options');
                 end
                 cd ../../..
                 

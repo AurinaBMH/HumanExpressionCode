@@ -261,9 +261,9 @@ for subject=1:6
 end
 
 if strcmp(probeSelections, 'RNAseq')
-     save(sprintf('%s%sQQQ.mat', startFileName, probeSelections{1}), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes', 'options');
+     save(sprintf('%s%s.mat', startFileName, probeSelections{1}), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes', 'options');
    % save(sprintf('%s%s%dRNAthr%dnoisethr.mat', startFileName, probeSelections{1}, RNAseqThreshold, signalThreshold), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes', 'options');
 else
-    save(sprintf('%s%sQQQ.mat', startFileName, probeSelections{1}), 'expressionAll', 'probeInformation' , 'sampleInfo', 'options');
+    save(sprintf('%s%s.mat', startFileName, probeSelections{1}), 'expressionAll', 'probeInformation' , 'sampleInfo', 'options');
 end
 cd ../../..

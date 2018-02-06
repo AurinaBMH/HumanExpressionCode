@@ -28,7 +28,7 @@ else
     fprintf(1,'Brainstem and cerebellum samples will be INCLUDED\n')
 end
 
-if updateProbes
+if strcmp(updateProbes, 'reannotator') || strcmp(updateProbes, 'Biomart')
     fprintf(1,'Probe to gene assignment will be UPDATED\n')
 else
     fprintf(1,'Probe to gene assignment will NOT be UPDATED\n')
@@ -166,7 +166,7 @@ ProbeID(isnan(ProbeID)) = [];
     
 end
 
-if updateProbes
+if strcmp(updateProbes, 'Biomart')
     %------------------------------------------------------------------------------
     % Update probe to gene annotation based on latest data
     %------------------------------------------------------------------------------
@@ -210,6 +210,42 @@ if updateProbes
         DataTable.Expression{s,1} = DataTable.Expression{s,1}(INDold,:);
         DataTable.Noise{s,1} = DataTable.Noise{s,1}(INDold,:);
     end
+    
+elseif strcmp(updateProbes, 'reannotator')
+    load('reannotatedProbes.mat'); 
+    % if cust probes are to be excluded, test only Agilent to get the
+    % numbers.
+   if ~useCUSTprobes
+       
+       cust = strfind(hg38match.probeNames, 'CUST');
+       remInd = find(~cellfun(@isempty,cust));
+       hg38match(remInd,:) = [];
+       
+   end
+
+    % sumarise the information in numbers
+    nm = length(find(hg38match.compare==1));
+    fprintf(1,'%d probes are matching\n', nm)
+    nmm = length(find(hg38match.compare==0));
+    fprintf(1,'%d probes are mismatching\n', nmm)
+    nu = length(find(hg38match.compare==2));
+    fprintf(1,'%d probes are introduced with IDs\n', nu)
+    
+    % find probes that are in both lists and replace geneSymbol and entrezIDs
+    % with updated.
+    [probesSelect, INDold, INDnew] = intersect(ProbeName, hg38match.probeNames);
+    
+    ProbeName = ProbeName(INDold);
+    ProbeID = ProbeID(INDold);
+    EntrezID = hg38match.ID(INDnew);
+    GeneSymbol = hg38match.geneNames(INDnew);
+    
+    
+    for s=1:6
+        DataTable.Expression{s,1} = DataTable.Expression{s,1}(INDold,:);
+        DataTable.Noise{s,1} = DataTable.Noise{s,1}(INDold,:);
+    end
+  
     
 else
     % if chosen not to update probes, then remove ones with missing entrezIDs
@@ -256,6 +292,10 @@ cd ..
 cd ('processedData');
 
 fprintf(1,'Saving data to the file\n')
-save(sprintf('%sProbesUpdated.mat', startFileName), 'DataTable','DataTableProbe', 'Expressionall', 'Coordinatesall', 'StructureNamesall', 'MRIvoxCoordinatesAll', 'noiseall', 'options');
+if strcmp(updateProbes, 'reannotator') || strcmp(updateProbes, 'Biomart')
+save(sprintf('%sProbesUpdatedXXX.mat', startFileName), 'DataTable','DataTableProbe', 'Expressionall', 'Coordinatesall', 'StructureNamesall', 'MRIvoxCoordinatesAll', 'noiseall', 'options');
+else
+save(sprintf('%sXXX.mat', startFileName), 'DataTable','DataTableProbe', 'Expressionall', 'Coordinatesall', 'StructureNamesall', 'MRIvoxCoordinatesAll', 'noiseall', 'options');   
+end
 cd ../../..
 end
