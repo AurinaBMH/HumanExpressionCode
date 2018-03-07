@@ -1,7 +1,7 @@
 
 clear all; 
 cd ('data/genes/processedData')
-load('MicroarrayDataProbesUpdated.mat')
+load('MicroarrayDataWITHcustProbesUpdatedXXX.mat')
 % select genes that have multiple probes, so thay will be sub-selected for
 % comparison
 [v, ind] = unique(DataTableProbe.EntrezID{1});
@@ -31,6 +31,7 @@ percentage = (length(duplicate_value)/length(unique(DataTableProbe.EntrezID{1}))
 format compact
 %fprintf('%d genes have more than one probe\n', m); 
 percentage 
+
 
 % Load probes, selected using different methods
 load('MicroarrayDataProbesUpdatedMeannoQC.mat')

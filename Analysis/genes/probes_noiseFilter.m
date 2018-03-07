@@ -1,7 +1,7 @@
 clear all; close all; 
 
 cd ('data/genes/processedData')
-load('MicroarrayDataProbesUpdated.mat')
+load('MicroarrayDataWITHcustProbesUpdatedXXX.mat')
 % select genes that have multiple probes, so thay will be sub-selected for
 % comparison
 for j=1:2

@@ -1,5 +1,5 @@
 % function to select probe based on RNA seq values
-function [correlations, avgCorr, indProbe, genes] = selectProbeRNAseq(DataTable, EntrezID, indKeepProbes, threshold)
+function [correlations, avgCorr, indProbe, genes, overlapStructures] = selectProbeRNAseq(DataTable, EntrezID, indKeepProbes, threshold)
 
 numGenes = length(unique(EntrezID));
 genes = unique(EntrezID);

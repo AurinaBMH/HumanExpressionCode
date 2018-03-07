@@ -495,7 +495,8 @@ ProbeID(isnan(ProbeID)) = [];
 %------------------------------------------------------------------------------
 % load ncbi data
 fprintf(1,'Loading ncbi data\n')
-load('HomoSampiens_geneInfo20171111.mat'); 
+Homosapiens = importNCBIgenefile('Homo_sapiens_gene_info.txt');
+%load('HomoSampiens_geneInfo20171111.mat'); 
 
 [matches, GeneSymbol, GeneName, nrUpdated, checkEntrezID, MissingProbes] = checkGene(Homosapiens, GeneSymbol, GeneName, EntrezID); 
 

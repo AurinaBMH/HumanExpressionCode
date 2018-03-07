@@ -1,8 +1,13 @@
 % correlate variance and intensity for each probe - we expect negative
 % correlation
 close all; 
+clear all; 
+cd ('data/genes/processedData')
+load('MicroarrayDataWITHcustProbesUpdatedXXX.mat')
+
 % calculate
 doCV = false; 
+
 if doCV
     filterINT = 2; 
     nameLabel = 'Coeficient of variation'; 
@@ -28,7 +33,7 @@ end
 figure; scatter(I,V); xlabel('Intensity');ylabel(nameLabel); 
 
 [rho,pval] = corr(I',V', 'type', 'Spearman');
-[xThresholds,yMeans] = BF_PlotQuantiles(I,V,100,1,1); xlabel('Intensity');ylabel(nameLabel); 
+[xThresholds,yMeans] = BF_PlotQuantiles(I,V,500,0,1); xlabel('Intensity');ylabel(nameLabel); 
 
 
 % filetr out probes with average intensity lower than 3
@@ -72,5 +77,5 @@ for i=1:length(highIND)
 end
 figure; scatter(Ihigh,Vhigh); xlabel('Intensity');ylabel(nameLabel); 
 
-[rhoHIGH,pvalHIGH] = corr(Ihigh',Vhigh', 'type', 'Spearman');
+[rhoHIGH,pvalHIGH] = corr(Ihigh',Vhigh', 'type', 'Spearman')
 [xThresholds,yMeans] = BF_PlotQuantiles(Ihigh,Vhigh,200,0,1); xlabel('Intensity');ylabel(nameLabel); 

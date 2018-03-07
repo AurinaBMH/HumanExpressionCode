@@ -73,7 +73,8 @@ for gene = 1:length(EntrezID)
         % according to the main name or gene symbol.
         allData = sum(logical(matches(gene,:)));
         if allData == 1
-            nrUpdated(l) = EntrezID(gene);
+            nrUpdated(l,1) = EntrezID(gene);
+            nrUpdated(l,2) = gene; 
             l=l+1;
             if matches(gene,1)==1 && matches(gene,2)==0
                 

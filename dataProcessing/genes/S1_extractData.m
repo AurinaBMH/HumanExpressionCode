@@ -195,6 +195,9 @@ if strcmp(updateProbes, 'Biomart')
     fprintf(1,'%d probes are mismatching\n', nmm)
     nu = length(find(updatedMatching.compare==2));
     fprintf(1,'%d probes are introduced with IDs\n', nu)
+    nnu = length(find(updatedMatching.compare==3));
+    fprintf(1,'%d probes are not givenID in NCBI\n', nnu)
+    
     
     % find probes that are in both lists and replace geneSymbol and entrezIDs
     % with updated.
@@ -230,7 +233,16 @@ elseif strcmp(updateProbes, 'reannotator')
     fprintf(1,'%d probes are mismatching\n', nmm)
     nu = length(find(hg38match.compare==2));
     fprintf(1,'%d probes are introduced with IDs\n', nu)
+    nnu = length(find(hg38match.compare==3));
+    fprintf(1,'%d are not givenID in NCBI- remove\n', nnu)
     
+    indREM = hg38match.compare==3; 
+    hg38match(indREM,:) = []; 
+    
+    fprintf(1,'Removing probes not mapped to genes\n')
+    fprintf(1,'Removing %d irrelevant probes\n', length(indREM))
+    
+
     % find probes that are in both lists and replace geneSymbol and entrezIDs
     % with updated.
     [probesSelect, INDold, INDnew] = intersect(ProbeName, hg38match.probeNames);
@@ -239,6 +251,7 @@ elseif strcmp(updateProbes, 'reannotator')
     ProbeID = ProbeID(INDold);
     EntrezID = hg38match.ID(INDnew);
     GeneSymbol = hg38match.geneNames(INDnew);
+
     
     
     for s=1:6
@@ -247,10 +260,9 @@ elseif strcmp(updateProbes, 'reannotator')
     end
   
     
-else
+end
     % if chosen not to update probes, then remove ones with missing entrezIDs
-    fprintf(1,'Removing probes not mapped to genes\n')
-    fprintf(1,'Removing %d irrelevant probes\n', sum(isnan(EntrezID)))
+
     %------------------------------------------------------------------------------
     % Make a table from all the data
     %------------------------------------------------------------------------------
@@ -264,7 +276,8 @@ else
     GeneSymbol(isnan(EntrezID)) = [];
     ProbeID(isnan(EntrezID)) = [];
     EntrezID(isnan(EntrezID)) = [];
-end
+
+    fprintf(1,'%d unique genes\n', length(unique(EntrezID)))
 
 %------------------------------------------------------------------------------
 % Assign ProbeIDs, EntrezIDs and ProbeNames to Data cell.

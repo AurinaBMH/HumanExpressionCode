@@ -21,13 +21,13 @@ close all;
 
 
 options.ExcludeCBandBS =  true;
-options.useCUSTprobes = false;
+options.useCUSTprobes = true;
 options.updateProbes = 'reannotator'; %'Biomart', 'reannotator', 'no'; 
 
 S1_extractData(options)
 
-options.probeSelections = {'Variance'};
-options.parcellations = {'HCP'};
+options.probeSelections = {'LessNoise'};
+options.parcellations = {'aparcaseg'};
 options.signalThreshold = 0.5; 
 options.RNAseqThreshold = 0.2; 
 options.correctDistance = true; 

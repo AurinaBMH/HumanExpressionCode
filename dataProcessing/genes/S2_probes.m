@@ -5,8 +5,13 @@ function S2_probes(options)
 % percentage of samples that a selected probe has expression levels that are higher than background
 rng shuffle % for selecting different seed for random probe selection
 useCUSTprobes = options.useCUSTprobes;
-probeSelections = options.probeSelections; 
+probeSelections = options.probeSelections{1}; 
 signalThreshold = options.signalThreshold; 
+
+if strcmp(probeSelections, 'RNAseq') 
+RNAseqThreshold = options.RNAseqThreshold; 
+end
+
 %------------------------------------------------------------------------------
 % Load the data
 %------------------------------------------------------------------------------
@@ -15,12 +20,12 @@ cd ('data/genes/processedData');
 if useCUSTprobes
     fprintf(1,'Loading the data with CUST probes and assigning variables\n')
     
-    startFileName = 'MicroarrayDataWITHcust';
+    startFileName = 'MicroarrayDataWITHcustProbesUpdatedXXX';
 else
     fprintf(1,'Loading the data without CUST probes and assigning variables\n')
-    startFileName = 'MicroarrayDataProbesUpdated';
+    startFileName = 'MicroarrayDataProbesUpdatedXXX';
 end
-fprintf(1,sprintf('Probe selection based on %s is chosen\n', probeSelections{1}))
+fprintf(1,sprintf('Probe selection based on %s is chosen\n', probeSelections))
 load(sprintf('%s.mat', startFileName));
 
 cd ..
@@ -67,7 +72,7 @@ probeInformationALL.GeneSymbol = GeneSymbol;
 % if choosing probes based on RNAseq, then use data only from 1 subject
 if strcmp(probeSelections, 'RNAseq')
     
-    [correlations, avgCorr, indProbe, genes] = selectProbeRNAseq(DataTable, EntrezID, indKeepProbes, RNAseqThreshold);
+    [correlations, avgCorr, indProbe, genes, overlapStructures] = selectProbeRNAseq(DataTable, EntrezID, indKeepProbes, RNAseqThreshold);
     nSub = 1;
 elseif strcmp(probeSelections, 'DS')
     [indProbe, avCorr] = selectProbeDS(EntrezID, DataTable, indKeepProbes);
@@ -105,7 +110,7 @@ for subj = 1:nSub
                 [MaxV, indMaxV] = max(measure);
                 
                 
-            elseif strcmp(probeSelection, 'PC')
+            elseif strcmp(probeSelections, 'PC')
                 %fprintf(1,'Performing probe selection using max PC\n');
                 % substract the mean before doing pca
                 expRepEntrezIDsNOmean = expRepEntrezIDs-mean(expRepEntrezIDs); 
@@ -261,9 +266,9 @@ for subject=1:6
 end
 
 if strcmp(probeSelections, 'RNAseq')
-     save(sprintf('%s%s.mat', startFileName, probeSelections{1}), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes', 'options');
+     save(sprintf('%s%snoQC.mat', startFileName, probeSelections), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes', 'options');
    % save(sprintf('%s%s%dRNAthr%dnoisethr.mat', startFileName, probeSelections{1}, RNAseqThreshold, signalThreshold), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes', 'options');
 else
-    save(sprintf('%s%s.mat', startFileName, probeSelections{1}), 'expressionAll', 'probeInformation' , 'sampleInfo', 'options');
+    save(sprintf('%s%s.mat', startFileName, probeSelections), 'expressionAll', 'probeInformation' , 'sampleInfo', 'options');
 end
 cd ../../..

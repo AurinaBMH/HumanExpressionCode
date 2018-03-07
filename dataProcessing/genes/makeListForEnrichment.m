@@ -1,11 +1,85 @@
 % make a list of genes to test for enrichment. 
 % we're interested if genes selected for the analysis using RNAseq are
 % enriched in something
+
+% import data
 clear all; 
-cd ('data/genes/processedData');
-load('MicroarrayDataProbesUpdated.mat')
-load('MicroarrayDataProbesUpdatedRNAseq.mat')%- %last version kept only genes that were above cackground (lessnoise)
-% and were correlated with RNAseq >0.3
+cd ('data/genes/processedData')
+load('MicroarrayDataWITHcustProbesUpdatedXXX.mat')
+
+% remove CUST probes because they can't be used in the enrichment in
+% ermineJ
+probeName = DataTableProbe.ProbeName{1};
+entrezID = DataTableProbe.EntrezID{1}; 
+% 
+% cust = strfind(probeName, 'CUST');
+% remInd = find(~cellfun(@isempty,cust));
+% 
+% probeName(remInd) = []; 
+% entrezID(remInd) = []; 
+% noiseall(remInd,:) = []; 
+
+% keep one probe per gene - doesn't matter the rule - all should represent
+% the same gene; 
+
+%probeList = probeName(uind); 
+%noiseList = noiseall(uind,:); 
+
+% do QC
+signalLevel = sum(noiseall,2)./size(noiseall,2);
+indKeepProbes = find(signalLevel>=0.5);
+indRemProbes = find(signalLevel<0.5);
+
+geneList = zeros(size(noiseall,1),2); 
+geneList(:,1) = entrezID; 
+geneList(indKeepProbes,2) = 1; 
+geneList(indRemProbes,2) = 0.0001; 
+
+% find unique genes and keep one value per gene
+[ugenes, uind] = unique(entrezID); 
+
+geneList2 = geneList(uind,:); 
+T = table(geneList2(:,1), geneList2(:,2)); 
+T.Properties.VariableNames = {'GeneEntrezID' 'Score'}; 
+
+writetable(T, 'QCprobes_enrichment.txt', 'Delimiter', '\t'); 
+
+
+% probeList(indKeepProbes,2) = {1}; 
+% probeList(indRemProbes,2) = {0.0001}; 
+% 
+% % keep one probe per gene
+% 
+% 
+% 
+% T = table(probeList(:,1), probeList(:,2)); 
+% T.Properties.VariableNames = {'Probe' 'Score'}; 
+% 
+% % save table
+% writetable(T, 'QCprobes_enrichment.txt', 'Delimiter', '\t'); 
+% 
+% 
+% 
+% 
+% 
+% 
+% 
+% 
+% 
+%     fprintf(1,'%d CUST probes removed\n', length(remInd))
+%     DataTableProbe.ProbeName{1}(remInd) = {NaN};
+%     DataTableProbe.ProbeID{1}(remInd) = NaN;
+%     
+% probeName = DataTableProbe.ProbeName{1}; 
+% probeName(remInd) = [];
+% 
+% entrezID = DataTableProbe.EntrezID{1}; 
+% entrezID(remInd) = []; 
+% 
+
+
+
+
 
 %[genes, indGenes] = unique(DataTableProbe.EntrezID{1}); 
 %listID = DataTableProbe.EntrezID{1}(indGenes); 

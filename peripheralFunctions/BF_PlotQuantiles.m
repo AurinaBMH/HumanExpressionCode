@@ -35,19 +35,19 @@ yStds = arrayfun(@(x)std(yData(xData>=xThresholds(x) & xData < xThresholds(x+1))
 if makeNewFigure
     f = figure('color','w'); box('on'); hold on
 end
-theColor = [0.9100    0.4100    0.1700];
+theColor = [.59 .87 .82];
 theStyle = '-';
 theLineWidth = 1;
 
 if alsoScatter
-    plot(xData,yData,'o', 'MarkerFaceColor', [.7 .7 .7], 'MarkerEdgeColor', [.45 .45 .45]);
+    plot(xData,yData,'o', 'MarkerFaceColor', [.7 .7 .7], 'MarkerEdgeColor', [.6 .6 .6]);
 end
 
 for k = 1:numThresholds-1
-    plot(xThresholds(k:k+1),ones(2,1)*yMeans(k),'LineStyle',theStyle,'LineWidth',theLineWidth,'Color',theColor)
-    %plot(xThresholds(k:k+1),ones(2,1)*(yMeans(k)+yStds(k)),'LineStyle','--','LineWidth',theLineWidth,'Color',theColor)
-    %plot(xThresholds(k:k+1),ones(2,1)*(yMeans(k)-yStds(k)),'LineStyle','--','LineWidth',theLineWidth,'Color',theColor)
-    plot(mean(xThresholds(k:k+1)),yMeans(k),'.','MarkerSize',15,'LineStyle',theStyle,'LineWidth',theLineWidth,'Color',theColor)
+    plot(xThresholds(k:k+1),ones(2,1)*yMeans(k),'LineStyle',theStyle,'LineWidth',theLineWidth,'Color', [.6 .6 .6]);
+    %plot(xThresholds(k:k+1),ones(2,1)*(yMeans(k)+yStds(k)),'LineStyle','--','LineWidth',theLineWidth,'MarkerFaceColor', [.59 .87 .82], 'MarkerEdgeColor', [.6 .6 .6])
+    %plot(xThresholds(k:k+1),ones(2,1)*(yMeans(k)-yStds(k)),'LineStyle','--','LineWidth',theLineWidth,'MarkerFaceColor', [.59 .87 .82], 'MarkerEdgeColor', [.6 .6 .6])
+    plot(mean(xThresholds(k:k+1)),yMeans(k),'o','MarkerSize',8,'LineStyle',theStyle,'LineWidth',theLineWidth,'MarkerFaceColor', [.59 .87 .82], 'MarkerEdgeColor', [.6 .6 .6]); %z'Color',theColor)
 end
 
 end
