@@ -26,7 +26,7 @@ options.updateProbes = 'reannotator'; %'Biomart', 'reannotator', 'no';
 
 S1_extractData(options)
 
-options.probeSelections = {'LessNoise'};
+options.probeSelections = {'RNAseq'};
 options.parcellations = {'aparcaseg'};
 options.signalThreshold = 0.5; 
 options.RNAseqThreshold = 0.2; 

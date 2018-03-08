@@ -1,14 +1,15 @@
 % Select only cortical samples
+clear all; 
 cd ('data/genes/processedData'); 
 %load('MicroarrayDataProbesUpdatedRNAseq360DistThresh2_CoordsAssigned.mat')
-load('MicroarrayDataProbesUpdatedRNAseq82DistThresh2_CoordsAssigned.mat') % this is better if attempting to 
+load('MicroarrayDataWITHcustProbesUpdatedXXXRNAseq82DistThresh2.mat') % this is better if attempting to 
 % visualise regions (only 34); 
 % or
 % load('MicroarrayDataProbesUpdatedRNAseq360DistThresh2_CoordsAssigned.mat')
 
-
 doNormalise = true;
 doNormalScale = false; 
+whatNormalisation = 'scaledRobustSigmoid'; 
 Lcortex = 1:34;
 D = cell(6,1);
 subjNr = cell(6,1);
@@ -18,7 +19,7 @@ data = DataExpression{s};
     select = ismember(data(:,2), Lcortex);
     cortexData = data(select==1,3:end);
     if doNormalise
-        expData = BF_NormalizeMatrix(cortexData,'maxmin');
+        expData = BF_NormalizeMatrix(cortexData,whatNormalisation);
     else
         expData = cortexData;
     end
@@ -68,31 +69,33 @@ for s=1:length(C)
     end
 end
 % color according to region
-Samp = zeros(length(subjects),3); 
-for j=1:length(uregions)
-    ind = find(regions==uregions(j)); 
-    for in = 1:length(ind)
-    Samp(ind(in),:) = use_map(j,:);
-    end
-end
+% Samp = zeros(length(subjects),3); 
+% for j=1:length(uregions)
+%     ind = find(regions==uregions(j)); 
+%     for in = 1:length(ind)
+%     Samp(ind(in),:) = use_map(j,:);
+%     end
+% end
 
 figure; h = scatter(x,y,S,A,'filled','MarkerEdgeColor',[.55 .55 .55],'LineWidth',1.5); 
 set(gcf,'color','w');
 xlabel(sprintf('PC1, explains %d%% variance', round(explained(1))));
 ylabel(sprintf('PC2, explains %d%% variance', round(explained(2))));
 set(gca,'fontsize',15)
+title(whatNormalisation)
 
-figure; h = scatter(x,y,S,Samp,'filled','MarkerEdgeColor',[.55 .55 .55],'LineWidth',1.5); 
-set(gcf,'color','w');
-xlabel(sprintf('PC1, explains %d%% variance', round(explained(1))));
-ylabel(sprintf('PC2, explains %d%% variance', round(explained(2))));
-set(gca,'fontsize',15)
+% figure; h = scatter(x,y,S,Samp,'filled','MarkerEdgeColor',[.55 .55 .55],'LineWidth',1.5); 
+% set(gcf,'color','w');
+% xlabel(sprintf('PC1, explains %d%% variance', round(explained(1))));
+% ylabel(sprintf('PC2, explains %d%% variance', round(explained(2))));
+% set(gca,'fontsize',15)
 
-figure; h = scatter3(x,y,z,S,A,'filled','MarkerEdgeColor',[.7 .7 .7],'LineWidth',1.5); 
-xlabel(sprintf('PC1, explains %d%% variance', round(explained(1))));
-ylabel(sprintf('PC2, explains %d%% variance', round(explained(2))));
-zlabel(sprintf('PC3, explains %d%% variance', round(explained(3))));
-set(gca,'fontsize',15)
+% figure; h = scatter3(x,y,z,S,A,'filled','MarkerEdgeColor',[.7 .7 .7],'LineWidth',1.5); 
+% xlabel(sprintf('PC1, explains %d%% variance', round(explained(1))));
+% ylabel(sprintf('PC2, explains %d%% variance', round(explained(2))));
+% zlabel(sprintf('PC3, explains %d%% variance', round(explained(3))));
+% set(gca,'fontsize',15)
+
 % on normal scaled data
 % [W,score,~,~,explained] = pca(expression2); %score=score'; W=W';
 % x = score(:,1); y = score(:,2); z = score(:,3); 

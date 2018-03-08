@@ -2,8 +2,11 @@ function S3_samples2parcellation(options)
 
 cd ('data/genes/processedData')
 
-useCUSTprobes = options.useCUSTprobes;
+
 probeSelections = options.probeSelections;
+parcellations = options.parcellations;
+useCUSTprobes = options.useCUSTprobes;
+distanceThreshold = options.distanceThreshold;
 
 sides = {'right', 'left'};
 % separate according to brain part: cortex/subcortex
@@ -16,7 +19,7 @@ subjects = 1:6;
 
 if useCUSTprobes
     fprintf(1,'Using the data with CUST probes\n')
-    startFileName = 'MicroarrayDataWITHcust';
+    startFileName = 'MicroarrayDataWITHcustProbesUpdatedXXX';
 else
     fprintf(1,'Using the data without CUST probes\n')
     startFileName = 'MicroarrayDataProbesUpdated';
@@ -113,11 +116,6 @@ end
         %------------------------------------------------------------------------------
         % assign samples to parcellation
         %------------------------------------------------------------------------------
-        useCUSTprobes = options.useCUSTprobes;
-        probeSelections = options.probeSelections;
-        parcellations = options.parcellations;
-        distanceThreshold = options.distanceThreshold;
-
         
         %------------------------------------------------------------------------------
         % Create variables to save data in
@@ -195,10 +193,8 @@ end
                     
                     if useCUSTprobes
                         fprintf(1,'Using the data with CUST probes %s for %d\n', probeSelections{t}, subject)
-                        startFileName = 'MicroarrayDataWITHcust';
                     else
                         fprintf(1,'Using the data without CUST probes %s for %d\n', probeSelections{t}, subject)
-                        startFileName = 'MicroarrayDataProbesUpdated';
                     end
                     
                     
@@ -213,7 +209,7 @@ end
                             
                             if distanceThreshold < 35
                                 
-                                load(sprintf('CoordsAssignedAll%dQQQ.mat', NumNodes));
+                                load(sprintf('CoordsAssignedAll%d.mat', NumNodes));
                                 
                             end
                             %------------------------------------------------------------------------------
