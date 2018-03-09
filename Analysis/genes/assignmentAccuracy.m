@@ -17,19 +17,17 @@
 %------------------------------------------------------------------------------
 % choose if you want to use data with CUST probes
 clear all;
-useCUSTprobes = false;
 % choose what type of probe selection to use, hemisphere, subject list, parcellations, threshols.
-probeSelections = {'RNAseq'}; % {'Mean', 'Variance', 'LessNoise'};
-parcellations = {'aparcaseg'}; %,'cust100', 'cust250', 'aparcaseg', HCP};
-distanceThreshold = 35; % first run with 40 for one probeSelection (will make a file that fits all)
+distanceThreshold = 2; % first run with 40 for one probeSelection (will make a file that fits all)
 % then run with 2 for all probe selections.
 cd ('data/genes/processedData')
-load('MicroarrayDataProbesUpdatedRNAseq.mat')
+load('MicroarrayDataWITHcustProbesUpdatedXXXRNAseq.mat')
 [~, ~, parcelLabels] = xlsread('82parcelLabels.xlsx','Sheet1');
 parcelLabels(cellfun(@(x) ~isempty(x) && isnumeric(x) && isnan(x),parcelLabels)) = {''};
 subjects = 1:6;
 out = cell(6,1);
-samplesLR = cell(6,1);
+samplesLR = cell(6,2);
+coordinatesLR = cell(6,2);
 distLR = cell(6,1);
 assignDistance = cell(6,1); 
 cd ../../..
@@ -85,14 +83,16 @@ for subject = subjects
     
     % gest structure names for these selected
     samplesLR{subject,1} = sampleInfo{subject}.StructureNames(indL);
+    coordinatesLR{subject,1} = sampleInfo{subject}.MMCoordinates(indL,:); 
     distLR{subject,1} = assignDistance{subject}(indL);
     samplesLR{subject,2} = sampleInfo{subject}.StructureNames(indR);
+    coordinatesLR{subject,2} = sampleInfo{subject}.MMCoordinates(indR,:); 
     distLR{subject,2} = assignDistance{subject}(indR);
     
     % find samples with assignment distance >2 and compare their labels and
     % parcellation ID
     
-    indCheck = find(assignDistance{subject}>2);
+    indCheck = find(assignDistance{subject}>distanceThreshold);
     % get their percel
     parcelLabel = intensity_all(indCheck);
     % structure name
@@ -108,7 +108,8 @@ for subject = subjects
 end
 
 
-
+k=1; 
+ok=1; 
 for p=1:2
     m=0;
     if p==1
@@ -119,8 +120,16 @@ for p=1:2
     for i=1:6
         % sheck how many right samples are assigned to left
         for j=1:size(samplesLR{i,p},1)
-            if strfind(samplesLR{i,p}{j}, side)
+            isMistake = strfind(samplesLR{i,p}{j}, side); 
+            if isMistake
+    coordsLR(k,:) = coordinatesLR{i,p}(j,:); 
+    sampleName{k,1} = samplesLR{i,p}{j}; 
+                k=k+1; 
                 m=m+1;
+            else
+                coordsLRok(ok,:) = coordinatesLR{i,p}(j,:); 
+                ok = ok+1; 
+                
             end
         end
         

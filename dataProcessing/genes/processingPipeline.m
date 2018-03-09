@@ -23,9 +23,6 @@ close all;
 options.ExcludeCBandBS =  true;
 options.useCUSTprobes = true;
 options.updateProbes = 'reannotator'; %'Biomart', 'reannotator', 'no'; 
-
-S1_extractData(options)
-
 options.probeSelections = {'RNAseq'};
 options.parcellations = {'aparcaseg'};
 options.signalThreshold = 0.5; 
@@ -43,7 +40,7 @@ options.percentDS =  10;
 options.doNormalise = true;
 options.resolution = 'ROI'; 
 
-
+S1_extractData(options)
 S2_probes(options)
 % for each parcellation first run with options.distanceThreshold = 40; 
 options.distanceThreshold = 40;

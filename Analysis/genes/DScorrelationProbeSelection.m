@@ -1,21 +1,47 @@
 clear all; 
 
 cd ('data/genes/processedData');
+load('MicroarrayDataWITHcustProbesUpdatedXXX.mat')
 
-normMethod = 'scaledRobustSigmoid'; % '' for sigmoid; zscore for zscore;
+options.ExcludeCBandBS =  true;
+options.useCUSTprobes = true;
+options.updateProbes = 'reannotator'; %'Biomart', 'reannotator', 'no'; 
+options.probeSelections = {'RNAseq'};
+options.parcellations = {'cust100'};
+options.signalThreshold = 0.5; 
+options.RNAseqThreshold = 0.2; 
+options.correctDistance = true; 
+options.onlyMultipleProbes = true; 
+options.calculateDS = true;
+options.distanceCorrection = 'Euclidean'; 
+options.coexpressionFor = 'all';
+options.Fit = {'removeMean'};
+options.distanceThreshold = 2; % first run 30, then with the final threshold 2
+options.normaliseWhat = 'Lcortex';
+options.normMethod = 'scaledRobustSigmoid'; 
+options.percentDS =  10;
+options.doNormalise = true;
+options.resolution = 'ROI'; 
+
+normMethod = options.normMethod; % '' for sigmoid; zscore for zscore;
 probeSelection = {'Variance', 'LessNoise'};
 onlyMultipleProbes = true; 
 numNodes = 360; 
-percentDS = 100; 
-doNormalise = true; 
-
-load('MicroarrayDataProbesUpdated.mat')
+percentDS = options.percentDS; 
+doNormalise = options.doNormalise;
+normaliseWhat = options.normaliseWhat; 
 % select genes that have multiple probes, so thay will be sub-selected for
 % comparison
-[v, ind] = unique(DataTableProbe.EntrezID{1});
+signalLevel = sum(noiseall,2)./size(noiseall,2);
+indKeepProbes = find(signalLevel>=options.signalThreshold);
 
-duplicate_ind = setdiff(1:size(DataTableProbe.EntrezID{1}, 1), ind);
-duplicate_value = unique(DataTableProbe.EntrezID{1}(duplicate_ind));
+% sduplicated values calculated only on those probes that pass QC
+% threshold;
+[v, ind] = unique(DataTableProbe.EntrezID{1}(indKeepProbes));
+duplicate_ind = setdiff(1:size(DataTableProbe.EntrezID{1}(indKeepProbes), 1), ind);
+entrezSelected = DataTableProbe.EntrezID{1}(indKeepProbes);
+duplicate_value = unique(entrezSelected(duplicate_ind));
+
 % numProbes = 3; %(2 or 3)
 % 
 % load(sprintf('IDgenes%dplus.mat', numProbes));
@@ -23,15 +49,16 @@ duplicate_value = unique(DataTableProbe.EntrezID{1}(duplicate_ind));
 %ind = intersect(probeInformation.EntrezID, duplicate_value); 
 
 for op=1:length(probeSelection)
-    load(sprintf('%dDS%d%s%s%d.mat', percentDS, numNodes, normMethod, probeSelection{op}, doNormalise)) % - generated using S5 script (probes chosen based on variance)
+    load(sprintf('%dDS%d%s%s%d%s', percentDS, numNodes, normMethod, probeSelection{op}, doNormalise, normaliseWhat)) % - generated using S5 script (probes chosen based on variance)
     % reorder entrez IDs for each probe selection
     %[entrezIDs,order] = sort(probeInformation.EntrezID);
    % DSone = DS(order); 
+   [genesMultiple, keep] = intersect(probeInformation.EntrezID, duplicate_value);
     DS = probeInformation.DS; 
     if onlyMultipleProbes
         % find genes with multiple probes in the reordered
         % version and sub-select them. 
-    [~, keep] = intersect(probeInformation.EntrezID, duplicate_value);
+    %[~, keep] = intersect(probeInformation.EntrezID, duplicate_value);
     DSscoresAll{op} = DS(keep); 
     
     else

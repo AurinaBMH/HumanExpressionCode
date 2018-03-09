@@ -27,11 +27,11 @@ normaliseWhat = options.normaliseWhat;
 % choose LcortexSubcortex if want to normalise LEFT cortex + left subcortex together
 % choose wholeBrain if you want to normalise the whole brain.
 % choose LRcortex if you want to normalise left cortex + right cortex.
-
+optionsSave = options; 
 
 for p=probeSelection
     
-    options.probeSelection = p; 
+    %options.probeSelection = p; 
 %------------------------------------------------------------------------------
 % Define number of subjects and parcellation details based on choises
 %------------------------------------------------------------------------------
@@ -77,11 +77,11 @@ switch normaliseWhat
         nROIs = [LeftCortex,RightCortex];
 
 end
-options.subjects = subjects;
+%options.subjects = subjects;
 if useCUSTprobes
-    startFileName = 'MicroarrayDataWITHcust';
+    startFileName = 'MicroarrayDataWITHcustProbesUpdatedXXX';
 else
-    startFileName = 'MicroarrayDataProbesUpdated';
+    startFileName = 'MicroarrayDataProbesUpdatedXXX';
 end
 
 cd ('data/genes/processedData');
@@ -95,8 +95,8 @@ expSampNorm = cell(6,1);
 expSample = cell(6,1);
 
 entrezIDs = probeInformation.EntrezID;
-load('IDgenes2plus.mat');
-[~, keep] = intersect(entrezIDs, IDgene);
+%load('IDgenes2plus.mat');
+%[~, keep] = intersect(entrezIDs, IDgene);
 %----------------------------------------------------------------------------------
 % Normalise data for each subject separately
 % Do differential stability calculation:
@@ -352,7 +352,7 @@ end
 SampleCoordinates = sortrows(combinedCoord,1); 
 SampleGeneExpression = sortrows(expSampNormalisedAll,1); 
 %save(sprintf('DSnew%s', p{1}), 'DS', 'averageCoexpression', 'DSProbeTable', 'expSampNormalisedAll', 'probeInformation'); 
-save(sprintf('%dDS%d%s%s%d%s', percentDS, numNodes, normMethod, p{1}, doNormalise, normaliseWhat), 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'options', 'averageCoexpression'); 
+save(sprintf('%dDS%d%s%s%d%s', percentDS, numNodes, normMethod, p{1}, doNormalise, normaliseWhat), 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'optionsSave', 'averageCoexpression'); 
 %save(sprintf('DSnew%s%s%dBEN', normMethod, p{1}, doNormalise), 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'options'); 
 cd ../../..
 end
