@@ -52,7 +52,7 @@ for j=1:2
             t=r(:);
             t(isnan(t)) = [];
             
-            corVal(i,j) = mean(t);
+            corVal(i,j) = median(t);
             
             corVal(i,j) = mean(t);
 
@@ -61,4 +61,4 @@ for j=1:2
     end
 end
 
-[p,h,stats] = signrank(corVal(:,1),corVal(:,2));
+[p,h,stats] = ranksum(corVal(:,1),corVal(:,2));
