@@ -13,7 +13,7 @@ useCUSTprobes = options.useCUSTprobes;  % choose if you want to use data with CU
 probeSelection = options.probeSelections; 
 parcellation = options.parcellations; 
 distanceThreshold = options.distanceThreshold; 
-correctDistance = options.distanceCorrection; 
+correctDistance = options.correctDistance; 
 resolution = options.resolution; 
 calculateDS = options.calculateDS; 
 percentDS = options.percentDS; 
@@ -319,7 +319,9 @@ if calculateDS
             fprintf(sprintf('%s distance correction is chosen\n', distanceCorrection))
             W = unique(expSampNormalisedAll(:,1));
             ROIs = expSampNormalisedAll(:,1);
-            [expPlot, parcelCoexpression, Residuals, distExpVect, distPlot] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance, resolution);
+            
+           [averageCoexpression, parcelCoexpression, correctedCoexpression, Residuals, distExpVect, averageDistance] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance, resolution);
+           
         case 'separate'
             
             expPlotALL = zeros(max(nROIs),max(nROIs),max(subjects));
@@ -337,23 +339,30 @@ if calculateDS
                 W = unique(expSampNorm{sub}(:,1));
                 ROIs = expSampNorm{sub}(:,1);
                 
-                [expPlot, parcelCoexpression, Residuals, distExpVect, distPlot] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance);
+                [expPlot, parcelCoexpression, correctedCoexpression, Residuals, distExpVect, averageDistance] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance);
                 expPlotALL(:,:,sub) = expPlot;
                 %expPlotALL2{sub} = expPlot;
                 correctedCoexpressionALL{sub} = correctedCoexpression;
                 parcelCoexpressionALL{sub} = parcelCoexpression;
                 
             end
+            averageCoexpression = nanmean(expPlotALL,3);
     end
     
-    averageCoexpression = nanmean(expPlot,3);
+    
     probeInformation.DS = DS';
 end
 SampleCoordinates = sortrows(combinedCoord,1); 
 SampleGeneExpression = sortrows(expSampNormalisedAll,1); 
 %save(sprintf('DSnew%s', p{1}), 'DS', 'averageCoexpression', 'DSProbeTable', 'expSampNormalisedAll', 'probeInformation'); 
-save(sprintf('%dDS%d%s%s%d%s', percentDS, numNodes, normMethod, p{1}, doNormalise, normaliseWhat), 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'optionsSave', 'averageCoexpression'); 
-%save(sprintf('DSnew%s%s%dBEN', normMethod, p{1}, doNormalise), 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'options'); 
+if correctDistance
+save(sprintf('%dDS%d%s%s%d%s_%s_distCorr%s.mat', percentDS, numNodes, normMethod, p{1}, doNormalise, normaliseWhat, resolution), 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'optionsSave', 'averageCoexpression', 'averageDistance'); 
+fprintf('saving to file1')
+elseif ~correctDistance
+save(sprintf('%dDS%d%s%s%d%s_%s_NOdistCorr.mat', percentDS, numNodes, normMethod, p{1}, doNormalise, normaliseWhat, resolution), 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'optionsSave', 'averageCoexpression', 'averageDistance');     
+fprintf('saving to file2')
+end
+%save(sprintf('DSnew%s%s%dBEN', normMethod, p{1}, doNormalise), 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'options');
 cd ../../..
 end
 %figure; imagesc(expPlotMNI); caxis([-1 1]); colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]); title('Average coexpression')

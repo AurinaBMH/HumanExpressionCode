@@ -1,15 +1,14 @@
-function [expPlot, parcelCoexpression, Residuals, distExpVect, distPlot] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance, resolution)
+function [expPlot, parcelCoexpression, correctedCoexpression, Residuals, distExpVect, distPlot] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance, resolution)
 
 %sampleDistances = maskHalf(sampleDistances);
-
-        selectedGenesN = selectedGenes(:,DSvalues(:,1)); % take genes with highest DS values
+selectedGenesN = selectedGenes(:,DSvalues(:,1)); % take genes with highest DS values
+switch resolution
+    case 'sample'
+        
         sampleCoexpression = corr(selectedGenesN', 'type', 'Spearman'); % calculate sample-sample coexpression
         %sampleCoexpression = maskHalf(sampleCoexpression);
         
         sampleCoexpression(logical(eye(size(sampleCoexpression)))) = NaN; % replace diagonal with NaN
-
-switch resolution
-    case 'sample'
         distExpVect(:,1) = sampleDistances(:); % make a vector for distances
         distExpVect(:,2) = sampleCoexpression(:); % make a vector for coexpression values
         distExpVect(any(isnan(distExpVect), 2), :) = [];
@@ -22,32 +21,52 @@ switch resolution
         figure; imagesc(sampleCoexpression); caxis([-1,1]);title('Sample-sample coexpression');
         colormap([flipud(BF_getcmap('blues',9));[1 1 1]; BF_getcmap('reds',9)]);
     case 'ROI'
-        [sROIs, ind] = sort(ROIs);
-        coexpressionSorted = sampleCoexpression(ind, ind);
-        distancesSorted = sampleDistances(ind, ind); 
+        parcelExpression = zeros(length(W), size(selectedGenesN,2));
+        for sub=1:length(W)
+            
+            A = ROIs == W(sub);
+            if length(find(A))>1
+                parcelExpression(sub,:) = nanmean(selectedGenesN(A==1,:));
+            else
+                parcelExpression(sub,:) = selectedGenesN(A==1,:);
+            end
+            
+        end
         
-        parcelCoexpression = zeros(length(W),length(W));
+        
+        [sROIs, ind] = sort(ROIs);
+        distancesSorted = sampleDistances(ind, ind);
         parcelDistances = zeros(length(W),length(W));
-
-
+        
         for sub=1:length(W)
             for j=1:length(W)
                 
                 A = sROIs == W(sub);
                 B = sROIs == W(j);
-
-               P = coexpressionSorted(A, B);
-
+                
                 D = distancesSorted(A,B);
-                parcelDistances(sub,j) = nanmean(mean(D));
-                parcelCoexpression(sub,j) = nanmean(mean(P));
+                parcelDistances(sub,j) = nanmean(D(:));
                 
             end
         end
         
-        distExpVect(:,1) = parcelDistances(:); 
-        distExpVect(:,2) = parcelCoexpression(:); 
-        distExpVect(any(isnan(distExpVect), 2), :) = [];
+        p = setdiff(nROIs, ROIs);
+        parcelCoexpression = corr(parcelExpression', 'type', 'Spearman'); % calculate sample-sample coexpression
+        parcelCoexpression(logical(eye(size(parcelCoexpression)))) = NaN; % replace diagonal with NaN
+        
+        if ~isempty(p)
+            
+            parcelDistances = insertrows(parcelDistances,NaN,p);
+            parcelDistances = insertrows(parcelDistances.', NaN,p).' ; % insert columns
+            
+            parcelCoexpression = insertrows(parcelCoexpression,NaN,p);
+            parcelCoexpression = insertrows(parcelCoexpression.', NaN,p).' ; % insert columns
+            
+        end
+        
+        distExpVect(:,1) = parcelDistances(:);
+        distExpVect(:,2) = parcelCoexpression(:);
+        %distExpVect(any(isnan(distExpVect), 2), :) = [];
 end
 %----------------------------------------------------------------------------------
 % Fit distance correction according to a defined rule
@@ -83,8 +102,12 @@ switch Fit{1}
         Y = discretize(distExpVect(:,1),xThresholds);
         Residuals = zeros(length(Y),1);
         for val=1:length(Y)
+            if ~isnan(distExpVect(val,2))
+                Residuals(val) = distExpVect(val,2) - yMeans(Y(val));
+            else
+                Residuals(val) = NaN;
+            end
             
-            Residuals(val) = distExpVect(val,2) - yMeans(Y(val));
             
         end
         
@@ -105,72 +128,111 @@ end
 %----------------------------------------------------------------------------------
 switch resolution
     case 'sample'
-numSamples = size(sampleDistances,1);
+        numSamples = size(sampleDistances,1);
+        % add NaNs to diagonal for reshaping
+        Idx=linspace(1, size(sampleDistances,1)*size(sampleDistances,1),size(sampleDistances,1));
+        c=false(1,length(Residuals)+length(Idx));
+        c(Idx)=true;
+        nResiduals = nan(size(c));
+        nResiduals(~c) = Residuals;
+        nResiduals(c) = NaN;
+        
+        correctedCoexpression = reshape(nResiduals,[numSamples, numSamples]);
+    case 'ROI'
+        numSamples = size(parcelDistances,1);
+        sampleDistances = parcelDistances;
+        correctedCoexpression = reshape(Residuals,[numSamples, numSamples]);
+        
+end
+figure; imagesc(correctedCoexpression); caxis([-1,1]);title('Corrected coexpression');
+colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]);
 
-% add NaNs to diagonal for reshaping
-Idx=linspace(1, size(sampleDistances,1)*size(sampleDistances,1),size(sampleDistances,1));
-c=false(1,length(Residuals)+length(Idx));
-c(Idx)=true;
-nResiduals = nan(size(c));
-nResiduals(~c) = Residuals;
-nResiduals(c) = NaN;
-
-correctedCoexpression = reshape(nResiduals,[numSamples, numSamples]);
-figure; imagesc(correctedCoexpression); caxis([-1,1]);title('Corrected Sample-sample coexpression');
-colormap([flipud(BF_getcmap('blues',9));[1 1 1]; BF_getcmap('reds',9)]);
 
 %----------------------------------------------------------------------------------
 % Plot corrected ROI-ROI coexpression matrix
 %----------------------------------------------------------------------------------
-
-parcelCoexpression = zeros(length(W),length(W));
-parcelDistances = zeros(length(W),length(W));
-
-[sROIs, ind] = sort(ROIs);
-correctedCoexpressionSorted = correctedCoexpression(ind, ind);
-
-sampleDistances(logical(eye(size(sampleDistances)))) = NaN;
-distancesSorted = sampleDistances(ind, ind);
-
-
-sampleCoexpression(logical(eye(size(sampleCoexpression)))) = NaN;
-coexpressionSorted = sampleCoexpression(ind, ind);
-
-figure; subplot(1,25,[1 2]); imagesc(sROIs);
-subplot(1,25,[3 25]); imagesc(coexpressionSorted); caxis([-1,1]); title('Corrected coexpression sorted samples');
-colormap([flipud(BF_getcmap('blues',9));[1 1 1]; BF_getcmap('reds',9)]);
-
-for sub=1:length(W)
-    for j=1:length(W)
+switch resolution
+    case 'sample'
         
-        A = sROIs == W(sub);
-        B = sROIs == W(j);
-        %for corrected
-        if correctDistance == true
-            %P = coexpressionSorted(A, B);
-            
-            P = correctedCoexpressionSorted(A, B);
-            
-        else
-            
-            %for uncorrected
-            P = coexpressionSorted(A, B);
+        parcelCoexpression = zeros(length(W),length(W));
+        parcelDistances = zeros(length(W),length(W));
+        
+        [sROIs, ind] = sort(ROIs);
+        correctedCoexpressionSorted = correctedCoexpression(ind, ind);
+        
+        sampleDistances(logical(eye(size(sampleDistances)))) = NaN;
+        distancesSorted = sampleDistances(ind, ind);
+        
+        
+        sampleCoexpression(logical(eye(size(sampleCoexpression)))) = NaN;
+        coexpressionSorted = sampleCoexpression(ind, ind);
+        
+        figure; subplot(1,25,[1 2]); imagesc(sROIs);
+        subplot(1,25,[3 25]); imagesc(coexpressionSorted); caxis([-1,1]); title('Corrected coexpression sorted samples');
+        colormap([flipud(BF_getcmap('blues',9));[1 1 1]; BF_getcmap('reds',9)]);
+        
+        
+        % add NaNs to diagonal for reshaping
+        % Idx=linspace(1, size(parcelDistances,1)*size(parcelDistances,1),size(parcelDistances,1));
+        % c=false(1,length(Residuals)+length(Idx));
+        % c(Idx)=true;
+        % nResiduals = nan(size(c));
+        % nResiduals(~c) = Residuals;
+        % nResiduals(c) = NaN;
+        %
+        % correctedCoexpression = reshape(nResiduals,[numSamples, numSamples]);
+        % figure; imagesc(correctedCoexpression); caxis([-1,1]);title('Corrected Sample-sample coexpression');
+        isNormP = zeros(length(W),length(W));
+        isNormH = zeros(length(W),length(W));
+        
+        for sub=1:length(W)
+            for j=1:length(W)
+                
+                A = sROIs == W(sub);
+                B = sROIs == W(j);
+                %for corrected
+                if correctDistance == true
+                    %P = coexpressionSorted(A, B);
+                    
+                    P = correctedCoexpressionSorted(A, B);
+%                     if length(P)>4
+%                         [isNormH(sub,j),isNormP(sub,j)] = adtest(P(:));
+%                     else
+%                         isNormH(sub,j) = NaN;
+%                         isNormP(sub,j) = NaN;
+%                     end
+                    
+                    
+                else
+                    
+                    %for uncorrected
+                    P = coexpressionSorted(A, B);
+%                     if length(P)>4
+%                         [isNormH(sub,j),isNormP(sub,j)] = adtest(P(:));
+%                     else
+%                         isNormH(sub,j) = NaN;
+%                         isNormP(sub,j) = NaN;
+%                     end
+                end
+                D = distancesSorted(A,B);
+                parcelDistances(sub,j) = mean(D(:));
+                parcelCoexpression(sub,j) = mean(P(:));
+                
+            end
         end
-        D = distancesSorted(A,B);
-        parcelDistances(sub,j) = mean(mean(D));
-        parcelCoexpression(sub,j) = mean(mean(P));
         
-    end
 end
 
-end
-    
-    
-    % add zeros values to missing ROIs; p - missing ROI
-    
-    p = setdiff(nROIs, ROIs);
+if correctDistance == true && strcmp(resolution, 'ROI')
+    expPlot = correctedCoexpression;
+else
     expPlot = parcelCoexpression;
-    distPlot = parcelDistances;
+end
+
+distPlot = parcelDistances;
+
+if strcmp(resolution, 'sample')
+    p = setdiff(nROIs, ROIs);
     if ~isempty(p)
         
         expPlot = insertrows(expPlot,NaN,p);
@@ -180,6 +242,13 @@ end
         distPlot = insertrows(distPlot.', NaN,p).' ; % insert columns
         
     end
-    figure; imagesc(expPlot); caxis([-1,1]); title('Parcellation coexpression ROIs');
-    colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]);
+end
+
+figure; imagesc(expPlot); caxis([-1,1]);
+if correctDistance
+    title('Corrected parcellation coexpression ROIs');
+else
+    title('Non - corrected parcellation coexpression ROIs');
+end
+colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]);
 end

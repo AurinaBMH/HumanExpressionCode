@@ -57,6 +57,7 @@ scatter(expressionZscore(:,geneIND),expressionSRS(:,geneIND),sz,C,'filled','Mark
 xlabel('z-score', 'FontSize', 15); ylabel('SRS', 'FontSize', 15); 
 title(probeInformation.GeneSymbol{geneIND}, 'FontSize', 20); 
 
+
 figure;set(gcf,'color','w'); 
 scatter(expressionMINMAX(:,geneIND),expressionSRS(:,geneIND),sz,C,'filled','MarkerEdgeColor',[.55 .55 .55],'LineWidth',1);
 xlabel('min-max', 'FontSize', 15); ylabel('SRS', 'FontSize', 15);

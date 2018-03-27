@@ -168,6 +168,7 @@ end
 % calculate correlation between each way of choosing a probe
 
 RNAcorr = zeros(8,1);
+stDEV = zeros(8,1); 
 for i=9
     for j=1:8
         
@@ -183,26 +184,49 @@ for i=9
         
         
         RNAcorr(j) = mean(correlation);
+        stDEV(j) = std(correlation); 
     end
 end
 
-[valS, indS] = sort(RNAcorr);
+[valS, indS] = sort(RNAcorr, 'descend');
 namesS = tickNames(indS);
 
 nice_cmap = [make_cmap('steelblue',50,30,0);flipud(make_cmap('orangered',50,30,0))];
 colors2use = nice_cmap([5 15 25 35 45 55 65 75 85 95],:); 
 
 
-figure; set(gcf,'color','w');
-
-bar(valS(1:8),'EdgeColor',[.55 .55 .55],...
-    'FaceColor',[1 .87 .68],...
-    'LineWidth',1.5);
+figure; 
+set(gcf,'color','w');
+hold on
+for i = 1:length(valS)
+    h=bar(i,valS(i));
+    %errorbar(i,valS(i),stDEV(i),'.')
+    if strcmp(namesS(i), 'CV')
+        set(h,'FaceColor',[1 .87 .68],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
+    elseif strcmp(namesS(i), 'Variance')
+        set(h,'FaceColor',[1 0.8 0.6],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
+    elseif strcmp(namesS(i), 'Random1')
+        set(h,'FaceColor',[.96 .63 .55],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
+    elseif strcmp(namesS(i), 'Random2')
+        set(h,'FaceColor',[.96 .63 .55],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
+    elseif strcmp(namesS(i), 'PC')
+        set(h,'FaceColor',[.95 .6 .6],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
+    elseif strcmp(namesS(i), 'Mean')
+        set(h,'FaceColor',[.88 .56 .59],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
+    elseif strcmp(namesS(i), 'Noise')
+        set(h,'FaceColor',[.72 .43 .47],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
+    elseif strcmp(namesS(i), 'DS')
+        set(h,'FaceColor',[.75 .31 .38],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);                 
+    end
+end
+hold off
 ylim([0.5 1]); ylabel('Spearman correlation'); xlabel('Probe selection methods');
 title(sprintf('Correlation to probes selected based on highest correlation to RNA-seq (%d)', length(indRNA)))
 xticks([1 2 3 4 5 6 7 8])
 xticklabels(namesS);
 set(gca,'fontsize',15)
+
+
 
 %% now do the same thing only with QC filtering done first
 % make a figure for probe correlation from scratch
@@ -401,11 +425,31 @@ end
 [valS, indS] = sort(RNAcorr);
 namesS = tickNames(indS);
 
-figure; set(gcf,'color','w');
-bar([1:8], valS(1:8), 100, ...
-    'MarkerEdgeColor',[.55 .55 .55],...
-    'MarkerFaceColor',[1 .60 .40],...
-    'LineWidth',1.5);
+
+figure; 
+set(gcf,'color','w');
+hold on
+for i = 1:length(r2)
+    h=bar(i,valS(i));
+    if strcmp(namesS(i), 'CV')
+        set(h,'FaceColor',[1 .87 .68],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
+    elseif strcmp(namesS(i), 'Variance')
+        set(h,'FaceColor',[1 0.8 0.6],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
+    elseif strcmp(namesS(i), 'Random1')
+        set(h,'FaceColor',[.96 .63 .55],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
+    elseif strcmp(namesS(i), 'Random2')
+        set(h,'FaceColor',[.96 .63 .55],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
+    elseif strcmp(namesS(i), 'PC')
+        set(h,'FaceColor',[.98 .57 .27],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
+    elseif strcmp(namesS(i), 'Mean')
+        set(h,'FaceColor',[1 .6 .4],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
+    elseif strcmp(namesS(i), 'Noise')
+        set(h,'FaceColor',[.98 .5 .45],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
+    elseif strcmp(namesS(i), 'DS')
+        set(h,'FaceColor',[1 .35 .21],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);                 
+    end
+end
+hold off
 ylim([0.5 1]); ylabel('Spearman correlation'); xlabel('Probe selection methods');
 title(sprintf('Correlation to probes selected based on highest correlation to RNA-seq (%d)', length(indRNA)))
 xticks([1 2 3 4 5 6 7 8])
