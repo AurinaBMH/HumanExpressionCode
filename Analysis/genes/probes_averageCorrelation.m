@@ -1,4 +1,6 @@
 % for each gene calculate average correlation between probes
+clear all; 
+
 cd ('data/genes/processedData')
 load('MicroarrayDataWITHcustProbesUpdatedXXX.mat')
 
@@ -70,12 +72,17 @@ for i=1:length(signalThreshold)
     
     histogram(corMult{i}, 50,'EdgeColor',[.6 .6 .6],...
         'FaceColor',colors(i,:));
-    xlabel('Average correlation between probes for the same gene','FontSize', 14)
-    ylabel('Number of genes','FontSize', 14')
+
     set(gcf,'color','w'); hold on;
 end
-legendText{1} = sprintf('%d genes (original)', length(corMult{1}));
-legendText{2} = sprintf('%d genes (after QC)', length(corMult{2}));
 
+    xlabel('Average correlation between probes')
+    ylabel('Number of genes')
+    set(gca,'FontSize', 16)
+legendText{1} = sprintf('Before intensity-based filtering (%d genes)', length(corMult{1}));
+legendText{2} = sprintf('After intensity-based filtering (%d genes)', length(corMult{2}));
+h = legend(legendText{1},legendText{2}); 
+set(h,'fontsize',20)
+xticks([-0.6 -0.4 -0.2 0 0.2 0.4 0.6 0.8 1])
 
-legend(legendText{1},legendText{2});
+box off

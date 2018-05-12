@@ -18,8 +18,8 @@ pThreshold = 0.05;
 % ------------------------------------------------------------------------------
 
 % ------------- (1) analyzeWhat: what to plot the rich club curves for:
-
 realLinkData = averageCoexpression;
+%realLinkData = averageCoexpression;
 
 %         bornEarly = C.BirthTime<1000;
 %         earlyMask = bornEarly.*bornEarly';
@@ -110,7 +110,7 @@ for i = 1:length(kr)
         switch j
             case 1 % 'rich'
                 keepMe(r,r) = 1;
-            case 2 % 'feedin'
+            case 2 % 'feeder'
                 keepMe(~r,r) = 1;
                 keepMe(r,~r) = 1;
             %case 3 % 'feedout'
@@ -184,7 +184,7 @@ for j = 1:length(whatLinks)
                 % % Set the Figure Size and Position (so that the labels fit)
                 pos=get(sp,'Position');
                 set(sp,'Position',[pos(1)*1, pos(2)*0.5, pos(3)*1, pos(4)*2.5]); % [left bottom width height]
-                set(gca,'Ytick', [0 0.1 0.2 0.3 0.4 0.5], 'YTickLabel',[0 0.1 0.2 0.3 0.4 0.5], 'FontSize', 18);
+                %set(gca,'Ytick', [0 0.1 0.2 0.3 0.4 0.5], 'YTickLabel',[0 0.1 0.2 0.3 0.4 0.5], 'FontSize', 18);
                 hold on;
                 
             end
@@ -197,7 +197,7 @@ for j = 1:length(whatLinks)
     xlim([min(nodeData)-0.5,max(nodeData)+0.5]);
     xlabel(extraParam{1})
     
-    ylabel('Mean coexpression');
+    ylabel('mean coexpression');
     
     
     
@@ -243,16 +243,16 @@ for j = 1:length(whatLinks)
     
     % Add proportion of nodes that are hubs:
     %     theYLim = ge    % Add proportion of nodes that are hubs:
-    %     theYLim = get(gca,'ylim');
-    %     plot(1:length(kr),theYLim(1)+(1-propisHub)*diff(theYLim),'--','color',myColors{4},'LineWidth',2)
+%         theYLim = get(gca,'ylim');
+%         plot(1:length(kr),theYLim(1)+(1-propisHub)*diff(theYLim),'--','color',myColors{4},'LineWidth',2)
     %
-    %     % Add number of hub-hub links:
-    %     plot(1:length(kr),theYLim(1) + (1-numHubHubLinks/max(numHubHubLinks))*diff(theYLim),'-.','color',brighten(myColors{4},-0.5),'LineWidth',2)
-    %t(gca,'ylim');
-    %     plot(1:length(kr),theYLim(1)+(1-propisHub)*diff(theYLim),'--','color',myColors{4},'LineWidth',2)
-    %
-    %     Add number of hub-hub links:
-    %     plot(1:length(kr),theYLim(1) + (1-numHubHubLinks/max(numHubHubLinks))*diff(theYLim),'-.','color',brighten(myColors{4},-0.5),'LineWidth',2)
+         % Add number of hub-hub links:
+%         plot(1:length(kr),theYLim(1) + (1-numHubHubLinks/max(numHubHubLinks))*diff(theYLim),'-.','color',brighten(myColors{4},-0.5),'LineWidth',2)
+%     set(gca,'ylim');
+%          plot(1:length(kr),theYLim(1)+(1-propisHub)*diff(theYLim),'--','color',myColors{4},'LineWidth',2)
+%     %
+%     %     Add number of hub-hub links:
+%          plot(1:length(kr),theYLim(1) + (1-numHubHubLinks/max(numHubHubLinks))*diff(theYLim),'-.','color',brighten(myColors{4},-0.5),'LineWidth',2)
     
     % Add a meaningful title:
     divisionText = '';
@@ -281,19 +281,28 @@ end
 % Add light gray rectangle
 ylimNow = [ax.YLim(1),ax.YLim(2)];
 if ax.YLim(1)<0
-    h_rect = rectangle('Position',[44,ylimNow(1),20,ylimNow(2)+(ylimNow(1).*(-1))],'EdgeColor','none','FaceColor',ones(3,1)*0.90);
+    h_rect = rectangle('Position',[80,ylimNow(1),70,ylimNow(2)+(ylimNow(1).*(-1))],'EdgeColor','none','FaceColor',ones(3,1)*0.90);
 else
-    h_rect = rectangle('Position',[44,ylimNow(1),20,ylimNow(2)-ylimNow(1)],'EdgeColor','none','FaceColor',ones(3,1)*0.90);
+    h_rect = rectangle('Position',[80,ylimNow(1),70,ylimNow(2)-ylimNow(1)],'EdgeColor','none','FaceColor',ones(3,1)*0.90);
 end
 uistack(h_rect,'bottom');
 set(gca,'ylim',ylimNow);
 
+%min1 = min(cellfun(@nanmean,allHubHub{1}(:,1)));
+%min2 = min(cellfun(@nanmean,allHubHub{1}(:,2)));
+%min3 = min(cellfun(@nanmean,allHubHub{1}(:,3)));
+%yvalmin = min(min1,min2,min3); 
 
-                ylim([-0.1 0.1]);
-                set(gca,'Ytick', [0 0.1 0.2 0.3 0.4 0.5], 'YTickLabel',[0 0.1 0.2 0.3 0.4 0.5], 'FontSize', 18);
+%max1 = max(cellfun(@nanmean,allHubHub{1}(:,1)));
+%max2 = max(cellfun(@nanmean,allHubHub{1}(:,2)));
+%max3 = max(cellfun(@nanmean,allHubHub{1}(:,3)));
+%yvalmax = max(max1, max2, max3); 
+
+                %ylim([yvalmin yvalmax]);
+                %set(gca,'Ytick', [0 0.1 0.2 0.3 0.4 0.5], 'YTickLabel',[0 0.1 0.2 0.3 0.4 0.5], 'FontSize', 18);
                 %set(gca,'Xtick', [0 10 20 30 40 50 60], 'YTickLabel',[0 10 20 30 40 50 60], 'FontSize', 14);
 
-                axisName = {'Mean gene', 'coexpression, r_\phi'};
+                axisName = {'mean gene', 'coexpression, r_\phi'};
 
         ylabel(axisName, 'FontSize', 18)
         xlabel('Degree, k','FontSize', 18);
@@ -306,20 +315,20 @@ set(sp,'Position',[pos(1), pos(2)*1.025, pos(3), pos(4)*0.7]); % [left bottom wi
 deg = degrees_und(Adj);
 kRange = min(deg):max(deg);
  
-end
+
 %set(gca,'XTick',40:80)
 
 
 
-%[link, deg] = propLinkDegree(C,whatAdj,D.whatConns);
+% [link, deg] = propLinkDegree(C,whatAdj,D.whatConns);
 % f = figure('color','w');
-% subplot(,1,1)
+% subplot(1,1,1)
 % kRange = degsort;
 % N = arrayfun(@(x)sum(deg==x),kRange);
 % bar(kRange,N,'EdgeColor','k','FaceColor','k')
 % xlim([min(deg),max(deg)]);
 % ylabel('Frequency')
-
+% 
 % for i = 1:length(kRange)
 %     %ind = (deg >= degsort(i));
 %     %categoriesHere = C.RegionM(ind==1, types);
@@ -338,6 +347,7 @@ end
 % xticks([]);
 % ylim([0 1]);
 % yticks([0 1]);
+end
 %hold on;
 % add connected vs  unconnected plot
 % [dataCell, S,P] = coexpELCHUncon(C, G, true);

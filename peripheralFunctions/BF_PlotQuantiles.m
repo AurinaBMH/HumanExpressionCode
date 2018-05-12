@@ -33,21 +33,21 @@ yStds = arrayfun(@(x)std(yData(xData>=xThresholds(x) & xData < xThresholds(x+1))
 % ------------------------------------------------------------------------------
 % Plot:
 if makeNewFigure
-    f = figure('color','w'); box('on'); hold on
+    f = figure('color','w'); box('off'); hold on
 end
 theColor = [.59 .87 .82];
 theStyle = '-';
 theLineWidth = 1;
 
 if alsoScatter
-    plot(xData,yData,'o', 'MarkerFaceColor', [.7 .7 .7], 'MarkerEdgeColor', [.6 .6 .6]);
+    plot(xData,yData,'o', 'MarkerSize', 10 ,'MarkerFaceColor', [.7 .7 .7], 'MarkerEdgeColor', [.6 .6 .6]);
 end
 
 for k = 1:numThresholds-1
     plot(xThresholds(k:k+1),ones(2,1)*yMeans(k),'LineStyle',theStyle,'LineWidth',theLineWidth,'Color', [.6 .6 .6]);
     %plot(xThresholds(k:k+1),ones(2,1)*(yMeans(k)+yStds(k)),'LineStyle','--','LineWidth',theLineWidth,'MarkerFaceColor', [.59 .87 .82], 'MarkerEdgeColor', [.6 .6 .6])
     %plot(xThresholds(k:k+1),ones(2,1)*(yMeans(k)-yStds(k)),'LineStyle','--','LineWidth',theLineWidth,'MarkerFaceColor', [.59 .87 .82], 'MarkerEdgeColor', [.6 .6 .6])
-    plot(mean(xThresholds(k:k+1)),yMeans(k),'o','MarkerSize',8,'LineStyle',theStyle,'LineWidth',theLineWidth,'MarkerFaceColor', [.59 .87 .82], 'MarkerEdgeColor', [.6 .6 .6]); %z'Color',theColor)
+    plot(mean(xThresholds(k:k+1)),yMeans(k),'o','MarkerSize',10,'LineStyle',theStyle,'LineWidth',theLineWidth,'MarkerFaceColor', [.89 0 .06], 'MarkerEdgeColor', [.6 .6 .6]); %z'Color',theColor)
 end
 
 end

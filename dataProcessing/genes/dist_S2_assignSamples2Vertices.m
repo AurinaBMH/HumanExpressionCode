@@ -17,7 +17,8 @@
 %------------------------------------------------------------------------------
 
 cd ('data/genes/processedData')
-load('MicroarrayDatadPC82DistThresh2_CoordsAssigned.mat');
+%load('MicroarrayDatadPC82DistThresh2_CoordsAssigned.mat');
+load('MicroarrayDataWITHcustProbesUpdatedXXXRNAseq82DistThresh2.mat')
 cd ../forFreesurfer
 keepSamplesOrig = cell(6,1);
 keepSamples = cell(6,1);
@@ -48,7 +49,7 @@ for sub = 1:6
     [xx, yy, zz] = meshgrid(1:size(data2.vol,2),1:size(data2.vol,1),1:size(data2.vol,3));
     
     % load overlay for a subject
-    dataOrig = MRIread(sprintf('S%dsamples.mgz', sub));
+    dataOrig = MRIread(sprintf('S%dsamplesXXX.mgz', sub));
     
     coordinatesall = DataCoordinatesMRI{sub};
     ROI = coordinatesall(:,2); keep = find(ROI<=34);
@@ -77,7 +78,7 @@ for sub = 1:6
         overlay(vertexind) = i;
         dataOrig.vol(vertexind) = i;
         
-        MRIwrite(dataOrig,sprintf('S%dsample%d_singleVert.mgz', sub, i));
+        MRIwrite(dataOrig,sprintf('S%dsample%d_singleVertXXX.mgz', sub, i));
         % In freesurfecoordinatesNEWvertr space vertex co-ordinate is:
         % disp([vertices(vertexind,1),vertices(vertexind,2),vertices(vertexind,3)]);
     end
@@ -91,13 +92,13 @@ for sub = 1:6
 %------------------------------------------------------------------------------
 % For each subject create a list of subjects
 %------------------------------------------------------------------------------
-    fileID = fopen(sprintf('S%dsampleList.txt', sub),'w');
+    fileID = fopen(sprintf('S%dsampleListXXX.txt', sub),'w');
     nbytes = fprintf(fileID,'%1d\n',sampleList); 
     fclose(fileID);
     cd ..
     
 end
-save('keepSamples.mat', 'keepSamples');
+save('keepSamplesXXX.mat', 'keepSamples');
 %% after running this script 
 % 1. the folder forFreesurfer need to be copied to massive (M2: /gpfs/M2Scratch/Monash076/aurina/HumanExpression/data/genes/forFreesurfer)
 % 2. then run runSurf2surf.sh script to map samples from native space on the surface to fsaverage standard space. 

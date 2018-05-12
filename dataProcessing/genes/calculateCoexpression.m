@@ -244,7 +244,8 @@ if strcmp(resolution, 'sample')
     end
 end
 
-figure; imagesc(expPlot); caxis([-1,1]);
+figure('color','w'); box('off');
+imagesc(expPlot); caxis([-1,1]);
 if correctDistance
     title('Corrected parcellation coexpression ROIs');
 else

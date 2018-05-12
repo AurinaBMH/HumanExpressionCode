@@ -5,7 +5,8 @@ cd ('/Users/Aurina/GoogleDrive/Genetics_connectome/Heritability/data/connectomes
 load('HCPMMP1ANDfslatlas20_acpc_FACT_SIFT2_standard_structnets.mat')
 cd ../../..
 cd ('HumanExpression/data/genes/processedData')
-load('100DS360scaledRobustSigmoidRNAseq1Lcortex_sample_distCorr.mat'); 
+load('30DS360scaledRobustSigmoidRNAseq1Lcortex_ROI_NOdistCorr_PC.mat'); 
+load('30DS360scaledRobustSigmoidRNAseq1Lcortex_ROI_NOdistCorr_MEAN.mat'); 
 
 [groupAdj, consist] = giveMeGroupAdj_variance(ADJS);
 adj = double(logical(groupAdj(1:180, 1:180))); 
@@ -31,7 +32,7 @@ JitteredParallelScatter(data)
 
 RichClubHuman(logical(groupAdj(1:180, 1:180)),averageCoexpression);
 
-load('100DS360scaledRobustSigmoidRNAseq1Lcortex_ROI_distCorr.mat'); 
+load('100DS360scaledRobustSigmoidRNAseq1Lcortex_ROI_NOdistCorr_PC.mat'); 
 
 %[groupAdj, consist] = giveMeGroupAdj_variance(ADJS);
 adj = double(logical(groupAdj(1:180, 1:180))); 

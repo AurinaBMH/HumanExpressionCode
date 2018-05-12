@@ -47,7 +47,7 @@ r = randi([1 100],1,34);
 use_map = nice_cmap(r,:); 
 
 p = randperm(length(subjects)); 
-[W,score,~,~,explained] = pca(expression, 'NumComponents',4);
+[W,score,~,~,explained] = pca(expression, 'NumComponents',5);
 x = score(p,1); y = score(p,2); z = score(p,3); 
 C = subjects(p); 
 S = ones(length(subjects),1)+60;

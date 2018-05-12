@@ -2,10 +2,9 @@
 % For each sample of gene expression convert MNI coordinates into voxell
 % coordinates for matching.
 % take samples only from left cortex and combine them into one matrix
-
-ROIs = 1:190;
+function coordsAssigned = samples2MNIparcellation(DataCoordinatesMNI, data_parcel, ROIs)
 samples = cell(6,1);
-distanceThreshold = 10; 
+%distanceThreshold = 10; 
 
 for i=1:6
     allsamples = DataCoordinatesMNI{i};
@@ -23,7 +22,7 @@ for samp = 1:size(data,1)
 end
 
 % load parcellation in MNI space
-[~, data_parcel]=read('MMPinMNI.nii');
+
 [Coordx,Coordy,Coordz] = ind2sub(size(data_parcel),find(ismember(data_parcel, ROIs)));
 coordsNonzeroParcel = cat(2,Coordx, Coordy, Coordz);
 
@@ -51,15 +50,16 @@ for j=1:size(coordsAssigned,1)
     
     assignDistance(j,1) = pdist2(coordsAssigned(j,:), xyznew(j,:));
     
-    if assignDistance(j)>distanceThreshold
-        coordsNONassigned(j,:,:,:)=xyznew(j,:,:,:);
-        coordsAssigned(j,:)=0;
-        xyznew(j,:)=0;
-        
-    end
-    
+%     if assignDistance(j)>distanceThreshold
+%         coordsNONassigned(j,:,:,:)=xyznew(j,:,:,:);
+%         coordsAssigned(j,:)=0;
+%         xyznew(j,:)=0;
+%         
+%     end
+
 end
 %remove zero elements
 xyznew( ~any(xyznew,2), : ) = NaN;
 coordsAssigned( ~any(coordsAssigned,2), : ) = NaN;
 coordsNONassigned( ~any(coordsNONassigned,2), : ) = [];
+end

@@ -117,6 +117,11 @@ for subj = 1:nSub
                 measure = pca(expRepEntrezIDsNOmean,'Centered',false);
                 % determine max PC loading
                 [MaxV, indMaxV] = max(measure(:,1));
+            elseif strcmp(probeSelections, 'maxIntensity')
+                
+                 measure = mean(expRepEntrezIDs);
+                % determine probe with max signal
+                [MaxV, indMaxV] = max(measure);
                 
                 
             elseif strcmp(probeSelections, 'CV')
@@ -155,7 +160,7 @@ for subj = 1:nSub
             end
             
             if (strcmp(probeSelections, 'Mean') || strcmp(probeSelections, 'Variance') || strcmp(probeSelections, 'Random') ||...
-                    strcmp(probeSelections, 'PC') || strcmp(probeSelections, 'LessNoise') || strcmp(probeSelections, 'RNAseq') || strcmp(probeSelections, 'CV'))
+                    strcmp(probeSelections, 'PC') || strcmp(probeSelections, 'LessNoise') || strcmp(probeSelections, 'maxIntensity') || strcmp(probeSelections, 'RNAseq') || strcmp(probeSelections, 'CV'))
                 %indMsubj(k,subj) = indProbe(k); %(indMaxV);
                 %if NaN, use NaN;
                 if isnan(indMaxV)
@@ -239,7 +244,7 @@ cd ('processedData')
 expressionAll = cell(6,1);
 sampleInfo = cell(6,1);
 for subject=1:6
-    if strcmp(probeSelections, 'Variance') || strcmp(probeSelections, 'PC') ...
+    if strcmp(probeSelections, 'Variance') || strcmp(probeSelections, 'PC') || strcmp(probeSelections, 'maxIntensity')...
             || strcmp(probeSelections, 'LessNoise') || strcmp(probeSelections, 'Random') ...
             || strcmp(probeSelections, 'RNAseq') || strcmp(probeSelections, 'DS') || strcmp(probeSelections, 'CV')
         
@@ -269,6 +274,6 @@ if strcmp(probeSelections, 'RNAseq')
      save(sprintf('%s%snoQC.mat', startFileName, probeSelections), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes', 'options');
    % save(sprintf('%s%s%dRNAthr%dnoisethr.mat', startFileName, probeSelections{1}, RNAseqThreshold, signalThreshold), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes', 'options');
 else
-    save(sprintf('%s%s.mat', startFileName, probeSelections), 'expressionAll', 'probeInformation' , 'sampleInfo', 'options');
+    save(sprintf('%s%snoQC.mat', startFileName, probeSelections), 'expressionAll', 'probeInformation' , 'sampleInfo', 'options');
 end
 cd ../../..

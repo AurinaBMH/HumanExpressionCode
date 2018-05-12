@@ -8,7 +8,7 @@
 % Choose single vertex per sample based on the max value
 %------------------------------------------------------------------------------
 
-cd ('data/genes/forFreesurfer')
+cd ('data/genes/forFreesurferXXX')
 % load flsaverage brain surface
 [verticesFSaverage,facesFSaverage] = read_surf('lhfsaverage.pial');
 listChosenVert = cell(6,1); 
@@ -17,13 +17,13 @@ listChosenVert = cell(6,1);
 for sub=1:6
     fprintf('Processing subject %d\n', sub); 
     cd (sprintf('S0%d', sub))
-    samples = load(sprintf('S%dsampleList.txt', sub));
+    samples = load(sprintf('S%dsampleListXXX.txt', sub));
     subjChosenVert = zeros(length(samples),1);
     k=1;
     for i=1:length(samples)
     sample = samples(i);
 
-    dataOrig = MRIread(sprintf('S%dsample%dONfsaveragePial.mgz',sub, sample));
+    dataOrig = MRIread(sprintf('S%dsample%dONfsaveragePialXXX.mgz',sub, sample));
     [~,chosenVert] = max(dataOrig.vol);
     subjChosenVert(k) = chosenVert;
     k=k+1;
@@ -47,6 +47,7 @@ for samp=1:length(vertices)
     
     [D,S,Q] = perform_fast_marching_mesh(verticesFSaverage.', facesFSaverage.' + 1, vertices(samp));
     distances(:,samp) = D; 
+    fprintf('%d sample has been analised\n', samp)
     
 end
 toc
@@ -54,7 +55,7 @@ toc
 distSamples = distances(vertices,:); 
 cd ..
 cd 'processedData'
-save('DistancesONsurface.mat', 'distSamples')
+save('DistancesONsurfaceXXX.mat', 'distSamples')
 % plot distances for a random sample - produces a nice picture
 figure;patch('Vertices',verticesFSaverage,'faces',facesFSaverage+1,'CData',distances(:,500),'FaceColor','interp','EdgeColor','none');axis off;camlight;axis image;view([0 45])
 

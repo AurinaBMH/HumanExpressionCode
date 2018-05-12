@@ -1,3 +1,6 @@
+clear all; 
+close all; 
+cd ('data/genes/processedData')
 load('MicroarrayDataWITHcustProbesUpdatedXXX.mat')
 
 signalThresholds = 0:0.01:1;
@@ -38,25 +41,40 @@ nrProbes(j) = length(ProbeName);
 nrGenes(j) = length(unique(EntrezID)); 
 end
 
-figure; plot(signalThresholds, nrProbes, '-o', ...
-    'Color', [.6 .6 .6], 'LineWidth',1,...
-    'MarkerSize',10,...
-    'MarkerEdgeColor',[.6 .6 .6],...
-    'MarkerFaceColor',[.59 .87 .82]);
-hold on; 
+fig=figure; 
+set(fig,'defaultAxesColorOrder',[.92 .35 .24; 0 .5 .5]);
+
+yyaxis left
 plot(signalThresholds, nrGenes, '-o', ...
     'Color', [.6 .6 .6], 'LineWidth',1,...
     'MarkerSize',10,...
     'MarkerEdgeColor',[.6 .6 .6],...
     'MarkerFaceColor',[.96 .63 .55]);
-legend({'Number of probes', 'Number of genes'}, 'FontSize', 14); 
-xlabel('Proportion of samples with expression values exceeding the background', 'FontSize', 14); 
-ylabel('Number of probes/genes', 'FontSize', 14)
+xlabel('Intensity-based filtering threshold'); 
+ylabel('Number of genes')
+yticklabels([0 5000 10000 15000 20000 25000])
+yticks([0 5000 10000 15000 20000 25000])
+xticks([0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1])
+set(gcf,'color','w');
+hold on; 
+
+yyaxis right
+plot(signalThresholds, nrProbes, '-o', ...
+    'Color', [.6 .6 .6], 'LineWidth',1,...
+    'MarkerSize',10,...
+    'MarkerEdgeColor',[.6 .6 .6],...
+    'MarkerFaceColor',[.59 .87 .82]);
+ylabel('Number of probes','FontSize', 14)
 yticklabels([0 5000 10000 15000 20000 25000 30000 35000 40000 45000 50000])
 yticks([0 5000 10000 15000 20000 25000 30000 35000 40000 45000 50000])
-set(gcf,'color','w');
+%legend({'Number of genes', 'Number of probes'}); 
+set(gca,'FontSize', 16)
+box off
+h = legend({'Number of genes', 'Number of probes'}); 
+set(h,'fontsize',20)
 
-  
+
+
 % do everything on 0.5
 % signalLevel = sum(noiseall,2)./size(noiseall,2);
 % indKeepProbes = find(signalLevel>=0.5);

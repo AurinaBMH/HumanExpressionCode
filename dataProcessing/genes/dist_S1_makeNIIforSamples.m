@@ -13,7 +13,9 @@ numSamples = 1;
 parcellation = {'aparcaseg'};%, 'cust100', 'cust250'};
 distanceThreshold = 2;
 sampleIND = cell(6,1);
-
+cd ('data/genes/processedData')
+load('MicroarrayDataWITHcustProbesUpdatedXXXRNAseq82DistThresh2.mat')
+cd ../../..
 for subject = subjects
     cd ('data/genes/parcellations')
     subjectDir = sprintf('S0%d_H0351', subject);
@@ -79,8 +81,8 @@ for subject = subjects
         image(point(1), point(2), point(3)) = index(samp);
     end
     cd ../../..
-    cd ('processedData')
-    filename1 = sprintf('S%dsamples.nii', subject);
+    cd ('genes/processedData')
+    filename1 = sprintf('S%dsamplesXXX.nii', subject);
     write(hdr,image,filename1);
 
     cd ../../..
@@ -88,7 +90,7 @@ for subject = subjects
 end
 cd ('data/genes/processedData')
 % when calculating sample-smple coexpression keep only those samples
-save('samples2keep.mat', 'sampleIND');
+save('samples2keepXXX.mat', 'sampleIND');
 
 %% after running this script
 % 1. we need to transform volume files (.nii) to surface files (.mgz) using mri_vol2surf command on massive (M2: /gpfs/M2Scratch/Monash076/aurina/AllenInstitute) for each subject and produce one .mgz file per subject

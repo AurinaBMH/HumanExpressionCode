@@ -10,6 +10,9 @@ if Regeneratedata
     options.probeSelections = {'Mean'};
     S2_probes(options);
     
+    options.probeSelections = {'maxIntensity'};
+    S2_probes(options);
+    
     options.probeSelections = {'LessNoise'};
     S2_probes(options);
     
@@ -83,6 +86,9 @@ load('MicroarrayDataWITHcustProbesUpdatedXXXCVnoQC.mat')
 probes{8} = probeInformation;
 expression{8} = vertcat(expressionAll{1}, expressionAll{2}, expressionAll{3}, expressionAll{4}, expressionAll{5},expressionAll{6});
 
+load('MicroarrayDataWITHcustProbesUpdatedXXXmaxIntensitynoQC.mat')
+probes{9} = probeInformation;
+expression{9} = vertcat(expressionAll{1}, expressionAll{2}, expressionAll{3}, expressionAll{4}, expressionAll{5},expressionAll{6});
 
 %select only genes that had more than one probe available
 [genesMultiple, indFilter] = intersect(probes{1}.EntrezID, duplicate_value); % separatelly for RNAseq and others as the numbef of genes is different
@@ -94,12 +100,13 @@ for k=1:length(probes)
     
 end
 
-avCorr = zeros(8,8);
+avCorr = zeros(9,9);
+stdCorr = zeros(9,9); 
 
-for i=1:8
+for i=1:9
     
     
-    for j=1:8
+    for j=i+1:9
         
         expr1 = expression{i};
         expr2 = expression{j};
@@ -111,27 +118,36 @@ for i=1:8
         end
         
         avCorr(j,i) = mean(correlation);
+        stdCorr(i,j) = std(correlation); 
     end
     
 end
+avCorrfull = avCorr+avCorr'; 
+avCorrfull(logical(eye(size(avCorrfull)))) = 1; 
+
+stdCorrfull = stdCorr+stdCorr'; 
 
 % reorder according to similarity
-R = BF_pdist(avCorr);
-[ord,R,keepers] = BF_ClusterReorder(avCorr,R);
-avCorrPlot = avCorr(ord, ord);
+R = BF_pdist(avCorrfull);
+[ord,R,keepers] = BF_ClusterReorder(avCorrfull,R);
+avCorrPlot = avCorrfull(ord, ord);
+stdCorrPlot = stdCorrfull(ord, ord); 
 
 nice_cmap = [flipud(make_cmap('orangered',50,30,0))];
 
 figure; imagesc(avCorrPlot);set(gcf,'color','w');
-colormap(nice_cmap)
+colormap(flipud(pink))
 caxis([0.5 1])
-tickNames = {'Mean', 'Noise', 'PC', 'DS', 'Random1', 'Random2','Variance', 'CV'};
+tickNames = {'mean', 'signal proportion', 'PC', 'DS', 'Rand_1', 'Rand_2','Variance', 'CV', 'max intensity'};
 tickNamesORD = tickNames(ord);
 
-xticks([1 2 3 4 5 6 7 8])
+xticks([1 2 3 4 5 6 7 8 9])
 xticklabels(tickNamesORD);
-yticks([1 2 3 4 5 6 7 8])
+xtickangle(45)
+yticks([1 2 3 4 5 6 7 8 9])
 yticklabels(tickNamesORD);
+ytickangle(45)
+set(gca,'FontSize', 14)
 
 cd ../../..
 % make a plot with RNA seq
@@ -146,20 +162,20 @@ end
 % load data
 cd ('data/genes/processedData')
 load('MicroarrayDataWITHcustProbesUpdatedXXXRNAseqnoQC.mat')
-probes{9} = probeInformation;
-expression{9} = vertcat(expressionAll{1}, expressionAll{2}, expressionAll{3}, expressionAll{4}, expressionAll{5},expressionAll{6});
+probes{10} = probeInformation;
+expression{10} = vertcat(expressionAll{1}, expressionAll{2}, expressionAll{3}, expressionAll{4}, expressionAll{5},expressionAll{6});
 % select genes in other versions and in this one  that overlap
 entrezIDs = probes{1}.EntrezID(indFilter);
 
 [genesMultiple, indFilter] = intersect(entrezIDs, duplicate_value); % separatelly for RNAseq and others as the numbef of genes is different
-[genesMultipleRNAseq, indFilterRNA] = intersect(probes{9}.EntrezID, duplicate_value);
+[genesMultipleRNAseq, indFilterRNA] = intersect(probes{10}.EntrezID, duplicate_value);
 
 % filter genes that had multiple probes
-for k=1:9
-    if k==9
+for k=1:10
+    if k==10
         expression{k} = expression{k}(:,indFilterRNA);
     else
-        expression{k} = expression{k}(:,indFilter);
+        expression{k} = expression{k}; %; (:,indFilter);
     end
 end
 
@@ -167,10 +183,10 @@ end
 [v2, indRNA] = intersect(genesMultipleRNAseq,genesMultiple);
 % calculate correlation between each way of choosing a probe
 
-RNAcorr = zeros(8,1);
-stDEV = zeros(8,1); 
-for i=9
-    for j=1:8
+RNAcorr = zeros(9,1);
+stDEV = zeros(9,1); 
+for i=10
+    for j=1:9
         
         expr1 = expression{i}(:,indRNA);
         expr2 = expression{j}(:,indALL);
@@ -202,38 +218,39 @@ for i = 1:length(valS)
     h=bar(i,valS(i));
     %errorbar(i,valS(i),stDEV(i),'.')
     if strcmp(namesS(i), 'CV')
-        set(h,'FaceColor',[1 .87 .68],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
+        set(h,'FaceColor',[1 0.8 0.6],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
     elseif strcmp(namesS(i), 'Variance')
         set(h,'FaceColor',[1 0.8 0.6],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
-    elseif strcmp(namesS(i), 'Random1')
+    elseif strcmp(namesS(i), 'Rand_1')
         set(h,'FaceColor',[.96 .63 .55],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
-    elseif strcmp(namesS(i), 'Random2')
+    elseif strcmp(namesS(i), 'Rand_2')
         set(h,'FaceColor',[.96 .63 .55],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
     elseif strcmp(namesS(i), 'PC')
+        set(h,'FaceColor',[1 0.8 0.6],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
+    elseif strcmp(namesS(i), 'mean')
         set(h,'FaceColor',[.95 .6 .6],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
-    elseif strcmp(namesS(i), 'Mean')
-        set(h,'FaceColor',[.88 .56 .59],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
-    elseif strcmp(namesS(i), 'Noise')
+    elseif strcmp(namesS(i), 'signal proportion')
         set(h,'FaceColor',[.72 .43 .47],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
     elseif strcmp(namesS(i), 'DS')
-        set(h,'FaceColor',[.75 .31 .38],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);                 
+        set(h,'FaceColor',[.72 .43 .47],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);                 
+    elseif strcmp(namesS(i), 'max intensity')
+        set(h,'FaceColor',[.72 .43 .47],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);                 
     end
 end
 hold off
 ylim([0.5 1]); ylabel('Spearman correlation'); xlabel('Probe selection methods');
-title(sprintf('Correlation to probes selected based on highest correlation to RNA-seq (%d)', length(indRNA)))
-xticks([1 2 3 4 5 6 7 8])
+%title(sprintf(' (%d)', length(indRNA)))
+xticks([1 2 3 4 5 6 7 8 9])
+%legend(sprintf('%d genes', length(indRNA)))
 xticklabels(namesS);
-set(gca,'fontsize',15)
-
+xtickangle(45)
+set(gca,'FontSize', 14)
 
 
 %% now do the same thing only with QC filtering done first
 % make a figure for probe correlation from scratch
 % make sure files are saved without "noQC" label at the end
 clear all;
-options.signalThreshold = 0.5; % no QC filtering
-options.useCUSTprobes = true;
 
 Regeneratedata = false;
 if Regeneratedata
@@ -274,6 +291,8 @@ end
 
 %cd ('data/genes/processedData')
 load('MicroarrayDataWITHcustProbesUpdatedXXX.mat')
+options.signalThreshold = 0.5; % no QC filtering
+options.useCUSTprobes = true;
 
 signalLevel = sum(noiseall,2)./size(noiseall,2);
 indKeepProbes = find(signalLevel>=options.signalThreshold);
@@ -422,15 +441,15 @@ for i=9
     end
 end
 
-[valS, indS] = sort(RNAcorr);
+[valS, indS] = sort(RNAcorr, 'descend');
 namesS = tickNames(indS);
-
 
 figure; 
 set(gcf,'color','w');
 hold on
-for i = 1:length(r2)
+for i = 1:length(valS)
     h=bar(i,valS(i));
+    %errorbar(i,valS(i),stDEV(i),'.')
     if strcmp(namesS(i), 'CV')
         set(h,'FaceColor',[1 .87 .68],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
     elseif strcmp(namesS(i), 'Variance')
@@ -440,13 +459,13 @@ for i = 1:length(r2)
     elseif strcmp(namesS(i), 'Random2')
         set(h,'FaceColor',[.96 .63 .55],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
     elseif strcmp(namesS(i), 'PC')
-        set(h,'FaceColor',[.98 .57 .27],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
+        set(h,'FaceColor',[.95 .6 .6],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
     elseif strcmp(namesS(i), 'Mean')
-        set(h,'FaceColor',[1 .6 .4],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
+        set(h,'FaceColor',[.88 .56 .59],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
     elseif strcmp(namesS(i), 'Noise')
-        set(h,'FaceColor',[.98 .5 .45],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
+        set(h,'FaceColor',[.72 .43 .47],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);
     elseif strcmp(namesS(i), 'DS')
-        set(h,'FaceColor',[1 .35 .21],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);                 
+        set(h,'FaceColor',[.75 .31 .38],'EdgeColor',[0.45 0.45 0.45],'LineWidth',1.5);                 
     end
 end
 hold off

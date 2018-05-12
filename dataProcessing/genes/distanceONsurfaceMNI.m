@@ -1,9 +1,9 @@
-function shortestDist = distanceONsurfaceMNI(data_parcel, nROIs, coordsAssigned)
+function shortestDist = distanceONsurfaceMNI(data_parcel, ROIs, coordsAssigned)
 
 %samplesIND = ismember(DataCoordinates{subject}(:,2),nROIs);
 samples = coordsAssigned; %DataCoordinates{subject}(samplesIND,3:5);
 
-data = ismember(data_parcel,nROIs);
+data = ismember(data_parcel,ROIs);
 ind = 1:(size(data,1)*size(data,2)*size(data,3));
 
 dataNew = reshape(ind,size(data));

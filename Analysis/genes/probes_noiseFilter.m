@@ -2,6 +2,7 @@ clear all; close all;
 
 cd ('data/genes/processedData')
 load('MicroarrayDataWITHcustProbesUpdatedXXX.mat')
+sameGenes = true; 
 % select genes that have multiple probes, so thay will be sub-selected for
 % comparison
 for j=1:2
@@ -12,6 +13,7 @@ for j=1:2
         doFilter = false;
     end
     
+   
     signalLevel = sum(noiseall,2)./size(noiseall,2);
     indKeepProbes = find(signalLevel>=0.5);
     
@@ -52,7 +54,7 @@ for j=1:2
             t=r(:);
             t(isnan(t)) = [];
             
-            corVal(i,j) = median(t);
+            %corVal(i,j) = median(t);
             
             corVal(i,j) = mean(t);
 
@@ -61,4 +63,40 @@ for j=1:2
     end
 end
 
-[p,h,stats] = ranksum(corVal(:,1),corVal(:,2));
+[pall,hall,statsall] = ranksum(corVal(:,1),corVal(:,2));
+
+% select only genes that were affected by this filtering - the ones where
+% correlation between probes changed. 
+for i=1:size(corVal,1)
+    if corVal(i,1) == corVal(i,2)
+        indRem(i) = i; 
+    end
+end
+
+indRem(indRem==0) = []; 
+C = corVal; 
+C(indRem,:) = []; 
+
+mafter = mean(C(:,1)); 
+mbefore = mean(C(:,2)); 
+
+figure; 
+histogram(C(:,2), 25,'EdgeColor',[.6 .6 .6],...
+        'FaceColor',[.96 .63 .55]);
+    xlabel('Average correlation between probes')
+    ylabel('Number of genes')
+    set(gcf,'color','w'); hold on;
+    
+histogram(C(:,1), 30,'EdgeColor',[.6 .6 .6],...
+        'FaceColor',[1 .46 .22]);
+    
+legendText{2} = sprintf('After intensity-based filtering (%d genes)', size(C,1));
+legendText{1} = sprintf('Before intensity-based filtering (%d genes)', size(C,1));
+set(gca,'FontSize', 16)
+h = legend(legendText{1},legendText{2}); 
+set(h,'fontsize',20)
+xticks([-0.6 -0.4 -0.2 0 0.2 0.4 0.6 0.8 1])
+
+box off
+
+[psubset,hsubset,statssubset] = ranksum(C(:,1),C(:,2));
