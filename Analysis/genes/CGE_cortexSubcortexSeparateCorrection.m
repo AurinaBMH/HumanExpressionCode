@@ -5,7 +5,7 @@ clear all; close all;
 cd /Users/Aurina/GoogleDrive/Genetics_connectome/HumanExpression/data/genes/processedData
 normalisedSeparately = true; 
 if normalisedSeparately
-    load('100DS82scaledRobustSigmoidRNAseq1LcortexSubcortexSEPARATE_ROI_NOdistCorrTEST.mat')
+    load('100DS82scaledRobustSigmoidRNAseq1LcortexSubcortexSEPARATE_ROI_NOdistCorr.mat')
 else
     load('100DS82scaledRobustSigmoidRNAseq1LcortexSubcortex_ROI_NOdistCorr.mat')
 end
@@ -96,11 +96,15 @@ hold on; scatter(distSEP{3}, corrected{3},100, 'MarkerEdgeColor',[.45 .45 .45],.
     'MarkerFaceColor',[1 .65 0]);
 hold on; scatter(distSEP{2}, corrected{2},100, 'MarkerEdgeColor',[.45 .45 .45],...
     'MarkerFaceColor',[1 .11 .18]);
-set(gcf,'color','w');set(gca,'fontsize',15)
-legend({'Cortex to cortex', 'Cortex to subcortex', 'Subcortex to subcortex'})
+set(gcf,'color','w');set(gca,'fontsize',18)
+%legend({'Cortex to cortex', 'Cortex to subcortex', 'Subcortex to subcortex'},'FontSize', 18);
 xlabel('Euclidean distance (mm)')
-ylabel('Correlated gene expression')
+ylabel('Correlated gene expression');
 ylim([-1 1])
+xticks([20 40 60 80 100 120 140 160])
+xlim([0 160])
+
+
 
 
 % plot distance relationships separately for groups on non-corrected data
@@ -110,8 +114,12 @@ hold on; scatter(distSEP{3}, expSEP{3},100, 'MarkerEdgeColor',[.45 .45 .45],...
     'MarkerFaceColor',[1 .65 0]);
 hold on; scatter(distSEP{2}, expSEP{2},100, 'MarkerEdgeColor',[.45 .45 .45],...
     'MarkerFaceColor',[1 .11 .18]);
-set(gcf,'color','w');set(gca,'fontsize',15)
-legend({'Cortex to cortex', 'Cortex to subcortex', 'Subcortex to subcortex'})
+set(gcf,'color','w');set(gca,'fontsize',18)
+%legend({'Cortex to cortex', 'Cortex to subcortex', 'Subcortex to subcortex'},'FontSize', 18);
 xlabel('Euclidean distance (mm)')
-ylabel('Correlated gene expression')
+ylabel('Correlated gene expression');
 ylim([-1 1])
+xticks([20 40 60 80 100 120 140 160])
+xlim([0 160])
+
+

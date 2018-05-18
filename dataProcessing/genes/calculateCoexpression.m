@@ -82,7 +82,7 @@ end
 %[param,stat] = sigm_fit(distExpVect(:,1),distExpVect(:,2));
 
 % plot original coexpression-distance .
-[xThresholds,yMeans] = BF_PlotQuantiles(distExpVect(:,1),distExpVect(:,2),25,1,1); xlabel('Euclidean distance (mm)'); ylabel('Correlated gene expression');ylim([-1 1]); set(gca,'fontsize',15)
+[xThresholds,yMeans] = BF_PlotQuantiles(distExpVect(:,1),distExpVect(:,2),26,1,1); xlabel('Euclidean distance (mm)'); ylabel('Correlated gene expression');ylim([-1 1]); set(gca,'fontsize',18)
 switch Fit{1}
     
     case 'linear'
@@ -117,9 +117,9 @@ if strcmp(Fit{1}, 'linear') || strcmp(Fit{1}, 'exp') || strcmp(Fit{1}, 'exp_1_0'
     hold on; scatter(distExpVect(:,1),FitCurve,1, '.', 'r');
     % get residuals
     Residuals = Rvect - FitCurve;
-    BF_PlotQuantiles(distExpVect(:,1),nonzeros(Residuals(:)),50,1,1);   xlabel('Euclidean distance (mm)'); ylabel('Correlated gene expression');ylim([-1 1]); set(gca,'fontsize',15)
+    BF_PlotQuantiles(distExpVect(:,1),nonzeros(Residuals(:)),51,1,1);   xlabel('Euclidean distance (mm)'); ylabel('Correlated gene expression');ylim([-1 1]); set(gca,'fontsize',18)
 else
-    BF_PlotQuantiles(distExpVect(:,1),Residuals(:),50,1,1);   xlabel('Euclidean distance (mm)'); ylabel('Correlated gene expression');ylim([-1 1]); set(gca,'fontsize',15)
+    BF_PlotQuantiles(distExpVect(:,1),Residuals(:),51,1,1);   xlabel('Euclidean distance (mm)'); ylabel('Correlated gene expression');ylim([-1 1]); set(gca,'fontsize',18)
 end
 
 
@@ -146,6 +146,10 @@ switch resolution
 end
 figure; imagesc(correctedCoexpression); caxis([-1,1]);title('Corrected coexpression');
 colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]);
+set(gca,'xtick',[])
+set(gca,'xticklabel',[])
+set(gca,'ytick',[])
+set(gca,'yticklabel',[])
 
 
 %----------------------------------------------------------------------------------
@@ -170,6 +174,11 @@ switch resolution
         figure; subplot(1,25,[1 2]); imagesc(sROIs);
         subplot(1,25,[3 25]); imagesc(coexpressionSorted); caxis([-1,1]); title('Corrected coexpression sorted samples');
         colormap([flipud(BF_getcmap('blues',9));[1 1 1]; BF_getcmap('reds',9)]);
+        set(gca,'xtick',[])
+        set(gca,'xticklabel',[])
+        set(gca,'ytick',[])
+        set(gca,'yticklabel',[])
+        
         
         
         % add NaNs to diagonal for reshaping
@@ -195,24 +204,24 @@ switch resolution
                     %P = coexpressionSorted(A, B);
                     
                     P = correctedCoexpressionSorted(A, B);
-%                     if length(P)>4
-%                         [isNormH(sub,j),isNormP(sub,j)] = adtest(P(:));
-%                     else
-%                         isNormH(sub,j) = NaN;
-%                         isNormP(sub,j) = NaN;
-%                     end
+                    %                     if length(P)>4
+                    %                         [isNormH(sub,j),isNormP(sub,j)] = adtest(P(:));
+                    %                     else
+                    %                         isNormH(sub,j) = NaN;
+                    %                         isNormP(sub,j) = NaN;
+                    %                     end
                     
                     
                 else
                     
                     %for uncorrected
                     P = coexpressionSorted(A, B);
-%                     if length(P)>4
-%                         [isNormH(sub,j),isNormP(sub,j)] = adtest(P(:));
-%                     else
-%                         isNormH(sub,j) = NaN;
-%                         isNormP(sub,j) = NaN;
-%                     end
+                    %                     if length(P)>4
+                    %                         [isNormH(sub,j),isNormP(sub,j)] = adtest(P(:));
+                    %                     else
+                    %                         isNormH(sub,j) = NaN;
+                    %                         isNormP(sub,j) = NaN;
+                    %                     end
                 end
                 D = distancesSorted(A,B);
                 parcelDistances(sub,j) = mean(D(:));
@@ -252,4 +261,8 @@ else
     title('Non - corrected parcellation coexpression ROIs');
 end
 colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]);
+set(gca,'xtick',[])
+set(gca,'xticklabel',[])
+set(gca,'ytick',[])
+set(gca,'yticklabel',[])
 end

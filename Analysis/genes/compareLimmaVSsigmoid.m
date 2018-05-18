@@ -3,7 +3,9 @@
 % 1. correlate separately normalised data using sigmoid and limma
 % normalised data + sigmoid
 % import limma normalised data
-normalisedExpression = importNormalisedExpression('normalisedExpression.txt'); 
+
+normalisedExpression = importlimmaExpression('limmanormalisedExpression.txt'); 
+
 normExpression = normalisedExpression'; 
 % sigmoid normalise it
 expNorm1 = BF_NormalizeMatrix(normExpression,'scaledRobustSigmoid');
@@ -54,7 +56,7 @@ subjects = vertcat(subjNr{1}, subjNr{2}, subjNr{3}, subjNr{4}, subjNr{5}, subjNr
 
 nice_cmap = [make_cmap('steelblue',50,30,0);flipud(make_cmap('orangered',50,30,0))];
 p = randperm(length(subjects)); 
-[W,score,~,~,explained] = pca(expNorm2, 'NumComponents',4);
+[W,score,~,~,explained] = pca(expNorm1, 'NumComponents',4);
 x = score(p,1); y = score(p,2); z = score(p,3); 
 C = subjects(p); 
 S = ones(length(subjects),1)+60;

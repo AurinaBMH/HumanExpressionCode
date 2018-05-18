@@ -1,6 +1,6 @@
 % make a histogram for assignment distances
 % load any file where samples were assigned to parcellation
-load('MicroarrayDataProbesUpdatedLessNoise82DistThresh5_CoordsAssigned.mat')
+load('MicroarrayDataWITHcustProbesUpdatedXXXRNAseq82DistThresh2.mat')
 
 sides = {'left', 'right'};
 brainParts = {'Cortex','Subcortex'};
@@ -33,15 +33,19 @@ end
 
 nice_cmap = [make_cmap('steelblue',50,30,0);flipud(make_cmap('orangered',50,30,0))];
 % plot on large axes
-figure; set(gcf,'color','w'); 
+figure; set(gcf,'color','w'); box off; 
 histogram(B, 27,'facecolor',nice_cmap(20,:),'facealpha',.5,'edgecolor',nice_cmap(10,:));
-xlabel('Distance (mm)', 'FontSize',15); ylabel('Number of samples', 'FontSize',15); 
+xlabel('Distance (mm)'); ylabel('Number of samples'); 
+set(gca,'FontSize', 18)
 % create smaller axes in top right, and plot on it
 axes('Position',[.35 .35 .5 .5])
+
 %box on
 x=0:20;  
 plot(x, prop, 'Color',nice_cmap(10,:), 'LineWidth',1.5); 
-xlabel('Distance (mm)', 'FontSize',12); ylabel('Proportion of assigned samples', 'FontSize',12); 
+xlabel('Distance (mm)'); ylabel('Proportion of assigned samples'); 
 hold on; box off; 
 scatter(x, prop, 'MarkerEdgeColor',nice_cmap(10,:),...
     'MarkerFaceColor',nice_cmap(20,:)); 
+set(gca,'FontSize', 16)
+

@@ -5,11 +5,11 @@ function S2_probes(options)
 % percentage of samples that a selected probe has expression levels that are higher than background
 rng shuffle % for selecting different seed for random probe selection
 useCUSTprobes = options.useCUSTprobes;
-probeSelections = options.probeSelections{1}; 
-signalThreshold = options.signalThreshold; 
+probeSelections = options.probeSelections{1};
+signalThreshold = options.signalThreshold;
 
-if strcmp(probeSelections, 'RNAseq') 
-RNAseqThreshold = options.RNAseqThreshold; 
+if strcmp(probeSelections, 'RNAseq')
+    RNAseqThreshold = options.RNAseqThreshold;
 end
 
 %------------------------------------------------------------------------------
@@ -107,28 +107,79 @@ for subj = 1:nSub
                 %fprintf(1,'Performing probe selection using Max variance\n');
                 measure = var(expRepEntrezIDs,0,1);
                 % determine max var value
-                [MaxV, indMaxV] = max(measure);
+                [~, indMaxV] = max(measure);
                 
                 
             elseif strcmp(probeSelections, 'PC')
                 %fprintf(1,'Performing probe selection using max PC\n');
                 % substract the mean before doing pca
-                expRepEntrezIDsNOmean = expRepEntrezIDs-mean(expRepEntrezIDs); 
+                expRepEntrezIDsNOmean = expRepEntrezIDs-mean(expRepEntrezIDs);
                 measure = pca(expRepEntrezIDsNOmean,'Centered',false);
                 % determine max PC loading
-                [MaxV, indMaxV] = max(measure(:,1));
+                [~, indMaxV] = max(measure(:,1));
             elseif strcmp(probeSelections, 'maxIntensity')
                 
-                 measure = mean(expRepEntrezIDs);
+                measure = mean(expRepEntrezIDs);
                 % determine probe with max signal
-                [MaxV, indMaxV] = max(measure);
+                [~, indMaxV] = max(measure);
                 
+            elseif strcmp(probeSelections, 'maxCorrelation_intensity')
+                % accordin to the description in WGCNA, if there are 2
+                % probes, one with max variance is chosen
+                if size(expRepEntrezIDs,2)==2
+                    measure = mean(expRepEntrezIDs);
+                    % determine probe with max signal
+                    [~, indMaxV] = max(measure);
+                    % if there are more then 2 probes, correelations between
+                    % each pair of probes is chosen and probe with max
+                    % correlaition to others is selected
+                elseif size(expRepEntrezIDs,2)>2
+                    % calculate correlations between probes (all pairs)
+                    rPR = zeros(size(expRepEntrezIDs,2),size(expRepEntrezIDs,2));
+                    for pr1=1:size(expRepEntrezIDs,2)
+                        for pr2=pr1+1:size(expRepEntrezIDs,2)
+                            rPR(pr1, pr2) = corr(expRepEntrezIDs(:,pr1), expRepEntrezIDs(:,pr2), 'Type','Pearson');
+                        end
+                    end
+                    rPR = rPR+rPR';
+                    rPR(logical(eye(size(rPR)))) = 1; 
+                    A = (0.5+0.5*rPR);
+                    % sum per column (or row) to get "total" correlaion
+                    measure = sum(A,1);
+                    [~, indMaxV] = max(measure);
+                end
+                
+                elseif strcmp(probeSelections, 'maxCorrelation_variance')
+                % accordin to the description in WGCNA, if there are 2
+                % probes, one with max variance is chosen
+                if size(expRepEntrezIDs,2)==2
+                    measure = var(expRepEntrezIDs,0,1);
+                    % determine probe with max signal
+                    [~, indMaxV] = max(measure);
+                    % if there are more then 2 probes, correelations between
+                    % each pair of probes is chosen and probe with max
+                    % correlaition to others is selected
+                elseif size(expRepEntrezIDs,2)>2
+                    % calculate correlations between probes (all pairs)
+                    rPR = zeros(size(expRepEntrezIDs,2),size(expRepEntrezIDs,2));
+                    for pr1=1:size(expRepEntrezIDs,2)
+                        for pr2=pr1+1:size(expRepEntrezIDs,2)
+                            rPR(pr1, pr2) = corr(expRepEntrezIDs(:,pr1), expRepEntrezIDs(:,pr2), 'Type','Pearson');
+                        end
+                    end
+                    rPR = rPR+rPR';
+                    rPR(logical(eye(size(rPR)))) = 1; 
+                    A = (0.5+0.5*rPR);
+                    % sum per column (or row) to get "total" correlaion
+                    measure = sum(A,1);
+                    [~, indMaxV] = max(measure);
+                end
                 
             elseif strcmp(probeSelections, 'CV')
                 %fprintf(1,'Performing probe selection using max PC\n');
                 measure = std(expRepEntrezIDs)./mean(expRepEntrezIDs);
                 % determine max PC loading
-                [MaxV, indMaxV] = max(measure);
+                [~, indMaxV] = max(measure);
                 
             elseif strcmp(probeSelections, 'LessNoise')
                 %fprintf(1,'Performing probe selection using less noise criteria\n');
@@ -136,7 +187,7 @@ for subj = 1:nSub
                 % find probe with most signal in it compared to noise
                 measure = sum(noiseRepEntrezIDs,1);
                 % determine probe with max signal
-                [MaxV, indMaxV] = max(measure);
+                [~, indMaxV] = max(measure);
                 
             elseif strcmp(probeSelections, 'Mean')
                 expressionSelected{subj}(:,k) = mean(expRepEntrezIDs,2);
@@ -146,7 +197,12 @@ for subj = 1:nSub
                 % for probeInformation (expression values are mean of
                 % al probes)
                 
-            elseif strcmp(probeSelections, 'Random')
+            elseif strcmp(probeSelections, 'Random1')
+                %fprintf(1,'Performing probe selection using random selection\n');
+                
+                % determine max var value
+                [indMaxV] = randsample(1:size(expRepEntrezIDs,2),1);
+            elseif strcmp(probeSelections, 'Random2')
                 %fprintf(1,'Performing probe selection using random selection\n');
                 
                 % determine max var value
@@ -159,8 +215,11 @@ for subj = 1:nSub
                 
             end
             
-            if (strcmp(probeSelections, 'Mean') || strcmp(probeSelections, 'Variance') || strcmp(probeSelections, 'Random') ||...
-                    strcmp(probeSelections, 'PC') || strcmp(probeSelections, 'LessNoise') || strcmp(probeSelections, 'maxIntensity') || strcmp(probeSelections, 'RNAseq') || strcmp(probeSelections, 'CV'))
+            if (strcmp(probeSelections, 'Mean') || strcmp(probeSelections, 'Variance') || strcmp(probeSelections, 'Random1') ...
+                    ||  strcmp(probeSelections, 'Random2') || strcmp(probeSelections, 'maxCorrelation_variance') ...
+                    || strcmp(probeSelections, 'maxCorrelation_intensity') || strcmp(probeSelections, 'PC') ...
+                    || strcmp(probeSelections, 'LessNoise') || strcmp(probeSelections, 'maxIntensity') ...
+                    || strcmp(probeSelections, 'RNAseq') || strcmp(probeSelections, 'CV'))
                 %indMsubj(k,subj) = indProbe(k); %(indMaxV);
                 %if NaN, use NaN;
                 if isnan(indMaxV)
@@ -245,7 +304,8 @@ expressionAll = cell(6,1);
 sampleInfo = cell(6,1);
 for subject=1:6
     if strcmp(probeSelections, 'Variance') || strcmp(probeSelections, 'PC') || strcmp(probeSelections, 'maxIntensity')...
-            || strcmp(probeSelections, 'LessNoise') || strcmp(probeSelections, 'Random') ...
+            || strcmp(probeSelections, 'LessNoise') || strcmp(probeSelections, 'Random1') || strcmp(probeSelections, 'Random2') ...
+            || strcmp(probeSelections, 'maxCorrelation_intensity') || strcmp(probeSelections, 'maxCorrelation_variance') ...
             || strcmp(probeSelections, 'RNAseq') || strcmp(probeSelections, 'DS') || strcmp(probeSelections, 'CV')
         
         % exclude NaN probes keeping 1 probe for 1 entrezID.
@@ -271,9 +331,19 @@ for subject=1:6
 end
 
 if strcmp(probeSelections, 'RNAseq')
-     save(sprintf('%s%snoQC.mat', startFileName, probeSelections), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes', 'options');
-   % save(sprintf('%s%s%dRNAthr%dnoisethr.mat', startFileName, probeSelections{1}, RNAseqThreshold, signalThreshold), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes', 'options');
+    if signalThreshold==-1
+        save(sprintf('%s%snoQC.mat', startFileName, probeSelections), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes', 'options');
+        % save(sprintf('%s%s%dRNAthr%dnoisethr.mat', startFileName, probeSelections{1}, RNAseqThreshold, signalThreshold), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes', 'options');
+    else
+        save(sprintf('%s%s.mat', startFileName, probeSelections), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes', 'options');
+    end
+    
 else
-    save(sprintf('%s%snoQC.mat', startFileName, probeSelections), 'expressionAll', 'probeInformation' , 'sampleInfo', 'options');
+    if signalThreshold==-1
+        save(sprintf('%s%snoQC.mat', startFileName, probeSelections), 'expressionAll', 'probeInformation' , 'sampleInfo', 'options');
+    else
+        save(sprintf('%s%s.mat', startFileName, probeSelections), 'expressionAll', 'probeInformation' , 'sampleInfo', 'options');
+        
+    end
 end
 cd ../../..

@@ -30,21 +30,22 @@ CSdist = dist.*CSmask;  CSdist = CSdist(:); CSdist(isnan(CSdist)) = [];
 SSdist = dist.*SSmask; SSdist = SSdist(:); SSdist(isnan(SSdist)) = [];
 
 
-figure; scatter(CCdist, CCexp, 100, 'MarkerEdgeColor',[.45 .45 .45],...
+figure; scatter(CCdist, CCexp, 100, 'MarkerEdgeColor',[.55 .55 .55],...
     'MarkerFaceColor',[.64 .87 .93]);
-hold on; scatter(CSdist, CSexp,100, 'MarkerEdgeColor',[.45 .45 .45],...
+hold on; scatter(CSdist, CSexp,100, 'MarkerEdgeColor',[.55 .55 .55],...
     'MarkerFaceColor',[1 .65 0]);
-hold on; scatter(SSdist, SSexp,100, 'MarkerEdgeColor',[.45 .45 .45],...
+hold on; scatter(SSdist, SSexp,100, 'MarkerEdgeColor',[.55 .55 .55],...
     'MarkerFaceColor',[1 .11 .18]);
-set(gcf,'color','w');set(gca,'fontsize',15)
-legend({'Cortex to cortex', 'Cortex to subcortex', 'Subcortex to subcortex'})
+set(gcf,'color','w');set(gca,'fontsize',18)
+%legend({'Cortex to cortex', 'Cortex to subcortex', 'Subcortex to subcortex'}, 'FontSize', 18); 
 xlabel('Euclidean distance (mm)')
 ylabel('Correlated gene expression')
 ylim([-1 1])
+xticks([20 40 60 80 100 120 140 160])
+xlim([0 160])
 
 
 % Cortex/subcortex
-cd('data/genes/processedData')
 load('100DS82scaledRobustSigmoidRNAseq1LcortexSubcortex_ROI_distCorr.mat')
 numCort = 34;
 numNodes = 41;
@@ -75,17 +76,19 @@ CSdist = dist.*CSmask;  CSdist = CSdist(:); CSdist(isnan(CSdist)) = [];
 SSdist = dist.*SSmask; SSdist = SSdist(:); SSdist(isnan(SSdist)) = [];
 
 
-figure; scatter(CCdist, CCexp, 100, 'MarkerEdgeColor',[.45 .45 .45],...
+figure; scatter(CCdist, CCexp, 100, 'MarkerEdgeColor',[.55 .55 .55],...
     'MarkerFaceColor',[.64 .87 .93]);
-hold on; scatter(CSdist, CSexp,100, 'MarkerEdgeColor',[.45 .45 .45],...
+hold on; scatter(CSdist, CSexp,100, 'MarkerEdgeColor',[.55 .55 .55],...
     'MarkerFaceColor',[1 .65 0]);
-hold on; scatter(SSdist, SSexp,100, 'MarkerEdgeColor',[.45 .45 .45],...
+hold on; scatter(SSdist, SSexp,100, 'MarkerEdgeColor',[.55 .55 .55],...
     'MarkerFaceColor',[1 .11 .18]);
-set(gcf,'color','w');set(gca,'fontsize',15)
-legend({'Cortex to cortex', 'Cortex to subcortex', 'Subcortex to subcortex'})
+set(gcf,'color','w');set(gca,'fontsize',18)
+%legend({'Cortex to cortex', 'Cortex to subcortex', 'Subcortex to subcortex'},'FontSize', 18);
 xlabel('Euclidean distance (mm)')
 ylabel('Correlated gene expression');
 ylim([-1 1])
+xticks([20 40 60 80 100 120 140 160])
+xlim([0 160])
 
 
 
