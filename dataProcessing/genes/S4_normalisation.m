@@ -1,11 +1,5 @@
-function S4_normalisationTEST(options)
-%% Author: Aurina
+function c=S4_normalisation(options)
 
-%close all;
-%Last modiffied: 2017-07-31
-%Last modiffied: 2017-08-01
-%close all;
-%clear all;
 %------------------------------------------------------------------------------
 % Choose options
 %------------------------------------------------------------------------------
@@ -18,12 +12,29 @@ resolution = options.resolution;
 calculateDS = options.calculateDS;
 percentDS = options.percentDS;
 distanceCorrection = options.distanceCorrection;
-coexpressionFor = options.coexpressionFor;
 Fit = options.Fit;
 doNormalise = options.doNormalise;
 normMethod = options.normMethod;
 normaliseWhat = options.normaliseWhat;
-% choose Lcortex if want tnormalise samples assigned to left cortex separately;
+normSample = options.normaliseWithinSample;
+signalThreshold = options.signalThreshold;
+xrange = options.xrange; 
+doPlotCGE = options.plotCGE; 
+doPlotResiduals = options.plotResiduals; 
+how2mean = options.meanSamples; 
+
+if signalThreshold==-1
+    QClabel = 'noQC'; 
+else
+    QClabel = 'QC'; 
+end
+
+if normSample
+    normHow = 'NSG';
+else
+    normHow = 'NG';
+end
+% choose Lcortex if want to normalise samples assigned to left cortex separately;
 % choose LcortexSubcortex if want to normalise LEFT cortex + left subcortex together
 % choose wholeBrain if you want to normalise the whole brain.
 % choose LRcortex if you want to normalise left cortex + right cortex.
@@ -57,9 +68,7 @@ for p=probeSelection
     elseif strcmp(parcellation, 'HCP')
         numNodes = 360;
         LeftCortex = 1:180;
-        %LeftSubcortex = 110;
         RightCortex = 181:360;
-        %RightSubcortex = NumNodes;
     end
     
     switch normaliseWhat
@@ -73,14 +82,13 @@ for p=probeSelection
             subjects = 1:2;
             nROIs = 1:numNodes;
         case 'LRcortex'
-            subjects = 1:2;
+            subjects = 1:6;
             nROIs = [LeftCortex,RightCortex];
         case 'LcortexSubcortexSEPARATE'
             subjects = 1:6;
             nROIs = [LeftCortex,LeftSubcortex];
             
     end
-    %options.subjects = subjects;
     if useCUSTprobes
         startFileName = 'MicroarrayDataWITHcustProbesUpdatedXXX';
     else
@@ -88,7 +96,7 @@ for p=probeSelection
     end
     
     cd ('data/genes/processedData');
-    load(sprintf('%s%s%dDistThresh%d.mat', startFileName, p{1}, numNodes, distanceThreshold));
+    load(sprintf('%s%s%s%dDistThresh%d.mat', startFileName, p{1}, QClabel, numNodes, distanceThreshold));
     
     
     expressionSubjROI = cell(6,1);
@@ -96,16 +104,13 @@ for p=probeSelection
     coordSample = cell(6,1);
     expSampNorm = cell(6,1);
     expSample = cell(6,1);
-    
     entrezIDs = probeInformation.EntrezID;
-    %load('IDgenes2plus.mat');
-    %[~, keep] = intersect(entrezIDs, IDgene);
     %----------------------------------------------------------------------------------
     % Normalise data for each subject separately
     % Do differential stability calculation:
     %1. average expression values for each ROI for differential stability calculation
     %2. get DS values for each gene
-    %3. take top 5% of DS genes
+    %3. take top X% of DS genes
     %----------------------------------------------------------------------------------
     
     for sub=subjects
@@ -150,41 +155,56 @@ for p=probeSelection
                     data = expSubj1{kk}(:,3:size(expSubj1{kk},2));
                     ROI1{kk} = expSubj1{kk}(:,2);
                     % normalise sample x gene data for each subject separately
-                    %% commented - not normalise
                     switch normMethod
                         case 'hampel'
+                            if normSample
+                                data = Norm_hampel(data')';
+                            end
                             dataNorm1 = Norm_hampel(data);
+                            indREM = find(all(isnan(dataNorm1),1));
+                            dataNorm1(:,indREM) = [];
+                            data(:,indREM) = [];
                             fprintf('Normalising gene expression data\n')
                         otherwise
+                            if normSample
+                                data = BF_NormalizeMatrix(data', normMethod)';
+                            end
                             dataNorm1 = BF_NormalizeMatrix(data, normMethod);
-                            %dataNorm2 = BF_NormalizeMatrix(dataNorm, normMethod);
+                            indREM = find(all(isnan(dataNorm1),1));
+                            dataNorm1(:,indREM) = [];
+                            data(:,indREM) = [];
                             fprintf('Normalising gene expression data\n')
                     end
                     DATA{kk} = dataNorm1;
                 end
                 dataNorm = vertcat(DATA{1}, DATA{2});
-                ROI = vertcat(ROI1{1}, ROI1{2}); 
-                coord = vertcat(coord1{1}, coord1{2}); 
+                ROI = vertcat(ROI1{1}, ROI1{2});
+                coord = vertcat(coord1{1}, coord1{2});
                 expSubj = vertcat(expSubj1{1}, expSubj1{2});
             otherwise
                 expSubj = expSingleSubj(ind,:);
                 coord = coordSingle(ind,3:5);
                 data = expSubj(:,3:size(expSubj,2));
-                %data = 2.^(data);
-                %     if onlyMultipleProbes
-                %         data = data(:,keep);
-                %     end
-                %coordSample{sub} = coord;
                 ROI = expSubj(:,2);
                 % normalise sample x gene data for each subject separately
-                %% commented - not normalise
                 switch normMethod
                     case 'hampel'
+                        if normSample
+                            data = Norm_hampel(data')';
+                        end
                         dataNorm = Norm_hampel(data);
+                        indREM = find(all(isnan(dataNorm),1));
+                        dataNorm(:,indREM) = [];
+                        data(:,indREM) = [];
                         fprintf('Normalising gene expression data\n')
                     otherwise
+                        if normSample
+                            data = BF_NormalizeMatrix(data', normMethod)';
+                        end
                         dataNorm = BF_NormalizeMatrix(data, normMethod);
-                        %dataNorm2 = BF_NormalizeMatrix(dataNorm, normMethod);
+                        indREM = find(all(isnan(dataNorm),1));
+                        dataNorm(:,indREM) = [];
+                        data(:,indREM) = [];
                         fprintf('Normalising gene expression data\n')
                 end
         end
@@ -193,11 +213,8 @@ for p=probeSelection
         else
             expSampNorm{sub} = [ROI, data];
         end
-        % SAVE NON-NORMALISED DATA FOR TEST
         coordSample{sub} = [ROI, coord];
-        %expSample{sub} = [ROI, data];
         ROIs = unique(expSubj(:,2));
-        
         
         % average expression values for each ROI for differential stability calculation
         
@@ -207,14 +224,12 @@ for p=probeSelection
         for j=1:length(ROIs)
             indROI = find(expSubj(:,2)==(ROIs(j)));
             noProbes = length(indROI);
-            % fprintf(1,'%u samples for %u ROI found \n', noProbes, ROIs(j))
             % take expression values for a selected entrezID
             if doNormalise
                 expressionRepInt = dataNorm(indROI,:);
             else
                 expressionRepInt = data(indROI,:);
             end
-            % try not normalised data for DS
             coordinatesRepInt = coord(indROI,:);
             
             % calculate the mean for expression data for a selected entrezID
@@ -236,9 +251,16 @@ for p=probeSelection
     combinedCoord = cat(1,coordSample{1}, coordSample{2}, coordSample{3},...
         coordSample{4}, coordSample{5}, coordSample{6});
     
+    
+    
+    ROIind{1} = [expSampNorm{1,1}(:,1), ones(length(expSampNorm{1,1}(:,1)),1)]; 
+    ROIind{2} = [expSampNorm{2,1}(:,1), ones(length(expSampNorm{2,1}(:,1)),1)*2]; 
+    ROIind{3} = [expSampNorm{3,1}(:,1), ones(length(expSampNorm{3,1}(:,1)),1)*3];
+    ROIind{4} = [expSampNorm{4,1}(:,1), ones(length(expSampNorm{4,1}(:,1)),1)*4];
+    ROIind{5} = [expSampNorm{5,1}(:,1), ones(length(expSampNorm{5,1}(:,1)),1)*5];
+    ROIind{6} = [expSampNorm{6,1}(:,1), ones(length(expSampNorm{6,1}(:,1)),1)*6];
+    
     if calculateDS
-        
-        %DS = calculateDS(DataExpression,DataCoordinatesMNI,parcellation, normaliseWhat, normMethod);
         
         %----------------------------------------------------------------------------------
         % Pre-define variables for DS calculation
@@ -309,7 +331,7 @@ for p=probeSelection
         % gene that have most consistent expression pattern through regions will
         % get highest scores
         %----------------------------------------------------------------------------------
-        DS = mean(c,1);
+        DS = nanmean(c,1);
         
         %----------------------------------------------------------------------------------
         % Take top % of DS genes
@@ -326,88 +348,68 @@ for p=probeSelection
         end
         
         %----------------------------------------------------------------------------------
-        % Get probeIDs for selected DS genes
-        %----------------------------------------------------------------------------------
-        
-        %    probes = probeInformation.ProbeName(DSvalues(:,1));
-        % DSProbeTable = table(probes, DSvalues(:,2));
-        %----------------------------------------------------------------------------------
         % Take selected genes and calculate sample - sample coexpression
         %----------------------------------------------------------------------------------
         fprintf('Calculating coexpression between samples, performing coexpression-distance correctio and averaging coexpression to ROIs\n')
-        %load('DistancesONsurface.mat');
-        switch coexpressionFor
-            case 'all'
+        
+        selectedGenes = expSampNormalisedAll(:,2:end);
+        switch distanceCorrection
+            case 'Euclidean'
+                % calculate euclidean distance on MNI coordinates
+                sampleDistances = pdist2(combinedCoord(:,2:end), combinedCoord(:,2:end));%
+            case 'GMvolume'
+                % load pre-calculated distances within GM volume
+                load('distancesGM_MNIXXX.mat');
+                sampleDistances = distSamples;
+            case 'Surface'
+                % load pre-calculated distances on surface
+                load('DistancesONsurfaceXXX.mat');
+                sampleDistances = distSamples;
+            case 'SurfaceANDEuclidean'
+                % calculate euclidean between all samples
+                sampleDistancesSubcortex = pdist2(combinedCoord(:,2:end), combinedCoord(:,2:end));%
+                % load surface distances for cortical samples
+                load('DistancesONsurfaceXXX.mat');
+                sampleDistancesCortex = distSamples;
+                % first samples in the distance matrix are
+                % cortical, so replace euclidean distance with
+                % surface for that set
+                sampleDistances = sampleDistancesSubcortex;
                 
-                selectedGenes = expSampNormalisedAll(:,2:end);
-                switch distanceCorrection
-                    case 'Euclidean'
-                        % calculate euclidean distance on MNI coordinates
-                        sampleDistances = pdist2(combinedCoord(:,2:end), combinedCoord(:,2:end));%
-                    case 'GMvolume'
-                        % load pre-calculated distances within GM volume
-                        load('distancesGM_MNIXXX.mat');
-                        sampleDistances = distSamples;
-                    case 'Surface'
-                        % load pre-calculated distances on surface
-                        load('DistancesONsurfaceXXX.mat');
-                        sampleDistances = distSamples;
-                end
-                fprintf(sprintf('%s distance correction is chosen\n', distanceCorrection))
-                W = unique(expSampNormalisedAll(:,1));
-                ROIs = expSampNormalisedAll(:,1);
-                
-                [averageCoexpression, parcelCoexpression, correctedCoexpression, Residuals, distExpVect, averageDistance] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance, resolution);
-                
-            case 'separate'
-                
-                expPlotALL = zeros(max(nROIs),max(nROIs),max(subjects));
-                %expPlotALL2 = cell(6,1);
-                correctedCoexpressionALL = cell(max(subjects),1);
-                parcelCoexpressionALL = cell(max(subjects),1);
-                indSub1 = 1;
-                for sub=subjects
-                    
-                    
-                    selectedGenes = expSampNorm{sub}(:,2:end);
-                    indSub = size(expSampNorm{sub},1);
-                    sampleDistances = pdist2(coordSample{sub}(:,2:end), coordSample{sub}(:,2:end)); %distancesMNI(indSub1:indSub, indSub1:indSub); %
-                    indSub1 = indSub+1;
-                    W = unique(expSampNorm{sub}(:,1));
-                    ROIs = expSampNorm{sub}(:,1);
-                    
-                    [expPlot, parcelCoexpression, correctedCoexpression, Residuals, distExpVect, averageDistance] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance, resolution);
-                    expPlotALL(:,:,sub) = expPlot;
-                    %expPlotALL2{sub} = expPlot;
-                    correctedCoexpressionALL{sub} = correctedCoexpression;
-                    parcelCoexpressionALL{sub} = parcelCoexpression;
-                    
-                end
-                averageCoexpression = nanmean(expPlotALL,3);
+                [tf,loc] = ismember(combinedCoord(:,1),LeftCortex);
+                sampleDistances(tf==1, tf==1) = sampleDistancesCortex;
         end
         
+        fprintf(sprintf('%s distance correction is chosen\n', distanceCorrection))
+        W = unique(expSampNormalisedAll(:,1));
+        ROIs = expSampNormalisedAll(:,1);
+        
+        [averageCoexpression, parcelCoexpression, ...
+            correctedCoexpression, Residuals, ...
+            distExpVect, averageDistance, ...
+            c, parcelExpression] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs, nROIs, Fit, correctDistance, resolution, xrange, doPlotCGE, doPlotResiduals, ROIind, how2mean);
         
         probeInformation.DS = DS';
     end
     SampleCoordinates = sortrows(combinedCoord,1);
     SampleGeneExpression = sortrows(expSampNormalisedAll,1);
-    %save(sprintf('DSnew%s', p{1}), 'DS', 'averageCoexpression', 'DSProbeTable', 'expSampNormalisedAll', 'probeInformation');
+    
+    probeInformation.EntrezID(indREM) = [];
+    probeInformation.GeneSymbol(indREM) = [];
+    probeInformation.ProbeID(indREM) = [];
+    probeInformation.ProbeName(indREM) = [];
+    
+    % add ROI numbers for each row
+    parcelExpression = [W, parcelExpression]; 
     if correctDistance
-        save(sprintf('%dDS%d%s%s%d%s_%s_distCorr.mat', percentDS, numNodes, normMethod, p{1}, doNormalise, normaliseWhat, resolution), 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'optionsSave', 'averageCoexpression', 'averageDistance');
-        %fprintf('saving to file1')
+        save(sprintf('%dDS%d%s%s%s%s%d%s_%s_distCorr%s.mat', percentDS, numNodes, normMethod, normHow, p{1}, QClabel,  doNormalise, normaliseWhat, resolution, distanceCorrection), 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'optionsSave', 'averageCoexpression', 'averageDistance', 'parcelExpression');
+        
     elseif ~correctDistance
-        save(sprintf('%dDS%d%s%s%d%s_%s_NOdistCorr.mat', percentDS, numNodes, normMethod, p{1}, doNormalise, normaliseWhat, resolution), 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'optionsSave', 'averageCoexpression', 'averageDistance');
-        %fprintf('saving to file2')
+        save(sprintf('%dDS%d%s%s%s%s%d%s_%s_NOdistCorr%s.mat', percentDS, numNodes, normMethod, normHow, p{1}, QClabel, doNormalise, normaliseWhat, resolution, distanceCorrection), 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'optionsSave', 'averageCoexpression', 'averageDistance', 'parcelExpression');
+        
     end
-    %save(sprintf('DSnew%s%s%dBEN', normMethod, p{1}, doNormalise), 'SampleCoordinates', 'SampleGeneExpression', 'probeInformation', 'options');
+    
     cd ../../..
 end
-%figure; imagesc(expPlotMNI); caxis([-1 1]); colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]); title('Average coexpression')
-
-% A = [averageCoexpressionSeparateMasMin(:),averageCoexpressionSeparateZscore(:)];
-% A = A(~any(isnan(A),2),:);
-% figure; scatter(A(:,1), A(:,2));
-% [r,p] = corr(A(:,1), A(:,2), 'type', 'Spearman')
-
 
 end

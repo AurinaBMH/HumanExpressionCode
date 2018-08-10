@@ -1,27 +1,30 @@
 % Rich club in the whole brain
+
+function [PhiNormMean, Adj] = giveMeRichClub(parcellation, onlyLeftCortex, numIter,numRepeats,WhatTypeNetwork,whatNullModel)
+
+
 type = 'HCP';
 
 if strcmp(type, 'HCP')
-    load('HCPMMP1ANDfslatlas20_acpc_connectome_data.mat')
+    load('HCPMMP1ANDfslatlas20_acpc_FACT_SIFT2_standard_structnets.mat')
 elseif strcmp(type, 'GenCog')
     load('HCPMMP1ANDfslatlas20_GenCOG_connectome_data.mat');
 end
 
-[Adj, consist] = giveMeGroupAdj(standard);
+[Adj, consist] = giveMeGroupAdj(ADJS);
 %deg = degrees_und(Adj);
 
-numIter = 5;
-numRepeats = 10;
+numIter = 50;
+numRepeats = 100;
 WhatTypeNetwork = 'bu'; 
 whatNullModel = 'randmio_und'; %'randmio_und'; %'strength'; %
+onlyLeftCortex = false; 
 
 if strcmp(WhatTypeNetwork, 'bu')
     Adj = logical(Adj); 
 end
-onlyLeft = false; 
-%Adj = logical(groupAdj(1:180,1:180));
 
-if onlyLeft
+if onlyLeftCortex
     Adj = Adj(1:180,1:180); 
 end
 

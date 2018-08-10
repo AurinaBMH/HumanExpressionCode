@@ -1,38 +1,72 @@
-function [expPlot, parcelCoexpression, correctedCoexpression, Residuals, distExpVect, distPlot] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance, resolution)
+function [expPlot, parcelCoexpression, correctedCoexpression, Residuals, distExpVect, distPlot, c, parcelExpression] = calculateCoexpression(sampleDistances, selectedGenes, DSvalues, W, ROIs,nROIs, Fit, correctDistance, resolution, xrange, doPlotCGE, doPlotResiduals, ROIind, how2mean)
 
-%sampleDistances = maskHalf(sampleDistances);
+if nargin<12
+    doPlotCGE = false;
+    doPlotResiduals = false;
+end
+
+
+if nargin<13
+    doPlotResiduals = false;
+end
+
+subjIND = vertcat(ROIind{1}(:,2), ROIind{2}(:,2), ROIind{3}(:,2), ROIind{4}(:,2), ROIind{5}(:,2), ROIind{6}(:,2)); 
 selectedGenesN = selectedGenes(:,DSvalues(:,1)); % take genes with highest DS values
 switch resolution
     case 'sample'
         
         sampleCoexpression = corr(selectedGenesN', 'type', 'Spearman'); % calculate sample-sample coexpression
-        %sampleCoexpression = maskHalf(sampleCoexpression);
+        
         
         sampleCoexpression(logical(eye(size(sampleCoexpression)))) = NaN; % replace diagonal with NaN
         distExpVect(:,1) = sampleDistances(:); % make a vector for distances
         distExpVect(:,2) = sampleCoexpression(:); % make a vector for coexpression values
         distExpVect(any(isnan(distExpVect), 2), :) = [];
         
-        %distExpVect(isnan(distExpVect,2), : ) = [];  % remove rows for diagonal elememns as thay will have 0 distance and 1 coexpression
-        
         Dvect = distExpVect(:,1);
         Rvect = distExpVect(:,2);
         
-        figure; imagesc(sampleCoexpression); caxis([-1,1]);title('Sample-sample coexpression');
-        colormap([flipud(BF_getcmap('blues',9));[1 1 1]; BF_getcmap('reds',9)]);
     case 'ROI'
         parcelExpression = zeros(length(W), size(selectedGenesN,2));
-        for sub=1:length(W)
+        
+        if strcmp(how2mean, 'meanSamples')
             
-            A = ROIs == W(sub);
-            if length(find(A))>1
-                parcelExpression(sub,:) = nanmean(selectedGenesN(A==1,:));
-            else
-                parcelExpression(sub,:) = selectedGenesN(A==1,:);
+            
+            for samp=1:length(W)
+                
+                A = ROIs == W(samp);
+                if length(find(A))>1
+                    parcelExpression(samp,:) = nanmean(selectedGenesN(A==1,:));
+                else
+                    parcelExpression(samp,:) = selectedGenesN(A==1,:);
+                end
+                
             end
             
+        elseif strcmp(how2mean, 'meanSubjects')
+            parcelExpressionSubj = zeros(6, length(W), size(selectedGenesN,2));
+            
+            for samp=1:length(W)
+                for subj=1:size(ROIind,2)
+                    isSample = subjIND==subj; 
+                    isSubject = ROIs == W(samp);
+                    
+                    A = zeros(length(subjIND),1); 
+                    A(isSample==1 & isSubject==1) = 1; 
+
+                    if length(find(A))>1
+                        parcelExpressionSubj(subj,samp,:) = nanmean(selectedGenesN(A==1,:));
+                    elseif isempty(find(A, 1))
+                        parcelExpressionSubj(subj,samp,:) = NaN;
+                    else
+                        parcelExpressionSubj(subj,samp,:) = selectedGenesN(A==1,:);
+                    end
+
+                end
+            end
+            parcelExpression = squeeze(nanmean(parcelExpressionSubj,1)); 
+
         end
-        
         
         [sROIs, ind] = sort(ROIs);
         distancesSorted = sampleDistances(ind, ind);
@@ -42,9 +76,9 @@ switch resolution
             for j=1:length(W)
                 
                 A = sROIs == W(sub);
-                B = sROIs == W(j);
+                isSubject = sROIs == W(j);
                 
-                D = distancesSorted(A,B);
+                D = distancesSorted(A,isSubject);
                 parcelDistances(sub,j) = nanmean(D(:));
                 
             end
@@ -66,6 +100,10 @@ switch resolution
         
         distExpVect(:,1) = parcelDistances(:);
         distExpVect(:,2) = parcelCoexpression(:);
+        
+        
+        Dvect = distExpVect(:,1);
+        Rvect = distExpVect(:,2);
         %distExpVect(any(isnan(distExpVect), 2), :) = [];
 end
 %----------------------------------------------------------------------------------
@@ -73,16 +111,21 @@ end
 %----------------------------------------------------------------------------------
 %
 
-
 % select values with distance <100
 if strcmp(Fit{1}, 'linear') || strcmp(Fit{1}, 'exp') || strcmp(Fit{1}, 'exp_1_0') || strcmp(Fit{1}, 'decay') || strcmp(Fit{1}, 'exp0') || strcmp(Fit{1}, 'exp1')
+    
     [~,~,c] = GiveMeFit(distExpVect(:,1),distExpVect(:,2),Fit{1});
+else
+    c=0;
 end
 
-%[param,stat] = sigm_fit(distExpVect(:,1),distExpVect(:,2));
-
 % plot original coexpression-distance .
-[xThresholds,yMeans] = BF_PlotQuantiles(distExpVect(:,1),distExpVect(:,2),26,1,1); xlabel('Euclidean distance (mm)'); ylabel('Correlated gene expression');ylim([-1 1]); set(gca,'fontsize',18)
+if doPlotCGE
+    [xThresholds,yMeans] = BF_PlotQuantiles(distExpVect(:,1),distExpVect(:,2),26,1,1);
+    xlabel('Distance between regions (mm)'); ylabel('Correlated gene expression');
+    ylim([-1 1]); xlim(xrange);
+    set(gca,'fontsize',18)
+end
 switch Fit{1}
     
     case 'linear'
@@ -114,14 +157,22 @@ switch Fit{1}
 end
 
 if strcmp(Fit{1}, 'linear') || strcmp(Fit{1}, 'exp') || strcmp(Fit{1}, 'exp_1_0') || strcmp(Fit{1}, 'decay') || strcmp(Fit{1}, 'exp0') || strcmp(Fit{1}, 'exp1')
-    hold on; scatter(distExpVect(:,1),FitCurve,1, '.', 'r');
+    if doPlotCGE
+        hold on; scatter(distExpVect(:,1),FitCurve,3, '.', 'r');
+        xlim(xrange)
+    end
     % get residuals
     Residuals = Rvect - FitCurve;
-    BF_PlotQuantiles(distExpVect(:,1),nonzeros(Residuals(:)),51,1,1);   xlabel('Euclidean distance (mm)'); ylabel('Correlated gene expression');ylim([-1 1]); set(gca,'fontsize',18)
+    if doPlotResiduals
+        BF_PlotQuantiles(distExpVect(:,1),nonzeros(Residuals(:)),26,1,1);   xlabel('Distance between regions (mm)'); ylabel('Correlated gene expression');ylim([-1 1]); set(gca,'fontsize',18)
+        xlim(xrange)
+    end
 else
-    BF_PlotQuantiles(distExpVect(:,1),Residuals(:),51,1,1);   xlabel('Euclidean distance (mm)'); ylabel('Correlated gene expression');ylim([-1 1]); set(gca,'fontsize',18)
+    if doPlotResiduals
+        BF_PlotQuantiles(distExpVect(:,1),Residuals(:),26,1,1);   xlabel('Distance between regions (mm)'); ylabel('Correlated gene expression');ylim([-1 1]); set(gca,'fontsize',18)
+        xlim(xrange)
+    end
 end
-
 
 %----------------------------------------------------------------------------------
 % Plot corrected sample - sample coexpression matrix
@@ -144,13 +195,15 @@ switch resolution
         correctedCoexpression = reshape(Residuals,[numSamples, numSamples]);
         
 end
-figure; imagesc(correctedCoexpression); caxis([-1,1]);title('Corrected coexpression');
-colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]);
-set(gca,'xtick',[])
-set(gca,'xticklabel',[])
-set(gca,'ytick',[])
-set(gca,'yticklabel',[])
 
+% if doPlot
+%     figure; imagesc(correctedCoexpression); caxis([-1,1]);title('Corrected coexpression');
+%     colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]);
+%     set(gca,'xtick',[])
+%     set(gca,'xticklabel',[])
+%     set(gca,'ytick',[])
+%     set(gca,'yticklabel',[])
+% end
 
 %----------------------------------------------------------------------------------
 % Plot corrected ROI-ROI coexpression matrix
@@ -170,27 +223,16 @@ switch resolution
         
         sampleCoexpression(logical(eye(size(sampleCoexpression)))) = NaN;
         coexpressionSorted = sampleCoexpression(ind, ind);
+        %         if doPlot
+        %             figure; subplot(1,25,[1 2]); imagesc(sROIs);
+        %             subplot(1,25,[3 25]); imagesc(coexpressionSorted); caxis([-1,1]); title('Corrected coexpression sorted samples');
+        %             colormap([flipud(BF_getcmap('blues',9));[1 1 1]; BF_getcmap('reds',9)]);
+        %             set(gca,'xtick',[])
+        %             set(gca,'xticklabel',[])
+        %             set(gca,'ytick',[])
+        %             set(gca,'yticklabel',[])
+        %         end
         
-        figure; subplot(1,25,[1 2]); imagesc(sROIs);
-        subplot(1,25,[3 25]); imagesc(coexpressionSorted); caxis([-1,1]); title('Corrected coexpression sorted samples');
-        colormap([flipud(BF_getcmap('blues',9));[1 1 1]; BF_getcmap('reds',9)]);
-        set(gca,'xtick',[])
-        set(gca,'xticklabel',[])
-        set(gca,'ytick',[])
-        set(gca,'yticklabel',[])
-        
-        
-        
-        % add NaNs to diagonal for reshaping
-        % Idx=linspace(1, size(parcelDistances,1)*size(parcelDistances,1),size(parcelDistances,1));
-        % c=false(1,length(Residuals)+length(Idx));
-        % c(Idx)=true;
-        % nResiduals = nan(size(c));
-        % nResiduals(~c) = Residuals;
-        % nResiduals(c) = NaN;
-        %
-        % correctedCoexpression = reshape(nResiduals,[numSamples, numSamples]);
-        % figure; imagesc(correctedCoexpression); caxis([-1,1]);title('Corrected Sample-sample coexpression');
         isNormP = zeros(length(W),length(W));
         isNormH = zeros(length(W),length(W));
         
@@ -198,32 +240,18 @@ switch resolution
             for j=1:length(W)
                 
                 A = sROIs == W(sub);
-                B = sROIs == W(j);
+                isSubject = sROIs == W(j);
                 %for corrected
                 if correctDistance == true
-                    %P = coexpressionSorted(A, B);
                     
-                    P = correctedCoexpressionSorted(A, B);
-                    %                     if length(P)>4
-                    %                         [isNormH(sub,j),isNormP(sub,j)] = adtest(P(:));
-                    %                     else
-                    %                         isNormH(sub,j) = NaN;
-                    %                         isNormP(sub,j) = NaN;
-                    %                     end
-                    
+                    P = correctedCoexpressionSorted(A, isSubject);
                     
                 else
                     
-                    %for uncorrected
-                    P = coexpressionSorted(A, B);
-                    %                     if length(P)>4
-                    %                         [isNormH(sub,j),isNormP(sub,j)] = adtest(P(:));
-                    %                     else
-                    %                         isNormH(sub,j) = NaN;
-                    %                         isNormP(sub,j) = NaN;
-                    %                     end
+                    P = coexpressionSorted(A, isSubject);
+                    
                 end
-                D = distancesSorted(A,B);
+                D = distancesSorted(A,isSubject);
                 parcelDistances(sub,j) = mean(D(:));
                 parcelCoexpression(sub,j) = mean(P(:));
                 
@@ -252,17 +280,18 @@ if strcmp(resolution, 'sample')
         
     end
 end
-
-figure('color','w'); box('off');
-imagesc(expPlot); caxis([-1,1]);
-if correctDistance
-    title('Corrected parcellation coexpression ROIs');
-else
-    title('Non - corrected parcellation coexpression ROIs');
-end
-colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]);
-set(gca,'xtick',[])
-set(gca,'xticklabel',[])
-set(gca,'ytick',[])
-set(gca,'yticklabel',[])
+% if doPlot
+%     figure('color','w'); box('off');
+%     imagesc(expPlot); caxis([-1,1]);
+%     if correctDistance
+%         title('Corrected parcellation coexpression ROIs');
+%     else
+%         title('Non - corrected parcellation coexpression ROIs');
+%     end
+%     colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]);
+%     set(gca,'xtick',[])
+%     set(gca,'xticklabel',[])
+%     set(gca,'ytick',[])
+%     set(gca,'yticklabel',[])
+% end
 end

@@ -1,6 +1,6 @@
 % Cortex/subcortex
 cd('data/genes/processedData')
-load('100DS82scaledRobustSigmoidRNAseq1LcortexSubcortex_ROI_NOdistCorr.mat')
+load('100DS82scaledRobustSigmoidRNAseq1LcortexSubcortex_ROI_NOdistCorrSurfaceANDEuclidean.mat')
 numCort = 34;
 numNodes = 41;
 
@@ -42,11 +42,11 @@ xlabel('Euclidean distance (mm)')
 ylabel('Correlated gene expression')
 ylim([-1 1])
 xticks([20 40 60 80 100 120 140 160])
-xlim([0 160])
+xlim([20 210])
 
 
 % Cortex/subcortex
-load('100DS82scaledRobustSigmoidRNAseq1LcortexSubcortex_ROI_distCorr.mat')
+load('100DS82scaledRobustSigmoidRNAseq1LcortexSubcortex_ROI_distCorrSurfaceANDEuclidean.mat')
 numCort = 34;
 numNodes = 41;
 
@@ -88,7 +88,7 @@ xlabel('Euclidean distance (mm)')
 ylabel('Correlated gene expression');
 ylim([-1 1])
 xticks([20 40 60 80 100 120 140 160])
-xlim([0 160])
+xlim([20 210])
 
 
 

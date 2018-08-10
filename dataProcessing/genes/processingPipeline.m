@@ -1,17 +1,9 @@
-%% Author: Aurina
-%% Date modified: 2016-03-22
-%% Date modified: 2017-07-14
-%% Date modified: 2017-08-29 - noise level data added
-%% Date modified: 2017-11-10 - manual gene symbol naming fixed
-%% Date modified: 2018-01-10 - option to update probe--> gene assingment added
+
 %% This script:
 %   1. Loads all microarray data from excell files for each subject
-%   2. Excludes custom probes;
-%   3. Excludes probes with missing entrezIDs or updates probe to gene
-%   assignment (depending on options chosen)
-%   4. Saves expression data, coordinates, sample structure names for all samples
-%   5. Saves data for separate subjects to DataTable
-%   6. Saves data for all subjects combined as variables 'MicorarrayData.mat' file
+%   2. Selects a single probe to represent a gene
+%   3. assigns samples to the parcellations for each subject
+%   4. normalises gene expression measures
 %%
 %------------------------------------------------------------------------------
 % Choose options
@@ -20,24 +12,31 @@ clear all;
 close all; 
 
 
-options.ExcludeCBandBS =  true;
-options.useCUSTprobes = true;
-options.updateProbes = 'reannotator'; %'Biomart', 'reannotator', 'no'; 
+options.ExcludeCBandBS = true; 
+options.useCUSTprobes = true; 
+options.updateProbes = 'reannotator'; 
 options.probeSelections = {'RNAseq'};
-options.parcellations = {'aparcaseg'};
+options.parcellations = {'HCP'};
+options.distanceThreshold = 2;
 options.signalThreshold = 0.5; 
 options.RNAseqThreshold = 0.2; 
+options.RNAsignThreshold = false; 
 options.correctDistance = false; 
 options.calculateDS = true;
-options.distanceCorrection = 'Euclidean'; % Surface; 'GMvolume' 'Euclidean'
-options.coexpressionFor = 'all';
-options.Fit = {'removeMean'};
-options.distanceThreshold = 2; % first run 30, then with the final threshold 2
-options.normaliseWhat = 'LcortexSubcortexSEPARATE';%LcortexSubcortexSEPARATE
-options.normMethod = 'scaledRobustSigmoid'; 
+options.distanceCorrection = 'Euclidean'; 
+options.Fit = {'exp'}; 
+options.normaliseWhat = 'LRcortex';% what part of the brain is normalised
+options.normMethod = 'scaledRobustSigmoid'; % what type of normalisation method used
 options.percentDS =  100;
 options.doNormalise = true;
 options.resolution = 'ROI'; 
+options.saveOutput = true; 
+options.normaliseWithinSample = true; 
+options.xrange = [0 200]; 
+options.plotCGE = true; 
+options.plotResiduals = true; 
+options.meanSamples = 'meanSamples'; %'meanSamples'; meanSubjects
+
 
 S1_extractData(options)
 S2_probes(options)
@@ -47,6 +46,6 @@ S3_samples2parcellation(options)
 % then use the appropriate threshold
 options.distanceThreshold = 2; 
 S3_samples2parcellation(options)
-S4_normalisation(options)
+c = S4_normalisation(options)
 
 

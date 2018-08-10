@@ -7,11 +7,11 @@ load('MicroarrayDataWITHcustProbesUpdatedXXXRNAseq82DistThresh2.mat') % this is 
 % or
 % load('MicroarrayDataProbesUpdatedRNAseq360DistThresh2_CoordsAssigned.mat')
 
-doNormalise = true;
+doNormalise = false;
 doNormalScale = false;
 whatNormalisation = 'scaledRobustSigmoid'; %'zscore'; %limma
 uselimma = false; % lima done only on cortex
-numCort = 41;
+numCort = 34;
 Lcortex = 1:numCort;
 D = cell(6,1);
 subjNr = cell(6,1);
@@ -48,6 +48,7 @@ else
     expression = vertcat(D{1}, D{2}, D{3}, D{4}, D{5}, D{6});
 end
 
+%expression = zscore(expression); 
 subjects = vertcat(subjNr{1}, subjNr{2}, subjNr{3}, subjNr{4}, subjNr{5}, subjNr{6});
 regions = vertcat(R{1}, R{2}, R{3}, R{4}, R{5}, R{6});
 uregions = unique(regions);
@@ -65,6 +66,12 @@ r = randi([1 100],1,numCort);
 use_map = nice_cmap(r,:);
 
 p = randperm(length(subjects));
+%score = tsne(expression); 
+if ~doNormalise
+    expression = zscore(expression); 
+else
+    expression = expression; 
+end
 [W,score,~,~,explained] = pca(expression, 'NumComponents',5);
 x = score(p,1); y = score(p,2); z = score(p,3);
 C = subjects(p);

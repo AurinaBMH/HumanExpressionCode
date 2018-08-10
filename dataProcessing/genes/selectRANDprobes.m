@@ -1,7 +1,8 @@
 %% ------------------------------------------------------------------------------
 % Save relevant variables to a MicroarrayData.mat file
 %%------------------------------------------------------------------------------
-function [expressionAll, probeInformation] = S2_probes(options)
+function [expressionAll, probeInformation] = selectRANDprobes(options, DataTable, DataTableProbe, ...
+    noiseall)
 % percentage of samples that a selected probe has expression levels that are higher than background
 rng shuffle % for selecting different seed for random probe selection
 useCUSTprobes = options.useCUSTprobes;
@@ -9,35 +10,24 @@ probeSelections = options.probeSelections{1};
 signalThreshold = options.signalThreshold;
 saveOutput = options.saveOutput;
 
-if strcmp(probeSelections, 'RNAseq')
-    RNAseqThreshold = options.RNAseqThreshold;
-    RNAsign = options.RNAsignThreshold; 
-end
-
-if signalThreshold==-1
-    QClabel = 'noQC'; 
-else
-    QClabel = 'QC'; 
-end
-
-%------------------------------------------------------------------------------
-% Load the data
-%------------------------------------------------------------------------------
-cd ('data/genes/processedData');
-
-if useCUSTprobes
-    fprintf(1,'Loading the data with CUST probes and assigning variables\n')
-    
-    startFileName = 'MicroarrayDataWITHcustProbesUpdatedXXX';
-else
-    fprintf(1,'Loading the data without CUST probes and assigning variables\n')
-    startFileName = 'MicroarrayDataProbesUpdatedXXX';
-end
-fprintf(1,sprintf('Probe selection based on %s is chosen\n', probeSelections))
-load(sprintf('%s.mat', startFileName));
-
-cd ..
-cd ('rawData');
+% %------------------------------------------------------------------------------
+% % Load the data
+% %------------------------------------------------------------------------------
+% cd ('data/genes/processedData');
+% 
+% if useCUSTprobes
+%     fprintf(1,'Loading the data with CUST probes and assigning variables\n')
+%     
+%     startFileName = 'MicroarrayDataWITHcustProbesUpdatedXXX';
+% else
+%     fprintf(1,'Loading the data without CUST probes and assigning variables\n')
+%     startFileName = 'MicroarrayDataProbesUpdatedXXX';
+% end
+% fprintf(1,sprintf('Probe selection based on %s is chosen\n', probeSelections))
+% load(sprintf('%s.mat', startFileName));
+% 
+% cd ..
+% cd ('rawData');
 
 %------------------------------------------------------------------------------
 % Calculate probe selection criteria for each subject separately (non
@@ -80,7 +70,7 @@ probeInformationALL.GeneSymbol = GeneSymbol;
 % if choosing probes based on RNAseq, then use data only from 1 subject
 if strcmp(probeSelections, 'RNAseq')
     
-    [correlations, avgCorr, avgPval, indProbe, genes, overlapStructures] = selectProbeRNAseq(DataTable, EntrezID, indKeepProbes, RNAseqThreshold, RNAsign);
+    [correlations, avgCorr, indProbe, genes, overlapStructures] = selectProbeRNAseq(DataTable, EntrezID, indKeepProbes, RNAseqThreshold);
     nSub = 1;
 elseif strcmp(probeSelections, 'DS')
     [indProbe, avCorr] = selectProbeDS(EntrezID, DataTable, indKeepProbes);
@@ -306,8 +296,6 @@ ProbeID2nd = ProbeID; % assign probe ID values to a variable (will be used to fi
 ProbeID(isnan(ProbeID)) = []; % remove redundant probes
 probeInformation.ProbeID = ProbeID(keepGenes);
 
-cd ..
-cd ('processedData')
 expressionAll = cell(6,1);
 sampleInfo = cell(6,1);
 for subject=1:6
@@ -340,11 +328,20 @@ end
 
 if saveOutput
     if strcmp(probeSelections, 'RNAseq')
+        if signalThreshold==-1
+            save(sprintf('%s%snoQC.mat', startFileName, probeSelections), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes', 'options');
+            % save(sprintf('%s%s%dRNAthr%dnoisethr.mat', startFileName, probeSelections{1}, RNAseqThreshold, signalThreshold), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes', 'options');
+        else
+            save(sprintf('%s%s.mat', startFileName, probeSelections), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'probeInformationALL', 'genes', 'options');
+        end
         
-            save(sprintf('%s%s%s.mat', startFileName, probeSelections, QClabel), 'expressionAll', 'probeInformation' , 'sampleInfo', 'avgCorr', 'avgPval', 'probeInformationALL', 'genes', 'options');
-
     else
-            save(sprintf('%s%s%s.mat', startFileName, probeSelections, QClabel), 'expressionAll', 'probeInformation' , 'sampleInfo', 'options');
+        if signalThreshold==-1
+            save(sprintf('%s%snoQC.mat', startFileName, probeSelections), 'expressionAll', 'probeInformation' , 'sampleInfo', 'options');
+        else
+            save(sprintf('%s%s.mat', startFileName, probeSelections), 'expressionAll', 'probeInformation' , 'sampleInfo', 'options');
+            
+        end
     end
 end
-cd ../../..
+

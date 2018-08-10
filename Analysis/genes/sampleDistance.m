@@ -1,5 +1,6 @@
 % make a histogram for assignment distances
 % load any file where samples were assigned to parcellation
+       cd ('data/genes/processedData')
 load('MicroarrayDataWITHcustProbesUpdatedXXXRNAseq82DistThresh2.mat')
 
 sides = {'left', 'right'};

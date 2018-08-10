@@ -2,6 +2,17 @@ function [f_handle,Stats,c] = GiveMeFit(xData,yData,fitType,suppressFigure)
 % ------------------------------------------------------------------------------
 % Ben Fulcher, 2014-11-20
 % ------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+% Filter out NaNs:
+goodBoth = (~isnan(xData) & ~isnan(yData));
+if ~any(goodBoth)
+    error('No good data');
+elseif any(~goodBoth)
+    xData = xData(goodBoth);
+    yData = yData(goodBoth);
+    fprintf(1,'Removed %u bad samples from x/y data\n',sum(~goodBoth));
+end
+
 if nargin < 4
     suppressFigure = 0;
 end

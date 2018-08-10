@@ -6,7 +6,7 @@ cd ('data/genes/processedData')
 load('MicroarrayDataWITHcustProbesUpdatedXXX.mat')
 
 % calculate
-doCV = true; 
+doCV = false; 
 
 if doCV
     filterINT = 2; 
@@ -23,11 +23,8 @@ for i=1:size(Expressionall,1)
         V(i) = var(Expressionall(i,:));
     end
     
-    %var(Expressionall(i,:));
     I(i) = mean(Expressionall(i,:));
     
-    %     V(i) = var(expressionAll{3}(:,i));
-    %     I(i) = mean(expressionAll{3}(:,i));
 end
 
 figure; scatter(I,V); xlabel('Intensity');ylabel(nameLabel); 
@@ -49,9 +46,7 @@ for i=1:length(lowIND)
         Vlow(i) = var(Expressionall(lowIND(i),:));
     end
     Ilow(i) = mean(Expressionall(lowIND(i),:));
-    
-    %     V(i) = var(expressionAll{3}(:,i));
-    %     I(i) = mean(expressionAll{3}(:,i));
+ 
 end
 
 figure; scatter(Ilow,Vlow); xlabel('Intensity');ylabel(nameLabel); 
@@ -71,7 +66,7 @@ for i=1:length(highIND)
     else
         Vhigh(i) = var(Expressionall(highIND(i),:));
     end
-    %Vhigh(i) = var(Expressionall(highIND(i),:));
+
     Ihigh(i) = mean(Expressionall(highIND(i),:));
     
     %     V(i) = var(expressionAll{3}(:,i));

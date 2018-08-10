@@ -1,9 +1,11 @@
 % function to select probe based on RNA seq values
-function [correlations, avgCorr, indProbe, genes, overlapStructures] = selectProbeRNAseq(DataTable, EntrezID, indKeepProbes, threshold)
+function [correlations, avgCorr, avgPval, indProbe, genes, overlapStructures] = selectProbeRNAseq(DataTable, EntrezID, indKeepProbes, threshold, thresholdSign)
 
 numGenes = length(unique(EntrezID));
 genes = unique(EntrezID);
 correlations = cell(numGenes,2);
+pvalues = cell(numGenes,2);
+ 
 for subject=1:2
     
     folderName = sprintf('rnaseq_donor0%d', subject);
@@ -52,13 +54,17 @@ for subject=1:2
         % for each probe found in microarray correlate it with RNAseq
         if isempty(indRNA)
             correlations{g,subject} = NaN;
+            pvalues{g,subject} = NaN;
         else
             C = zeros(length(indMIC),1);
+            Pvals = zeros(length(indMIC),1);
             for p=1:length(indMIC)
-                C(p) = corr(exprna(indRNA,:)',expmic(indMIC(p),:)', 'type', 'Spearman');
+                [C(p),Pvals(p)] = corr(exprna(indRNA,:)',expmic(indMIC(p),:)', 'type', 'Spearman');
+               
             end
             
             correlations{g, subject} = C;
+            pvalues{g, subject} = Pvals; 
             
         end
     end
@@ -71,18 +77,32 @@ end
 % keep the probe if on average between two subjects correlation is higher
 % than 0.1 (ir some other threshold)
 avgCorr = cell(numGenes,1);
+avgPval = cell(numGenes,1);
+
 indProbe = zeros(numGenes,1);
 for gene = 1:numGenes
     cors = [correlations{gene,1}, correlations{gene,2}];
+    vals = [pvalues{gene,1}, pvalues{gene,2}]; 
     avc = mean(cors,2);
+    avp = mean(vals,2); 
     
     avgCorr{gene} = avc;
+    avgPval{gene} = avp; 
     [chosenVal, chosenInd] = max(avc);
-    if chosenVal > threshold
+    if thresholdSign
+    if chosenVal > threshold && avp(chosenInd)<0.05
         indProbe(gene) = chosenInd;
     else
         indProbe(gene) = NaN;
     end
+    else
+        if chosenVal > threshold 
+        indProbe(gene) = chosenInd;
+    else
+        indProbe(gene) = NaN;
+        end
+    end
+        
     
 end
 

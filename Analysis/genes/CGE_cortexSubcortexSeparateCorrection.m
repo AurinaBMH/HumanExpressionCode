@@ -3,11 +3,11 @@
 clear all; close all; 
 
 cd /Users/Aurina/GoogleDrive/Genetics_connectome/HumanExpression/data/genes/processedData
-normalisedSeparately = true; 
+normalisedSeparately = false; 
 if normalisedSeparately
-    load('100DS82scaledRobustSigmoidRNAseq1LcortexSubcortexSEPARATE_ROI_NOdistCorr.mat')
+    load('100DS82scaledRobustSigmoidRNAseq1LcortexSubcortexSEPARATE_ROI_NOdistCorrSurfaceANDEuclidean.mat')
 else
-    load('100DS82scaledRobustSigmoidRNAseq1LcortexSubcortex_ROI_NOdistCorr.mat')
+    load('100DS82scaledRobustSigmoidRNAseq1LcortexSubcortex_ROI_NOdistCorrSurfaceANDEuclidean.mat')
 end
 
 numNodes = 41;
@@ -83,43 +83,50 @@ expCorr = expCorr'+expCorr;
 
 figure; imagesc(expCorr); caxis([-1,1]);title('Corrected coexpression');
 colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]);
-
+set(gca,'xtick',[])
+set(gca,'xticklabel',[])
+set(gca,'ytick',[])
+set(gca,'yticklabel',[])
 
 figure; imagesc(averageCoexpression); caxis([-1,1]);title('Coexpression');
 colormap([flipud(BF_getcmap('blues',9));[1 1 1];BF_getcmap('reds',9)]);
 set(gcf,'color','w');
+set(gca,'xtick',[])
+set(gca,'xticklabel',[])
+set(gca,'ytick',[])
+set(gca,'yticklabel',[])
 
 % plot distance relationships separately for groups on corrected data
-figure; scatter(distSEP{1}, corrected{1}, 100, 'MarkerEdgeColor',[.45 .45 .45],...
+figure; scatter(distSEP{1}, corrected{1}, 100, 'MarkerEdgeColor',[.55 .55 .55],...
     'MarkerFaceColor',[.64 .87 .93]);
-hold on; scatter(distSEP{3}, corrected{3},100, 'MarkerEdgeColor',[.45 .45 .45],...
+hold on; scatter(distSEP{3}, corrected{3},100, 'MarkerEdgeColor',[.55 .55 .55],...
     'MarkerFaceColor',[1 .65 0]);
-hold on; scatter(distSEP{2}, corrected{2},100, 'MarkerEdgeColor',[.45 .45 .45],...
+hold on; scatter(distSEP{2}, corrected{2},100, 'MarkerEdgeColor',[.55 .55 .55],...
     'MarkerFaceColor',[1 .11 .18]);
 set(gcf,'color','w');set(gca,'fontsize',18)
 %legend({'Cortex to cortex', 'Cortex to subcortex', 'Subcortex to subcortex'},'FontSize', 18);
 xlabel('Euclidean distance (mm)')
 ylabel('Correlated gene expression');
 ylim([-1 1])
-xticks([20 40 60 80 100 120 140 160])
-xlim([0 160])
+xticks([20 40 60 80 100 120 140 160 180 200])
+xlim([10 210])
 
 
 
 
 % plot distance relationships separately for groups on non-corrected data
-figure; scatter(distSEP{1},expSEP{1}, 100, 'MarkerEdgeColor',[.45 .45 .45],...
+figure; scatter(distSEP{1},expSEP{1}, 100, 'MarkerEdgeColor',[.55 .55 .55],...
     'MarkerFaceColor',[.64 .87 .93]);
-hold on; scatter(distSEP{3}, expSEP{3},100, 'MarkerEdgeColor',[.45 .45 .45],...
+hold on; scatter(distSEP{3}, expSEP{3},100, 'MarkerEdgeColor',[.55 .55 .55],...
     'MarkerFaceColor',[1 .65 0]);
-hold on; scatter(distSEP{2}, expSEP{2},100, 'MarkerEdgeColor',[.45 .45 .45],...
+hold on; scatter(distSEP{2}, expSEP{2},100, 'MarkerEdgeColor',[.55 .55 .55],...
     'MarkerFaceColor',[1 .11 .18]);
 set(gcf,'color','w');set(gca,'fontsize',18)
 %legend({'Cortex to cortex', 'Cortex to subcortex', 'Subcortex to subcortex'},'FontSize', 18);
 xlabel('Euclidean distance (mm)')
 ylabel('Correlated gene expression');
 ylim([-1 1])
-xticks([20 40 60 80 100 120 140 160])
-xlim([0 160])
+xticks([20 40 60 80 100 120 140 160 180 200])
+xlim([10 210])
 
 

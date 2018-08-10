@@ -7,6 +7,7 @@ probeSelections = options.probeSelections;
 parcellations = options.parcellations;
 useCUSTprobes = options.useCUSTprobes;
 distanceThreshold = options.distanceThreshold;
+signalThreshold = options.signalThreshold;
 
 sides = {'right', 'left'};
 % separate according to brain part: cortex/subcortex
@@ -24,11 +25,19 @@ else
     fprintf(1,'Using the data without CUST probes\n')
     startFileName = 'MicroarrayDataProbesUpdated';
 end
+
+if signalThreshold==-1
+    QClabel = 'noQC'; 
+else
+    QClabel = 'QC'; 
+end
+
+
 fprintf('Separating samples according to side and structure\n')
 % load data file
 for t = 1:length(probeSelections)
     
-    FileName = sprintf('%s%s.mat',startFileName, probeSelections{t});
+    FileName = sprintf('%s%s%s.mat',startFileName, probeSelections{t}, QClabel);
     load(FileName);
     
     expressionSubjects = cell(6,1);
@@ -86,7 +95,7 @@ for t = 1:length(probeSelections)
                         expressionS(i,:) = NaN;
                         sampleInformationS.MRIvoxCoordinates(i,:) = NaN;
                         sampleInformationS.MMCoordinates(i,:) = NaN;
-                        sampleInformationS.StructureNames{i} = 'remove'; %"; %{double.empty(0)};
+                        sampleInformationS.StructureNames{i} = 'remove';
                     end
                 end
                 
@@ -103,7 +112,6 @@ for t = 1:length(probeSelections)
                 sampleInformationS.StructureNames(strcmp('remove',sampleInformationS.StructureNames)) = [];
                 sampleInformation.(side{1}).(brainPart{1}).StructureNames = sampleInformationS.StructureNames;
                 
-                %probeInformation = ProbeInformation;
             end
         end
 
@@ -141,7 +149,7 @@ end
                     cd (subjectDir)
                     
                     if strcmp(parcellation, 'HCP')
-                        brainParts = {'Cortex'}; %, 'Subcortex'};
+                        brainParts = {'Cortex'};
                     else
                         brainParts = {'Cortex','Subcortex'};
                     end
@@ -151,7 +159,6 @@ end
                     % Load parcellations
                     %------------------------------------------------------------------------------
                     if strcmp(parcellation, 'aparcaseg')
-                        parcName = 'default_NativeAnat';
                         [~, data_parcel]=read('defaultparc_NativeAnat.nii');
                         NumNodes = 82;
                         LeftCortex = 1:34;
@@ -159,7 +166,6 @@ end
                         RightCortex = 42:75;
                         RightSubcortex = 76:82;
                     elseif strcmp(parcellation, 'cust100')
-                        parcName = 'custom100_NativeAnat';
                         [~, data_parcel]=read('customparc100_NativeAnatFixed.nii');
                         NumNodes = 220;
                         LeftCortex = 1:100;
@@ -167,7 +173,6 @@ end
                         RightCortex = 111:210;
                         RightSubcortex = 211:220;
                     elseif strcmp(parcellation, 'cust250')
-                        parcName = 'custom250_NativeAnat';
                         [~, data_parcel]=read('customparc250_NativeAnatFixed.nii');
                         NumNodes = 530;
                         LeftCortex = 1:250;
@@ -175,14 +180,10 @@ end
                         RightCortex = 266:515;
                         RightSubcortex = 516:530;
                     elseif strcmp(parcellation, 'HCP')
-                        parcName = 'HCP';
                         [~, data_parcel]=read('HCPMMP1_acpc_uncorr.nii');
                         NumNodes = 360;
                         LeftCortex = 1:180;
-                        %LeftSubcortex = 35:41;
                         RightCortex = 181:360;
-                        %RightSubcortex = 76:82;
-                        
                     end
                     cd ../../
                     
@@ -196,12 +197,7 @@ end
                     else
                         fprintf(1,'Using the data without CUST probes %s for %d\n', probeSelections{t}, subject)
                     end
-                    
-                    
-                    %load(sprintf('ProbeInformation%s.mat', probeSelection));
-%                    load(sprintf('%s%ssepQQQ.mat', startFileName, probeSelections{t}));
-                    
-                    
+
                     for side = sides
                         for brainPart = brainParts
                             
@@ -254,9 +250,7 @@ end
                             %(size(coordsAssigned,1),1);
                             coordsNONassigned = zeros(size(coordsAssigned,1),3);
                             coordsToAssignAll = coords2assign;
-                            
-                            % assignDistance{subject}.(side{1}).(brainPart{1}) = zeros(size(coordsAssigned,1),1);
-                            
+                          
                             for j=1:size(coordsAssigned,1)
                                 
                                 assignDistance{subject}.(side{1}).(brainPart{1})(j,1) = pdist2(coordsAssigned(j,:), coords2assign(j,:));
@@ -391,16 +385,12 @@ end
                         DataExpression{subject} = [SUBJECT, Expression];
                         DataCoordinatesMRI{subject} = [SUBJECT, CoordinatesMRI];
                         DataCoordinatesMNI{subject} = [SUBJECT, CoordinatesMNI];
-                        
-                        %save(sprintf('%s%s%dDistThresh%d_CoordsAssigned_S0%d.mat', startFileName, probeSelection, NumNodes, distanceThreshold, subject), ...
-                        %'data');
-                        
+ 
                     elseif distanceThreshold > 35
                         
                         save(sprintf('CoordsAssignedAll%d.mat', NumNodes), 'coordsAssignedALL');
                         
                     end
-                    % cd ../../..
                     cd ../../..
                 end
                 
@@ -408,7 +398,7 @@ end
                 %% save data for all subjects
                 cd ('data/genes/processedData')
                 if distanceThreshold < 35
-                    save(sprintf('%s%s%dDistThresh%d.mat', startFileName, probeSelections{t}, NumNodes, distanceThreshold), 'DataExpression', 'DataCoordinatesMRI', 'DataCoordinatesMNI', 'probeInformation', 'assignDistance', 'options');
+                    save(sprintf('%s%s%s%dDistThresh%d.mat', startFileName, probeSelections{t}, QClabel, NumNodes, distanceThreshold), 'DataExpression', 'DataCoordinatesMRI', 'DataCoordinatesMNI', 'probeInformation', 'assignDistance', 'options');
                 end
                 cd ../../..
                 

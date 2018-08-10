@@ -1,5 +1,4 @@
-%% Author: Aurina
-%% Date modified: 2017-08-18
+
 %% This script:
 %   1. loads .mgz files for each brain (with all samples in them)
 %   2. loads original orig.mgz file, pial surface of the brain, original
@@ -18,7 +17,7 @@
 
 cd ('data/genes/processedData')
 %load('MicroarrayDatadPC82DistThresh2_CoordsAssigned.mat');
-load('MicroarrayDataWITHcustProbesUpdatedXXXRNAseq82DistThresh2.mat')
+load('MicroarrayDataWITHcustProbesUpdatedXXXRNAseqQC82DistThresh2.mat')
 cd ../forFreesurfer
 keepSamplesOrig = cell(6,1);
 keepSamples = cell(6,1);

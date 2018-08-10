@@ -1,6 +1,6 @@
 % compile ermineJ results and keep only signifficant values after
 % correction
-type = 'background_GSRresult'; 
+type = 'RNAseq_microarray_overlapResult'; 
 fileINname = sprintf('%s.txt', type);  
 signThr = 0.05; 
 
