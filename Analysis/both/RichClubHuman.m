@@ -173,6 +173,8 @@ for j = 1:length(whatLinks)
                 % Degree distribution
                 %N = arrayfun(@(x)sum(nodeData==x),krAll);
                 %bar(krAll,N,'EdgeColor','k','FaceColor','k')
+               
+
                 histogram(nodeData,100,'EdgeColor','k','FaceColor','k');
                 xlim([min(nodeData)-0.5,max(nodeData)+0.5]);
                 xticks([]); box off;

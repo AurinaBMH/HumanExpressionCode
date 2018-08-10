@@ -4,6 +4,7 @@ function [PhiNormMean, G] = giveMeRichClub(matrices, COG, groupMatrixType,densTh
 
 if nargin < 3
     groupMatrixType = 'consistency';
+    densThreshold = 0.3; 
     fprintf('Making consistency based group matrix BY DEFAULT\n')
 end
 
