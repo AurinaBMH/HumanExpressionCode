@@ -55,19 +55,19 @@ end
 % [PhiNormMean, G] = giveMeRichClub(matrices, coordinates);
 % figure; imagesc(log(G));
 
-load('100DS360scaledRobustSigmoidNSGRNAseqQC1Lcortex_ROI_NOdistCorrEuclidean.mat')
+load('10DS360scaledRobustSigmoidNSGRNAseqQC1Lcortex_ROI_NOdistCorrEuclidean.mat')
 
 [~, G] = giveMeRichClub(matrices, coordinates, 'variance', 0.25);
-G = logical(G);
+Gr = logical(G);
 RichClubHuman(G,averageCoexpression);
 
 % see if there is the trlationship between CGE and distance for hubs
-deg = degrees_und(G); 
+deg = degrees_und(Gr); 
 isHub = deg>60; 
 
 A = zeros(numNodes, numNodes); 
 A(isHub, isHub) = 1; 
-A = A.*G;
+A = A.*Gr;
 figure; imagesc(A); 
 B = averageCoexpression.*A; 
 figure; imagesc(B); 
@@ -82,8 +82,8 @@ figure; scatter(distVect, coexpVect);
 
 
 % see CGE-distance relationship for all connected regions
-CGEcon = averageCoexpression.*G; 
-DISTcon = di.*G; 
+CGEcon = averageCoexpression.*Gr; 
+DISTcon = di.*Gr; 
 CGEcon(CGEcon==0) = NaN; DISTcon(DISTcon==0) = NaN; 
 distExpVect(:,1) = DISTcon(:); 
 distExpVect(:,2) = CGEcon(:);
