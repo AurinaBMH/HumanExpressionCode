@@ -1,4 +1,5 @@
 %  CGE vs distance
+clear all; close all;
 
 parcellation = 'HCPMMP1ANDfslatlas20';
 tract = 'FACT';
@@ -26,6 +27,7 @@ elseif strcmp(parcellation, 'custom200ANDfslatlas20')
     RC = 111:210;
     nROIs = 220;
 end
+
 cort = [LC,RC];
 if strcmp(brainPart, 'LRcortex')
     keepNodes = cort;
@@ -56,11 +58,22 @@ nanA(nanA==0) = NaN;
 avWeight = nanmean(nanA,3);
 avWeight(isnan(avWeight)) = 0;
 
+
 distCorr = 'NO';
 DS = 100;
 correctConnected = false;
 
-for densThreshold = [0.1]
+load(sprintf('%dDS%dscaledRobustSigmoidNGRNAseqQC1Lcortex_ROI_%sdistCorrEuclidean.mat', DS, nROIs, distCorr))
+
+% find mouse metabolic genes in human data to calculate CGE on them
+mouse_metabolicGenes = importMouseGenes('mouse_metabolicGenes.txt');
+mgInd = cell(length(mouse_metabolicGenes),1);
+for mg=1:length(mouse_metabolicGenes)
+    mgInd{mg} = find(strcmp(mouse_metabolicGenes{mg},probeInformation.GeneSymbol));
+end
+indMetabol = cell2mat(mgInd);
+
+for densThreshold = [0.25]
     
     [rgb_colorMatrix,labels] = GiveMeColors('richFeederPeripheral2');
     if densThreshold==0.10
@@ -80,7 +93,7 @@ for densThreshold = [0.1]
     Gr = logical(Gr);
     G = Gr.*avWeight;
     
-    load(sprintf('%dDS%dscaledRobustSigmoidNGRNAseqQC1Lcortex_ROI_%sdistCorrEuclidean.mat', DS, nROIs, distCorr))
+    
     
     % see CGE-distance relationship for all connected regions
     CGEcon = averageCoexpression.*Gr;
@@ -165,7 +178,7 @@ for densThreshold = [0.1]
     ylim([50 65])
     
     RichClubHuman(Gr,averageCoexpression);
-    title(sprintf('Density %d, %d DS, %s distance correction - CGEe', densThreshold, DS, distCorr))
+    title(sprintf('Density %d, %d DS, %s distance correction - CGE', densThreshold, DS, distCorr))
     % % using strength as x value
     % RichClubHuman(G,averageCoexpression);
     % title(sprintf('Density %d, %d DS, %s distance correction', densThreshold, DS, distCorr))
@@ -183,13 +196,23 @@ for densThreshold = [0.1]
     end
     % find those genes that show significant correlations and make CGE matrix
     % with them
-    geneINDdeg = find(corrDeg(:,2)<0.01);
-    geneINDstr = find(corrStrength(:,2)<0.000001);
+    geneINDdegsign = find(corrDeg(:,2)<0.05); geneINDdegpos = find(corrDeg(:,1)>0);
+    geneINDdeg = intersect(geneINDdegsign, geneINDdegpos);
+    
+    geneINDstrsign = find(corrStrength(:,2)<0.05); geneINDstrpos = find(corrStrength(:,1)>0);
+    geneINDstr = intersect(geneINDstrsign, geneINDstrpos);
+    
     parcelCoexpressionDeg = corr(parcelExpression(:,geneINDdeg+1)', 'type', 'Spearman'); % calculate sample-sample coexpression
     parcelCoexpressionDeg(logical(eye(size(parcelCoexpressionDeg)))) = NaN; % replace diagonal with NaN
     
     parcelCoexpressionStr = corr(parcelExpression(:,geneINDstr+1)', 'type', 'Spearman'); % calculate sample-sample coexpression
     parcelCoexpressionStr(logical(eye(size(parcelCoexpressionStr)))) = NaN; % replace diagonal with NaN
+    
+    
+    % select those genes from expression matrix
+    expMetabol = parcelExpression(:,indMetabol+1);
+    % calculate coexpression of this set of genes
+    CGEmetabol = corr(expMetabol', 'rows','complete', 'type', 'Spearman');
     
     p = setdiff(1:length(G), parcelExpression(:,1));
     
@@ -200,28 +223,47 @@ for densThreshold = [0.1]
         parcelCoexpressionStr = insertrows(parcelCoexpressionStr,NaN,p);
         parcelCoexpressionStr = insertrows(parcelCoexpressionStr.', NaN,p).' ; % insert columns
         
+        CGEmetabol = insertrows(CGEmetabol,NaN,p);
+        CGEmetabol = insertrows(CGEmetabol.', NaN,p).' ; % insert columns
+        
     end
     
     figure; imagesc(parcelCoexpressionDeg); caxis([-1 1]); title(sprintf('Significant genes (deg) %d density, %d genes', densThreshold, length(geneINDdeg)))
     figure; imagesc(parcelCoexpressionStr); caxis([-1 1]); title(sprintf('Significant genes (str) %d density, %d genes', densThreshold, length(geneINDstr)))
     
     RichClubHuman(Gr,parcelCoexpressionDeg);
-    RichClubHuman(Gr,parcelCoexpressionStr);
+    title(sprintf('Density %d, %d DS, %s distance correction - CGE degCorr genes', densThreshold, DS, distCorr))
+    
+    RichClubHuman(Gr,CGEmetabol);
+    title(sprintf('Density %d, %d DS, %s distance correction - CGE metabolic genes', densThreshold, DS, distCorr))
+    %RichClubHuman(Gr,parcelCoexpressionStr);
     
     % make a list of genes for enrichment
-    geneListDeg = probeInformation.EntrezID; 
-    geneListDeg(geneINDdeg,2) = 1; %abs(corrDeg(geneINDdeg,1)); 
+    geneListDeg = probeInformation.EntrezID;
+    geneListDeg(geneINDdeg,2) = 1; %abs(corrDeg(geneINDdeg,1));
     
-    geneListStr = probeInformation.EntrezID; 
-    geneListStr(geneINDstr,2) = 1; %abs(corrDeg(geneINDstr,1)); 
-    
-    
+    geneListStr = probeInformation.EntrezID;
+    geneListStr(geneINDstr,2) = 1; %abs(corrDeg(geneINDstr,1));
     
 end
 
+% compare to a random set of genes
+for it=1:100
+r = randi([2, size(parcelExpression,2)-1],1,length(indMetabol));
+exprand = parcelExpression(:,r);
+% calculate coexpression of this set of genes
+CGErand = corr(exprand', 'rows','complete', 'type', 'Spearman');
+p = setdiff(1:length(G), parcelExpression(:,1));
 
+CGErand = insertrows(CGErand,NaN,p);
+CGErand = insertrows(CGErand.', NaN,p).' ; % insert columns
 
+CGErandall(it,:,:) = CGErand; 
+end
 
+CGErandmean = squeeze(nanmean(CGErandall,1)); 
+figure; imagesc(CGErandmean); title(sprintf('%d random genes', length(r)))
+figure; imagesc(CGEmetabol); title(sprintf('%d metabolic genes', length(indMetabol)))
 
 
 
