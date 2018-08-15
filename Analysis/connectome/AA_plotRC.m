@@ -44,16 +44,16 @@ for m=1:length(ADJS)
     end
 end
 % 
-% for th=[0.1 0.15 0.2 0.25 0.3]
-% 
-% [~, G] = giveMeRichClub(matrices, coordinates, 'variance', th);
-% figure; imagesc(log(G)); 
-% end
-% 
-% [~, G] = giveMeRichClub(matrices, coordinates, 'lengthCV');
-% figure; imagesc(log(G));
-% [PhiNormMean, G] = giveMeRichClub(matrices, coordinates);
-% figure; imagesc(log(G));
+for th=[0.1 0.15 0.2 0.25 0.3]
+
+[~, G] = giveMeRichClub(matrices, coordinates, 'variance', th);
+figure; imagesc(log(G)); 
+end
+
+[~, G] = giveMeRichClub(matrices, coordinates, 'lengthCV');
+figure; imagesc(log(G));
+[PhiNormMean, G] = giveMeRichClub(matrices, coordinates, 'consistency');
+figure; imagesc(log(G));
 
 load('10DS360scaledRobustSigmoidNSGRNAseqQC1Lcortex_ROI_NOdistCorrEuclidean.mat')
 
