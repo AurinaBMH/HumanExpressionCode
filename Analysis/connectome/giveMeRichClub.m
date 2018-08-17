@@ -1,6 +1,6 @@
 % Rich club in the whole brain
 
-function [PhiNormMean, G] = giveMeRichClub(matrices, COG, groupMatrixType,densThreshold,numIter, numRepeats, whatTypeNetwork ,whatNullModel,scaling)
+function [G] = giveMeRichClub(matrices, COG, groupMatrixType, densThreshold, giveRC, numIter, numRepeats, whatTypeNetwork ,whatNullModel,scaling)
 
 if nargin < 3
     groupMatrixType = 'consistency';
@@ -8,14 +8,17 @@ if nargin < 3
     fprintf('Making consistency based group matrix BY DEFAULT\n')
 end
 
-if nargin < 5
+if nargin < 6
     numIter = 50;
     numRepeats = 100;
     whatTypeNetwork = 'bu';
     whatNullModel = 'randmio_und';
     scaling = 0.4;
+    if giveRC
     fprintf('Calculating RC using %d iterations with %d repeats on %s network with %s null model with %d distance scaling BY DEFAULT\n', numIter, numRepeats, whatTypeNetwork, whatNullModel, scaling)
+    end
 end
+
 
 numNodes = size(matrices{1},1);
 numSubjects = length(matrices);
@@ -52,6 +55,9 @@ elseif strcmp(groupMatrixType, 'consistency')
     G = giveMeGroupAdj_consistency(matrices, densThreshold);
 end
 
+if giveRC
+
 [dMiddleNorm, dMiddle, PhiNormMean, PhiTrue, PhiRand] = PlotRichClub(G,mdist,whatTypeNetwork,whatNullModel,numIter,numRepeats,scaling);
+end
 
 end
