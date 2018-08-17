@@ -67,6 +67,9 @@ A = zeros(numNodes, numNodes,numSubjects);
 for m=1:length(ADJS)
     if ~strcmp(brainPart, 'wholeBrain')
         matrices{m} = ADJS{m}(keepNodes, keepNodes);
+        if strcmp(weight, 'standard')
+        matrices{m}(matrices{m}<10) = 0;  
+        end
         coordinates{m} = COG{m}(keepNodes,:);
         A(:,:,m) = matrices{m};
     else
