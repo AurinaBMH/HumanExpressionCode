@@ -2,94 +2,117 @@
 clear all; close all;
 
 parc = 'HCP';
-tract = 'FACT';
-weight = 'standard';
+tract = 'iFOD2';
+weight = 'FA';
 brainPart = 'Lcortex';
-groupConn = 'variance'; %  lengthCV, consistency
+groupConn = 'consistency'; %  lengthCV, consistency
 
 [coexpData, A, matrices, coordinates, avWeight] = giveConnCoexp(parc,tract,weight,brainPart);
 
-correctWhat = 'none'; %'connected'; 'all'; 'none'; %false;
-whatGeneSet = 'DEG'; % DS, HSE, DEG, SCZ
-recRC = false;
+correctWhat = 'all'; %'connected'; 'all'; 'none'; %false;
+whatGeneSet = 'MET'; % DS, HSE, DEG, SCZ
+giveRC = true;
 
 if strcmp(whatGeneSet, 'DS')
     DSthresh = 0.8;
 end
 
-for densThreshold = [0.25]
+for densThreshold = [0.1 0.15 0.25]
+    
+    
+    [rgb_colorMatrix,labels] = GiveMeColors('richFeederPeripheral2');
+    [Gr] = giveMeRichClub(matrices, coordinates, groupConn ,densThreshold, giveRC);
+    title(sprintf('RC and distance curves, %.2f density', densThreshold))
+    %figure; imagesc(log(Gr));
+    Gr = logical(Gr);
+    nodeDeg = degrees_und(Gr);
+    G = Gr.*avWeight;
+    
+    if densThreshold==0.10
+        switch tract
+            case 'FACT'
+                hubThresh = 20;
+            case 'iFOD2'
+                hubThresh = 25;
+        end
+    elseif densThreshold==0.15
+        switch tract
+            case 'FACT'
+                hubThresh = 30;
+            case 'iFOD2'
+                hubThresh = 45;
+        end
+    elseif densThreshold==0.20
+        switch tract
+            case 'FACT'
+                hubThresh = 50;
+            case 'iFOD2'
+                hubThresh = 55;
+        end
+    elseif densThreshold==0.25
+        switch tract
+            case 'FACT'
+                hubThresh = 60;
+            case 'iFOD2'
+                hubThresh = 65;
+        end
+    elseif densThreshold==0.30
+        switch tract
+            case 'FACT'
+                hubThresh = 80;
+            case 'iFOD2'
+                hubThresh = 70;
+        end
+    end
+    
+    % see CGE-distance relationship for all connected regions
+    parcelExpression = coexpData.parcelExpression;
+    probeInformation = coexpData.probeInformation;
+    switch whatGeneSet
+        case 'ALL'
+            selectGenes = find(probeInformation.DS);
+            nrGenes = size(coexpData.parcelExpression,2)-1;
+        case 'MET'
+            geneNames = importMouseGenes('mouse_metabolicGenes.txt');
+            mgInd = cell(length(geneNames),1);
+            for mg=1:length(geneNames)
+                mgInd{mg} = find(strcmp(geneNames{mg},probeInformation.GeneSymbol));
+            end
+            selectGenes = cell2mat(mgInd);
+            nrGenes = length(selectGenes);
+        case 'DS'
+            selectGenes = find(probeInformation.DS>DSthresh);
+            nrGenes = length(selectGenes);
+        case 'HSE'
+            geneNames = {'BEND5', 'C1QL2', 'CACNA1E', 'COL24A1', 'COL6A1', 'CRYM', 'KCNC3', 'KCNH4', 'LGALS1', ...
+                'MFGE8', 'NEFH', 'PRSS12', 'SCN3B', 'SCN4B', 'SNCG', 'SV2C', 'SYT2', 'TPBG', 'VAMP1'};
+            mgInd = cell(length(geneNames),1);
+            for mg=1:length(geneNames)
+                mgInd{mg} = find(strcmp(geneNames{mg},probeInformation.GeneSymbol));
+            end
+            selectGenes = cell2mat(mgInd);
+            nrGenes = length(selectGenes);
+        case 'DEG'
+            corrDeg = zeros(size(parcelExpression,2)-1,2);
+            for g=1:size(parcelExpression,2)-1
+                [corrDeg(g,1),corrDeg(g,2)] = corr(parcelExpression(:,g+1), nodeDeg(parcelExpression(:,1))', 'rows','complete', 'type', 'Pearson');
+            end
+            % find those genes that show significant correlations and make CGE matrix
+            % with them
+            geneINDdegsign = find(corrDeg(:,2)<0.05); geneINDdegpos = find(corrDeg(:,1)>0.3);
+            selectGenes = intersect(geneINDdegsign, geneINDdegpos);
+            nrGenes = length(selectGenes);
+            % make a list of genes for enrichment
+            geneListDeg = probeInformation.EntrezID;
+            geneListDeg(selectGenes,2) = 1; %abs(corrDeg(geneINDdeg,1));
+        case 'SCZ'
+            % make a list of SCZ genes
+    end
     for crand=1:2
         if crand==1
             doRandomSet = false;
         else
             doRandomSet = true;
-        end
-        
-        [rgb_colorMatrix,labels] = GiveMeColors('richFeederPeripheral2');
-        if recRC
-            [~, Gr] = giveMeRichClub(matrices, coordinates, 'variance',densThreshold);
-            title(sprintf('RC and distance curves, %.2f density', densThreshold))
-        else
-            Gr = giveMeGroupAdj_variance(matrices, densThreshold);
-        end
-        Gr = logical(Gr);
-        nodeDeg = degrees_und(Gr); 
-        G = Gr.*avWeight;
-        
-        if densThreshold==0.10
-            hubThresh = 20;
-        elseif densThreshold==0.15
-            hubThresh = 30;
-        elseif densThreshold==0.20
-            hubThresh = 50;
-        elseif densThreshold==0.25
-            hubThresh = 60;
-        elseif densThreshold==0.30
-            hubThresh = 80;
-        end
-        
-        % see CGE-distance relationship for all connected regions
-        parcelExpression = coexpData.parcelExpression;
-        probeInformation = coexpData.probeInformation;
-        switch whatGeneSet
-            case 'ALL'
-                selectGenes = find(probeInformation.DS);
-                nrGenes = size(coexpData.parcelExpression,2)-1;
-            case 'MET'
-                geneNames = importMouseGenes('mouse_metabolicGenes.txt');
-                mgInd = cell(length(geneNames),1);
-                for mg=1:length(geneNames)
-                    mgInd{mg} = find(strcmp(geneNames{mg},probeInformation.GeneSymbol));
-                end
-                selectGenes = cell2mat(mgInd);
-                nrGenes = length(selectGenes);
-            case 'DS'
-                selectGenes = find(probeInformation.DS>DSthresh);
-                nrGenes = length(selectGenes);
-            case 'HSE'
-                geneNames = {'BEND5', 'C1QL2', 'CACNA1E', 'COL24A1', 'COL6A1', 'CRYM', 'KCNC3', 'KCNH4', 'LGALS1', ...
-                    'MFGE8', 'NEFH', 'PRSS12', 'SCN3B', 'SCN4B', 'SNCG', 'SV2C', 'SYT2', 'TPBG', 'VAMP1'};
-                mgInd = cell(length(geneNames),1);
-                for mg=1:length(geneNames)
-                    mgInd{mg} = find(strcmp(geneNames{mg},probeInformation.GeneSymbol));
-                end
-                selectGenes = cell2mat(mgInd);
-                nrGenes = length(selectGenes);
-            case 'DEG'
-                corrDeg = zeros(size(parcelExpression,2)-1,2);
-                for g=1:size(parcelExpression,2)-1
-                    [corrDeg(g,1),corrDeg(g,2)] = corr(parcelExpression(:,g+1), nodeDeg(parcelExpression(:,1))', 'rows','complete', 'type', 'Pearson');
-                end
-                % find those genes that show significant correlations and make CGE matrix
-                % with them
-                geneINDdegsign = find(corrDeg(:,2)<0.05); geneINDdegpos = find(corrDeg(:,1)>0.3);
-                selectGenes = intersect(geneINDdegsign, geneINDdegpos);
-                nrGenes = length(selectGenes);
-                % make a list of genes for enrichment
-                geneListDeg = probeInformation.EntrezID;
-                geneListDeg(selectGenes,2) = 1; %abs(corrDeg(geneINDdeg,1));
-            case 'SCZ'
-            % make a list of SCZ genes    
         end
         
         if doRandomSet
@@ -119,13 +142,13 @@ for densThreshold = [0.25]
         DISTcon(logical(eye(size(DISTcon)))) = NaN;
         distExpVect = zeros(length(CGEmatrix(:)),2);
         distExpVect(:,1) = DISTcon(:);
-                
+        
         % try to correct distance effect for connected/all or none
-       Gr = double(Gr);
-       Gr(Gr==0) = NaN;
+        Gr = double(Gr);
+        Gr(Gr==0) = NaN;
         switch correctWhat
             case 'connected'
-
+                
                 CGEmatrix = CGEmatrix.*Gr;
                 %CGEmatrix(CGEmatrix==0) = NaN;
                 distExpVect(:,2) = CGEmatrix(:);
@@ -133,7 +156,7 @@ for densThreshold = [0.25]
                 %indNAN = find(isnan(distExpVect(:,2)));
                 Fit{1} = 'linear';
                 [~,~,c] = GiveMeFit(distExpVect(:,1),distExpVect(:,2),Fit{1});
-                [FitCurve] = getFitCurve(Fit,distExpVect,c); 
+                [FitCurve] = getFitCurve(Fit,distExpVect,c);
                 Residuals = distExpVect(:,2) - FitCurve;
                 % reshape into matrix for further use
                 CGEmatrix = reshape(Residuals,[length(Gr) length(Gr)]);
@@ -143,7 +166,7 @@ for densThreshold = [0.25]
                 distExpVect(:,2) = CGEmatrix(:);
                 Fit{1} = 'exp';
                 [~,~,c] = GiveMeFit(distExpVect(:,1),distExpVect(:,2),Fit{1});
-                [FitCurve] = getFitCurve(Fit,distExpVect,c); 
+                [FitCurve] = getFitCurve(Fit,distExpVect,c);
                 Residuals = distExpVect(:,2) - FitCurve;
                 % reshape into matrix for further use
                 CGEmatrix = reshape(Residuals,[length(Gr) length(Gr)]);
@@ -151,7 +174,7 @@ for densThreshold = [0.25]
             case 'none'
                 CGEmatrix = CGEmatrix.*Gr;
         end
-        distExpVect(:,2) = CGEmatrix(:); 
+        distExpVect(:,2) = CGEmatrix(:);
         distExpVect(any(isnan(distExpVect), 2),:)=[];
         figure; set(gcf,'Position',[300 300 500 1300])
         set(gcf,'color','w');
@@ -171,8 +194,8 @@ for densThreshold = [0.25]
         text(120, 0.5, sprintf('p = %d', p))
         
         % see CGE-distance relationship for hubs
-        Grdeg = Gr; 
-        Grdeg(isnan(Grdeg)) = 0; 
+        Grdeg = Gr;
+        Grdeg(isnan(Grdeg)) = 0;
         numNodes = size(Gr,1);
         nodeDeg = degrees_und(Grdeg);
         
@@ -214,8 +237,10 @@ for densThreshold = [0.25]
         end
         
         % % using degree as x value
-        RichClubHuman(Grdeg,DISTcon);
-        title(sprintf('Density %.2f - distance', densThreshold))
+        if crand~=1
+            RichClubHuman(Grdeg,DISTcon);
+            title(sprintf('Density %.2f - distance', densThreshold))
+        end
         
         RichClubHuman(Grdeg,CGEmatrix);
         if doRandomSet
