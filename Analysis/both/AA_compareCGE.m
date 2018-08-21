@@ -3,68 +3,47 @@ clear all; close all;
 
 parc = 'HCP';
 tract = 'iFOD2';
-weight = 'FA';
-brainPart = 'Lcortex';
-groupConn = 'consistency'; %  lengthCV, consistency
+weight = 'standard';
+brainPart = 'wholeBrain';
+groupConn = 'variance'; %  lengthCV, consistency
 
 [coexpData, A, matrices, coordinates, avWeight] = giveConnCoexp(parc,tract,weight,brainPart);
+% if strcmp(weight,'standard')
+%     % for standard weight (where streamline count is used), divide wegith
+%     % by the length of the streamline
+%     [~, Alength, matricesLength] = giveConnCoexp(parc,tract,'length',brainPart);
+%     for s=1:length(matrices)
+%         matrices{s} = matrices{s}./matricesLength{s};
+%         matrices{s}(isnan(matrices{s})) = 0; 
+%         A(:,:,s) = matrices{s};
+%     end
+%     
+% end
+    
+% [coexpData, A, matrices, coordinates, avWeight] = giveConnCoexp(parc,tract,weight,'Lcortex');
 
-correctWhat = 'all'; %'connected'; 'all'; 'none'; %false;
-whatGeneSet = 'MET'; % DS, HSE, DEG, SCZ
-giveRC = true;
+correctWhat = 'connected'; %'connected'; 'all'; 'none'; %false;
+whatGeneSet = 'ALL'; % DS, HSE, DEG, SCZ
+giveRC = false;
 
 if strcmp(whatGeneSet, 'DS')
     DSthresh = 0.8;
 end
 
-for densThreshold = [0.1 0.15 0.25]
-    
-    
-    [rgb_colorMatrix,labels] = GiveMeColors('richFeederPeripheral2');
+[rgb_colorMatrix,labels] = GiveMeColors('RFPU');
+for densThreshold = 0.1
+
     [Gr] = giveMeRichClub(matrices, coordinates, groupConn ,densThreshold, giveRC);
-    title(sprintf('RC and distance curves, %.2f density', densThreshold))
-    %figure; imagesc(log(Gr));
+    %title(sprintf('RC and distance curves, %.2f density', densThreshold))
     Gr = logical(Gr);
     nodeDeg = degrees_und(Gr);
-    G = Gr.*avWeight;
+    hubThresh = quantile(nodeDeg,0.5) + quantile(nodeDeg,0.25);
     
-    if densThreshold==0.10
-        switch tract
-            case 'FACT'
-                hubThresh = 20;
-            case 'iFOD2'
-                hubThresh = 25;
-        end
-    elseif densThreshold==0.15
-        switch tract
-            case 'FACT'
-                hubThresh = 30;
-            case 'iFOD2'
-                hubThresh = 45;
-        end
-    elseif densThreshold==0.20
-        switch tract
-            case 'FACT'
-                hubThresh = 50;
-            case 'iFOD2'
-                hubThresh = 55;
-        end
-    elseif densThreshold==0.25
-        switch tract
-            case 'FACT'
-                hubThresh = 60;
-            case 'iFOD2'
-                hubThresh = 65;
-        end
-    elseif densThreshold==0.30
-        switch tract
-            case 'FACT'
-                hubThresh = 80;
-            case 'iFOD2'
-                hubThresh = 70;
-        end
+    if strcmp(brainPart, 'wholeBrain')
+             nodeDeg = nodeDeg(1:180);
+             Gr = Gr(1:180,1:180); 
     end
-    
+
     % see CGE-distance relationship for all connected regions
     parcelExpression = coexpData.parcelExpression;
     probeInformation = coexpData.probeInformation;
@@ -108,8 +87,8 @@ for densThreshold = [0.1 0.15 0.25]
         case 'SCZ'
             % make a list of SCZ genes
     end
-    for crand=1:2
-        if crand==1
+    for doRand=1
+        if doRand==1
             doRandomSet = false;
         else
             doRandomSet = true;
@@ -122,20 +101,15 @@ for densThreshold = [0.1 0.15 0.25]
                 ran = randi([2, size(parcelExpression,2)-1],1,nrGenes);
                 exprand = parcelExpression(:,ran);
                 % calculate coexpression of this set of genes
-                CGErand = corr(exprand', 'rows','complete', 'type', 'Pearson');
+                
+                CGErand = corr(exprand', 'type', 'Spearman');
+                CGErand(logical(eye(size(CGErand)))) = NaN; % replace diagonal with NaN
                 CGErandall(it,:,:) = CGErand;
             end
             CGEmatrix = squeeze(nanmean(CGErandall,1));
         else
-            CGEmatrix = corr(parcelExpression(:,selectGenes+1)', 'type', 'Pearson'); % calculate sample-sample coexpression
+            CGEmatrix = corr(parcelExpression(:,selectGenes+1)', 'type', 'Spearman'); % calculate sample-sample coexpression
             CGEmatrix(logical(eye(size(CGEmatrix)))) = NaN; % replace diagonal with NaN
-        end
-        
-        p = setdiff(1:length(Gr), parcelExpression(:,1));
-        
-        if ~isempty(p)
-            CGEmatrix = insertrows(CGEmatrix,NaN,p);% insert rows
-            CGEmatrix = insertrows(CGEmatrix.', NaN,p).' ; % insert columns
         end
         
         DISTcon = coexpData.averageDistance;
@@ -146,8 +120,15 @@ for densThreshold = [0.1 0.15 0.25]
         % try to correct distance effect for connected/all or none
         Gr = double(Gr);
         Gr(Gr==0) = NaN;
+        
         switch correctWhat
             case 'connected'
+                
+                % make mask for unconnected links, so we can map them back
+                % after correction for only connected is done
+                CGEmatrixUncon = zeros(size(CGEmatrix)); 
+                CGEmatrixUncon(isnan(Gr)) = 1;
+                CGEmatrixUncon(~isnan(Gr)) = 0; 
                 
                 CGEmatrix = CGEmatrix.*Gr;
                 %CGEmatrix(CGEmatrix==0) = NaN;
@@ -161,6 +142,11 @@ for densThreshold = [0.1 0.15 0.25]
                 % reshape into matrix for further use
                 CGEmatrix = reshape(Residuals,[length(Gr) length(Gr)]);
                 
+                CGE1 = CGEmatrixUncon.*coexpData.averageCoexpression; 
+                CGE2 = CGEmatrix; 
+                CGE2(isnan(CGE2)) = 0; 
+                CGEmatrixFull = CGE2+CGE1; 
+                
             case 'all'
                 
                 distExpVect(:,2) = CGEmatrix(:);
@@ -170,8 +156,11 @@ for densThreshold = [0.1 0.15 0.25]
                 Residuals = distExpVect(:,2) - FitCurve;
                 % reshape into matrix for further use
                 CGEmatrix = reshape(Residuals,[length(Gr) length(Gr)]);
+                CGEmatrixFull = CGEmatrix;
                 CGEmatrix = CGEmatrix.*Gr;
+                
             case 'none'
+                CGEmatrixFull = CGEmatrix;
                 CGEmatrix = CGEmatrix.*Gr;
         end
         distExpVect(:,2) = CGEmatrix(:);
@@ -194,10 +183,10 @@ for densThreshold = [0.1 0.15 0.25]
         text(120, 0.5, sprintf('p = %d', p))
         
         % see CGE-distance relationship for hubs
-        Grdeg = Gr;
-        Grdeg(isnan(Grdeg)) = 0;
-        numNodes = size(Gr,1);
-        nodeDeg = degrees_und(Grdeg);
+         Grdeg = Gr;
+         Grdeg(isnan(Grdeg)) = 0;
+         numNodes = size(Gr,1);
+%         nodeDeg = degrees_und(Grdeg);
         
         isHub = nodeDeg>hubThresh;
         maskHub = zeros(numNodes, numNodes);
@@ -218,7 +207,7 @@ for densThreshold = [0.1 0.15 0.25]
             distExpVectHub(:,2) = CGEconHub(:);
             distExpVectHub(any(isnan(distExpVectHub), 2),:)=[];
             
-            subplot(4,1,i+1); scatter(distExpVectHub(:,1),distExpVectHub(:,2),50,'MarkerEdgeColor',[0.35 0.35 0.35],'MarkerFaceColor',rgb_colorMatrix(i+1,:),'LineWidth',1.5)
+            subplot(4,1,i+1); scatter(distExpVectHub(:,1),distExpVectHub(:,2),50,'MarkerEdgeColor',[0.35 0.35 0.35],'MarkerFaceColor',rgb_colorMatrix(i,:),'LineWidth',1.5)
             [r,p] = corr(distExpVectHub(:,1),distExpVectHub(:,2));
             hline = refline;
             ylabel('CGE')
@@ -237,22 +226,52 @@ for densThreshold = [0.1 0.15 0.25]
         end
         
         % % using degree as x value
-        if crand~=1
-            RichClubHuman(Grdeg,DISTcon);
+        if doRand~=1
+            RichClubHuman(Grdeg,DISTcon, nodeDeg);
             title(sprintf('Density %.2f - distance', densThreshold))
         end
         
-        RichClubHuman(Grdeg,CGEmatrix);
+        RichClubHuman(Grdeg,CGEmatrix,nodeDeg)
         if doRandomSet
             title(sprintf('Density %.2f, random (%d genes) - CGE (%s corrected)', densThreshold, nrGenes, correctWhat))
         else
             title(sprintf('Density %.2f, %s (%d genes) - CGE (%s corrected)', densThreshold, whatGeneSet, nrGenes, correctWhat))
         end
+        
+        % calculate distributions for rich/feeder/peripheral/unconnected
+        % links within each distance bin
+        
+        % define distance bins based on connected edges (unconnected will 
+%         A = CGEmatrix; 
+%         A(maskHub~=1) = NaN; %.*(maskHub==1); 
+        [xThresholds,yMeans, yMedians] = BF_PlotQuantiles(DISTcon(:),CGEmatrix(:),11,0,1); 
+%         [xThresholds,yMeans, yMedians] = BF_PlotQuantiles(DISTcon(:),A(:),11,0,1); 
+        [Y] = discretize(DISTcon,xThresholds); 
+        
+        f = figure('color', 'w');
+        f.Position = [1000,200,2000,1000];
+        for b=1:max(Y(:))
+            
+            maskBin = Y==b; % all links in this distance bin
+            AdjCon = Gr.*Y==b; % connected links in this distance bin
+            AdjUnc = maskBin & ~AdjCon; % unconnected links in this distance bin
+
+            rgb_colorMatrix = GiveMeColors('RFPU');
+            
+            subplot(2,5,b);
+            [dataCell, p, stats] = AA_CGE_RFPU(CGEmatrixFull, AdjCon, AdjUnc, nodeDeg, hubThresh, rgb_colorMatrix);
+            conUncon(b,2) = p; 
+            conUncon(b,1) = stats.tstat; 
+            title(sprintf('Connections %.2f - %.2f mm', xThresholds(b), xThresholds(b+1)))
+            hold on; 
+
+        end
+
     end
 end
 
-
-
+% figure; subplot(2,1,1); histogram(degrees_und(FACT), 50); xlim([0, max([degrees_und(iFOD), degrees_und(FACT)])]); title('FACT'); subplot(2,1,2); ...
+%     histogram(degrees_und(iFOD), 50); title('iFOD'); xlim([0, max([degrees_und(iFOD), degrees_und(FACT)])]); 
 
 
 

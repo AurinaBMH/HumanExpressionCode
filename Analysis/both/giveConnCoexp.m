@@ -75,6 +75,7 @@ for m=1:length(ADJS)
     else
         matrices{m} = ADJS{m};
         A(:,:,m) = matrices{m};
+        coordinates{m} = COG{m}(keepNodes,:);
     end
 end
 

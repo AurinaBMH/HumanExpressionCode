@@ -1,10 +1,10 @@
 % Rich club in the whole brain
 
-function [G] = giveMeRichClub(matrices, COG, groupMatrixType, densThreshold, giveRC, numIter, numRepeats, whatTypeNetwork ,whatNullModel,scaling)
+function [G,  PhiNormMean, dMiddle] = giveMeRichClub(matrices, COG, groupMatrixType, densThreshold, giveRC, numIter, numRepeats, whatTypeNetwork ,whatNullModel,scaling)
 
 if nargin < 3
     groupMatrixType = 'consistency';
-    densThreshold = 0.3; 
+    densThreshold = 0.6; 
     fprintf('Making consistency based group matrix BY DEFAULT\n')
 end
 
@@ -40,9 +40,14 @@ avWeight(isnan(avWeight)) = 0;
 
 % make a group matrix
 if strcmp(groupMatrixType, 'lengthCV')
+    if numNodes==180
+        hemiid = ones(numNodes,1);
+    else
+        
     hemiid = zeros(numNodes,1);
     hemiid(1:numNodes/2) = 1;
     hemiid(numNodes/2+1: numNodes) = 2;
+    end
     
     Gr = fcn_group_average(A,mdist,hemiid);
     G = Gr.*avWeight;

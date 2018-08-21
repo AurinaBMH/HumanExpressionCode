@@ -1,14 +1,8 @@
-function RichClubHuman(Adj,averageCoexpression)
+function RichClubHuman(Adj,averageCoexpression,nodeData)
 % ------------------------------------------------------------------------------
 % Function plots coexpression for rich/feeder/peripheral lins as a function
 % of degree using mean to summarise coexpression at each threshold
 %-------------------------------------------------------------------------------
-% Inputs
-% ------------------------------------------------------------------------------
-% C (connectivity structure)
-% G (gene data structure)
-% analyzeWhat 'coexpression', 'lineage distance', 'connection distance';
-% coexpMeasure - choose coexpression measure as defined in G.Corr. default Pearson_noLR
 % ------------------------------------------------------------------------------
 
 pThreshold = 0.05;
@@ -42,7 +36,11 @@ numNodes = length(Adj);
 % ------------------------------------------------------------------------------
 % nodeData (~degree) should not change with different nulls, which preserve the in/out degree of all nodes
 % ------------------------------------------------------------------------------
+if nargin<3
 [~,~,nodeData] = AdjLabelNodes(labelNodesHow,Adj,extraParam,'bu');
+else
+    nodeData = nodeData;
+end
 %nodeData = degrees_und(Adj);
 % ------------------------------------------------------------------------------
 % Get groups of links based on their degree (or use all k)
@@ -111,7 +109,7 @@ end
 % ------------------------------------------------------------------------------
 %% Plot as rich plots
 % ------------------------------------------------------------------------------
-myColors = GiveMeColors('richFeederPeripheral2'); % [BF_getcmap('spectral',4,1),BF_getcmap('set2',4,1)];
+myColors = GiveMeColors('RFPU'); % [BF_getcmap('spectral',4,1),BF_getcmap('set2',4,1)];
 plotOnOne = true; % plot all on one figure
 includeHist = true;
 plotJustRich = true;
@@ -180,23 +178,23 @@ for j = 1:length(whatLinks)
     lineStyle = '-'; markerStyle = 'o';
     
     if any(isSig)
-        plot(kr(isSig),realTrajectory(isSig),markerStyle,'MarkerEdgeColor',myColors(j+1,:),...
-            'MarkerFaceColor',brighten(myColors(j+1,:),+0.5),'LineWidth',1,'MarkerSize',9)
+        plot(kr(isSig),realTrajectory(isSig),markerStyle,'MarkerEdgeColor',myColors(j,:),...
+            'MarkerFaceColor',brighten(myColors(j,:),+0.5),'LineWidth',1,'MarkerSize',9)
     end
     
     % mean trajectory:
-    plot(kr,realTrajectory,lineStyle,'color',myColors(j+1,:),'LineWidth',3)
+    plot(kr,realTrajectory,lineStyle,'color',myColors(j,:),'LineWidth',3)
     
     % +/- std:
     if includeStd
-        plot(kr,realTrajectory+realStd,lineStyle,'color',myColors(j+1,:),'LineWidth',1)
-        plot(kr,realTrajectory-realStd,lineStyle,'color',myColors(j+1,:),'LineWidth',1)
+        plot(kr,realTrajectory+realStd,lineStyle,'color',myColors(j,:),'LineWidth',1)
+        plot(kr,realTrajectory-realStd,lineStyle,'color',myColors(j,:),'LineWidth',1)
     end
     
     xLimits = get(gca,'xlim'); yLimits = get(gca,'ylim');
     
     if ~plotJustRich
-        text(xLimits(1)+0.1*diff(xLimits),yLimits(1)+0.9*diff(yLimits)-j/20,whatLinks{j},'color',myColors(j+1,:),'FontSize',18)
+        text(xLimits(1)+0.1*diff(xLimits),yLimits(1)+0.9*diff(yLimits)-j/20,whatLinks{j},'color',myColors(j,:),'FontSize',18)
     end
 
     divisionText = '';

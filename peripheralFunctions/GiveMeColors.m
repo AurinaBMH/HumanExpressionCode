@@ -21,12 +21,26 @@ switch colorSet
             .96 .78 .1; ...
             1 .1 .07];
         labels = {'black','peripheral','feeder','rich'}; % ??
+        
+     case 'RFPU'
+        rgb_colorMatrix = [227 26 28; ...
+            254 204 92; ...
+            158 202 225; ...
+            150 150 150]/255;
+        labels = {'rich','feeder','peripheral','unconnected'}; % ??
 
     case 'ElChemUncon'
-        rgb_colorMatrix = [0 0 .5; ...
-            .13 .31 .78
-            .10 .45 .82];
-        labels = {'Electrical','Chemical','Unconnected'}; % ??
+        rgb_colorMatrix = [227 26 28; ...
+            253 141 60;
+            254 204 92;
+            150 150 150]/255;
+        labels = {'Electrical','Chemical1', 'Chemical2','Unconnected'}; % ??
+
+     case 'mouse'
+        rgb_colorMatrix = [49 130 189; ...
+            158 202 225;
+            150 150 150]/255;
+        labels = {'Electrical','Chemical1', 'Chemical2','Unconnected'}; % ??
 
     case 'richFeedInOutPeripheral'
         rgb_colorMatrix = [0,0,0;...
@@ -40,18 +54,6 @@ switch colorSet
         %                     .96 .78 .1; ...
         %                     1 .1 .07];
         labels = {'black','rich', 'feedin', 'feedout', 'peripheral'}; % ??
-        
-        case 'richFeederPeripheral2'
-%         rgb_colorMatrix = [0,0,0;...
-%             215 25 28;
-%             1*255 .8*255 0; ...
-%             103 169 207 ...
-%             ]/255;
-         rgb_colorMatrix = [0 0 0; ...
-                             .89 0 .06; ...
-                             1 .65 0; ...
-                             .49 .71 1];
-        labels = {'black','rich', 'feeder', 'peripheral'}; % ??
     case 'InterneuronMotorSensoryMulti'
         rgb_colorMatrix = [.98 .3 0;...% interneuron
             0 .62 .38; ...% motor neuron
@@ -70,8 +72,8 @@ switch colorSet
             1 .15 .07
             ];
     case 'RichNONrich'
-        rgb_colorMatrix = [.93 .35 0; ...
-            0 .22 .65];
+        rgb_colorMatrix = [215/225 25/225 28/225; ...
+            .02 .56 .2];
         labels = {'hub','nonhub'};
     case 'directedAnatomy'
         rgb_colorMatrix = [70,114,114;... % HeadHead
