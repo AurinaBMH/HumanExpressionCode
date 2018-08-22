@@ -55,6 +55,11 @@ elseif strcmp(groupMatrixType, 'variance')
     Gr = giveMeGroupAdj_variance(matrices, densThreshold);
     Gr = logical(Gr); 
     G = Gr.*avWeight;
+    
+elseif strcmp(groupMatrixType, 'varianceAA')
+    Gr = giveMeGroupAdj_variance_AA(matrices, densThreshold);
+    Gr = logical(Gr); 
+    G = Gr.*avWeight;
 
 elseif strcmp(groupMatrixType, 'consistency')
     G = giveMeGroupAdj_consistency(matrices, densThreshold);

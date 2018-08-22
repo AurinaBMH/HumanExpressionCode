@@ -65,11 +65,13 @@ matrices = cell(1,size(ADJS,2));
 coordinates = cell(1,size(ADJS,2));
 A = zeros(numNodes, numNodes,numSubjects);
 for m=1:length(ADJS)
+    if strcmp(weight, 'standard')
+        ADJS{m}(ADJS{m}<10) = 0; % remove less than 10 streamlines
+    elseif strcmp(weight, 'density')
+        ADJS{m}(ADJS{m}<10^(-4)) = 0; % remove weights less than 0.0001 streamlines
+    end
     if ~strcmp(brainPart, 'wholeBrain')
         matrices{m} = ADJS{m}(keepNodes, keepNodes);
-        if strcmp(weight, 'standard')
-        matrices{m}(matrices{m}<10) = 0;  
-        end
         coordinates{m} = COG{m}(keepNodes,:);
         A(:,:,m) = matrices{m};
     else
@@ -77,6 +79,7 @@ for m=1:length(ADJS)
         A(:,:,m) = matrices{m};
         coordinates{m} = COG{m}(keepNodes,:);
     end
+
 end
 
 nanA = A;
